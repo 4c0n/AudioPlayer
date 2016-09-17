@@ -21,12 +21,12 @@ public class Media extends AppCompatActivity {
 
         BrowseFragment browseFragment = new BrowseFragment();
 
-        String[] columns = {MediaStore.Audio.AudioColumns.ARTIST,
+        String[] columns = {MediaStore.Audio.AudioColumns._ID, MediaStore.Audio.AudioColumns.ARTIST,
                 MediaStore.Audio.AudioColumns.TITLE};
 
         Cursor mediaCursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                null,//columns,
-                null,
+                columns,
+                MediaStore.Audio.AudioColumns.IS_MUSIC + "=1",
                 null,
                 null);
 
@@ -38,6 +38,8 @@ public class Media extends AppCompatActivity {
                 CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
 
         browseFragment.setListAdapter(adapter);
+
+        //browseFragment.setEmptyText(getString(R.string.no_media));
 
         getSupportFragmentManager().beginTransaction().add(R.id.media_fragment_container, browseFragment)
                 .commit();
