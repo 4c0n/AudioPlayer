@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">AudioPlayer</string>
     <string name="no_media">No audio to browse&#8230;</string>
+    <string name="track_image">Visual identifier for the track, this will usually be album art</string>
 </resources>
