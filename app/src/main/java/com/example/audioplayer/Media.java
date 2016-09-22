@@ -1,12 +1,8 @@
 package com.example.audioplayer;
 
-import android.database.Cursor;
-import android.provider.MediaStore;
-import android.support.v7.app.AppCompatActivity;
+import android.content.ContentResolver;
 import android.os.Bundle;
-import android.util.Log;
-import android.widget.CursorAdapter;
-import android.widget.SimpleCursorAdapter;
+import android.support.v7.app.AppCompatActivity;
 
 public class Media extends AppCompatActivity {
 
@@ -21,27 +17,11 @@ public class Media extends AppCompatActivity {
 
         BrowseFragment browseFragment = new BrowseFragment();
 
-        String[] columns = {MediaStore.Audio.AudioColumns._ID, MediaStore.Audio.AudioColumns.ARTIST,
-                MediaStore.Audio.AudioColumns.TITLE};
-
-        Cursor mediaCursor = getContentResolver().query(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                columns,
-                MediaStore.Audio.AudioColumns.IS_MUSIC + "=1",
-                null,
-                null);
-
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(this,
-                R.layout.list_item,
-                mediaCursor,
-                new String[] {"Title", "Artist"},
-                new int[] {R.id.track_title, R.id.track_artist},
-                CursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER);
+        MediaStoreAudioAdapter adapter = new MediaStoreAudioAdapter(this, getContentResolver());
 
         browseFragment.setListAdapter(adapter);
 
-        //browseFragment.setEmptyText(getString(R.string.no_media));
-
-        getSupportFragmentManager().beginTransaction().add(R.id.media_fragment_container, browseFragment)
-                .commit();
+        getSupportFragmentManager().beginTransaction().add(R.id.media_fragment_container,
+                browseFragment).commit();
     }
 }
