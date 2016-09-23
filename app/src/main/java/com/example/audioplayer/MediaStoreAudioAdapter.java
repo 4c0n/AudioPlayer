@@ -19,10 +19,30 @@ class MediaStoreAudioAdapter extends BaseAdapter {
     private ContentResolver mContentResolver;
     private Cursor mMediaCursor;
     private LayoutInflater mInflater;
+    private boolean mSortedAscending = true;
+
+    private static class ViewHolder {
+        TextView title;
+        TextView artist;
+        ImageView albumArt;
+    }
 
     MediaStoreAudioAdapter(Context context, ContentResolver contentResolver) {
         mContentResolver = contentResolver;
+        queryContentResolver();
 
+        mInflater = LayoutInflater.from(context);
+    }
+
+    private void queryContentResolver() {
+        String sortOrder = MediaStore.Audio.Media.TITLE;
+        if (mSortedAscending) {
+            sortOrder += " ASC";
+        } else {
+            sortOrder += " DESC";
+        }
+
+        // TODO: use cursorloader or other means of threading
         mMediaCursor = mContentResolver.query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 new String[] {
@@ -33,10 +53,8 @@ class MediaStoreAudioAdapter extends BaseAdapter {
                 },
                 MediaStore.Audio.Media.IS_MUSIC + "=1",
                 null,
-                null
+                sortOrder
         );
-
-        mInflater = LayoutInflater.from(context);
     }
 
     @Override
@@ -87,6 +105,7 @@ class MediaStoreAudioAdapter extends BaseAdapter {
                 mMediaCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
         );
 
+        // TODO: use cursorloader or other means of threading
         Cursor albumCursor = mContentResolver.query(
                 MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
                 new String[] {MediaStore.Audio.Albums.ALBUM_ART},
@@ -115,9 +134,13 @@ class MediaStoreAudioAdapter extends BaseAdapter {
         return convertView;
     }
 
-    private static class ViewHolder {
-        TextView title;
-        TextView artist;
-        ImageView albumArt;
+    public void sort() {
+        if (mSortedAscending) {
+            mSortedAscending = false;
+        } else {
+            mSortedAscending = true;
+        }
+        queryContentResolver();
+        notifyDataSetChanged();
     }
 }
