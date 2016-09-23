@@ -42,6 +42,10 @@ class MediaStoreAudioAdapter extends BaseAdapter {
             sortOrder += " DESC";
         }
 
+        if (mMediaCursor != null) {
+            mMediaCursor.close();
+        }
+
         // TODO: use cursorloader or other means of threading
         mMediaCursor = mContentResolver.query(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -142,5 +146,9 @@ class MediaStoreAudioAdapter extends BaseAdapter {
         }
         queryContentResolver();
         notifyDataSetChanged();
+    }
+
+    public void close() {
+        mMediaCursor.close();
     }
 }

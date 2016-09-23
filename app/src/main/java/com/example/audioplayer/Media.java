@@ -1,9 +1,9 @@
 package com.example.audioplayer;
 
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
@@ -12,21 +12,27 @@ public class Media extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("Media", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media);
         Toolbar toolbar = (Toolbar) findViewById(R.id.media_toolbar);
         setSupportActionBar(toolbar);
 
-        if (savedInstanceState != null) {
-            return;
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        BrowseFragment browseFragment = (BrowseFragment) fragmentManager.findFragmentById(
+                R.id.media_fragment_container
+        );
+
+        if (browseFragment == null) {
+            browseFragment = new BrowseFragment();
+            browseFragment.setRetainInstance(true);
         }
 
         mMediaStoreAudioAdapter = new MediaStoreAudioAdapter(this, getContentResolver());
-
-        BrowseFragment browseFragment = new BrowseFragment();
-        browseFragment.setRetainInstance(true);
         browseFragment.setListAdapter(mMediaStoreAudioAdapter);
+
+        if (savedInstanceState != null) {
+            return;
+        }
 
         getSupportFragmentManager().beginTransaction().add(R.id.media_fragment_container,
                 browseFragment).commit();
@@ -48,5 +54,11 @@ public class Media extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(menuItem);
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        mMediaStoreAudioAdapter.close();
+        super.onDestroy();
     }
 }
