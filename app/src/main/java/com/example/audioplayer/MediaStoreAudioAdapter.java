@@ -15,12 +15,12 @@ import android.widget.TextView;
 
 import java.io.File;
 
-public class MediaStoreAudioAdapter extends BaseAdapter {
+class MediaStoreAudioAdapter extends BaseAdapter {
     private ContentResolver mContentResolver;
     private Cursor mMediaCursor;
     private LayoutInflater mInflater;
 
-    public MediaStoreAudioAdapter(Context context, ContentResolver contentResolver) {
+    MediaStoreAudioAdapter(Context context, ContentResolver contentResolver) {
         mContentResolver = contentResolver;
 
         mMediaCursor = mContentResolver.query(
@@ -95,29 +95,27 @@ public class MediaStoreAudioAdapter extends BaseAdapter {
                 null
         );
 
-        if (albumCursor.getCount() > 0) {
-            albumCursor.moveToFirst();
+        holder.albumArt.setImageURI(null);
+        if (albumCursor != null) {
+            if (albumCursor.getCount() > 0) {
+                albumCursor.moveToFirst();
 
-            String albumArtStr = albumCursor.getString(
-                    albumCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)
-            );
+                String albumArtStr = albumCursor.getString(
+                        albumCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)
+                );
 
-            if (albumArtStr != null) {
-                Log.d("albumart", albumArtStr);
-                holder.albumArt.setImageURI(Uri.fromFile(new File(albumArtStr)));
-            } else {
-                holder.albumArt.setImageURI(null);
+                if (albumArtStr != null) {
+                    Log.d("albumart", albumArtStr);
+                    holder.albumArt.setImageURI(Uri.fromFile(new File(albumArtStr)));
+                }
             }
-        } else {
-            holder.albumArt.setImageURI(null);
+            albumCursor.close();
         }
-
-        albumCursor.close();
 
         return convertView;
     }
 
-    static class ViewHolder {
+    private static class ViewHolder {
         TextView title;
         TextView artist;
         ImageView albumArt;
