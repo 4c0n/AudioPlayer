@@ -15,6 +15,9 @@ import android.widget.TextView;
 
 import java.io.File;
 
+/**
+ * TODO: Register as data observer so the list is updated when songs are added to the MediaStore
+ */
 class MediaStoreAudioAdapter extends BaseAdapter {
     private ContentResolver mContentResolver;
     private Cursor mMediaCursor;

@@ -18,12 +18,12 @@ public class BrowseActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        BrowseFragment browseFragment = (BrowseFragment) fragmentManager.findFragmentById(
+        TrackBrowseFragment browseFragment = (TrackBrowseFragment) fragmentManager.findFragmentById(
                 R.id.media_fragment_container
         );
 
         if (browseFragment == null) {
-            browseFragment = new BrowseFragment();
+            browseFragment = new TrackBrowseFragment();
             browseFragment.setRetainInstance(true);
         }
 
