@@ -7,7 +7,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class Media extends AppCompatActivity {
+public class BrowseActivity extends AppCompatActivity {
     private MediaStoreAudioAdapter mMediaStoreAudioAdapter;
 
     @Override
