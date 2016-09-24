@@ -8,7 +8,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 public class BrowseActivity extends AppCompatActivity {
-    private MediaStoreAudioAdapter mMediaStoreAudioAdapter;
+    private TrackBrowseFragment mTrackBrowseFragment;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,24 +18,24 @@ public class BrowseActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        TrackBrowseFragment browseFragment = (TrackBrowseFragment) fragmentManager.findFragmentById(
+        mTrackBrowseFragment = (TrackBrowseFragment) fragmentManager.findFragmentById(
                 R.id.media_fragment_container
         );
 
-        if (browseFragment == null) {
-            browseFragment = new TrackBrowseFragment();
-            browseFragment.setRetainInstance(true);
+        if (mTrackBrowseFragment == null) {
+            mTrackBrowseFragment = new TrackBrowseFragment();
+            mTrackBrowseFragment.setRetainInstance(true);
         }
 
-        mMediaStoreAudioAdapter = new MediaStoreAudioAdapter(this, getContentResolver());
-        browseFragment.setListAdapter(mMediaStoreAudioAdapter);
+        MediaStoreAudioAdapter mediaStoreAudioAdapter = new MediaStoreAudioAdapter(this, getContentResolver());
+        mTrackBrowseFragment.setListAdapter(mediaStoreAudioAdapter);
 
         if (savedInstanceState != null) {
             return;
         }
 
         getSupportFragmentManager().beginTransaction().add(R.id.media_fragment_container,
-                browseFragment).commit();
+                mTrackBrowseFragment).commit();
     }
 
     @Override
@@ -48,17 +48,11 @@ public class BrowseActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         switch (menuItem.getItemId()) {
             case R.id.sort_menu_button:
-                mMediaStoreAudioAdapter.sort();
+                mTrackBrowseFragment.sort();
                 return true;
 
             default:
                 return super.onOptionsItemSelected(menuItem);
         }
-    }
-
-    @Override
-    public void onDestroy() {
-        mMediaStoreAudioAdapter.close();
-        super.onDestroy();
     }
 }

@@ -19,10 +19,9 @@ import java.io.File;
  * TODO: Register as data observer so the list is updated when songs are added to the MediaStore
  */
 class MediaStoreAudioAdapter extends BaseAdapter {
-    private ContentResolver mContentResolver;
     private Cursor mMediaCursor;
     private LayoutInflater mInflater;
-    private boolean mSortedAscending = true;
+    private ContentResolver mContentResolver;
 
     private static class ViewHolder {
         TextView title;
@@ -32,51 +31,41 @@ class MediaStoreAudioAdapter extends BaseAdapter {
 
     MediaStoreAudioAdapter(Context context, ContentResolver contentResolver) {
         mContentResolver = contentResolver;
-        queryContentResolver();
-
         mInflater = LayoutInflater.from(context);
-    }
-
-    private void queryContentResolver() {
-        String sortOrder = MediaStore.Audio.Media.TITLE;
-        if (mSortedAscending) {
-            sortOrder += " ASC";
-        } else {
-            sortOrder += " DESC";
-        }
-
-        if (mMediaCursor != null) {
-            mMediaCursor.close();
-        }
-
-        // TODO: use cursorloader or other means of threading
-        mMediaCursor = mContentResolver.query(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                new String[] {
-                        MediaStore.Audio.Media._ID,
-                        MediaStore.Audio.Media.TITLE,
-                        MediaStore.Audio.Media.ARTIST,
-                        MediaStore.Audio.Media.ALBUM_ID
-                },
-                MediaStore.Audio.Media.IS_MUSIC + "=1",
-                null,
-                sortOrder
-        );
     }
 
     @Override
     public int getCount() {
-        return mMediaCursor.getCount();
+        if (mMediaCursor != null) {
+            return mMediaCursor.getCount();
+        }
+
+        return 0;
     }
 
     @Override
     public Object getItem(int position) {
-        return position;
+        if (mMediaCursor != null) {
+            mMediaCursor.moveToPosition(position);
+            return mMediaCursor;
+        }
+
+        return null;
     }
 
     @Override
     public long getItemId(int position) {
-        return position;
+        if (mMediaCursor != null) {
+            if (mMediaCursor.moveToPosition(position)) {
+                return mMediaCursor.getLong(
+                        mMediaCursor.getColumnIndex(MediaStore.Audio.Media._ID)
+                );
+            }
+
+            return 0;
+        }
+
+        return 0;
     }
 
     @Override
@@ -141,17 +130,16 @@ class MediaStoreAudioAdapter extends BaseAdapter {
         return convertView;
     }
 
-    public void sort() {
-        if (mSortedAscending) {
-            mSortedAscending = false;
-        } else {
-            mSortedAscending = true;
+    public void changeCursor(Cursor cursor) {
+        if (mMediaCursor != null) {
+            mMediaCursor.close();
         }
-        queryContentResolver();
-        notifyDataSetChanged();
-    }
 
-    public void close() {
-        mMediaCursor.close();
+        if (cursor != null) {
+            mMediaCursor = cursor;
+            notifyDataSetChanged();
+        } else {
+            notifyDataSetInvalidated();
+        }
     }
 }
