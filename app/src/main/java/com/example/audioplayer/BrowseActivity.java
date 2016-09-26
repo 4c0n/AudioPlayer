@@ -20,8 +20,6 @@ import java.util.List;
 public class BrowseActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener {
 
-    private TrackBrowseFragment mTrackBrowseFragment;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -30,26 +28,26 @@ public class BrowseActivity extends AppCompatActivity implements
         setSupportActionBar(toolbar);
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        mTrackBrowseFragment = (TrackBrowseFragment) fragmentManager.findFragmentById(
+        TrackBrowseFragment trackBrowseFragment = (TrackBrowseFragment) fragmentManager.findFragmentById(
                 R.id.media_fragment_container
         );
 
-        if (mTrackBrowseFragment == null) {
-            mTrackBrowseFragment = new TrackBrowseFragment();
-            mTrackBrowseFragment.setRetainInstance(true);
+        if (trackBrowseFragment == null) {
+            trackBrowseFragment = new TrackBrowseFragment();
+            trackBrowseFragment.setRetainInstance(true);
         }
 
         MediaStoreAudioAdapter mediaStoreAudioAdapter = new MediaStoreAudioAdapter(this,
                 getContentResolver());
 
-        mTrackBrowseFragment.setListAdapter(mediaStoreAudioAdapter);
+        trackBrowseFragment.setListAdapter(mediaStoreAudioAdapter);
 
         if (savedInstanceState != null) {
             return;
         }
 
         getSupportFragmentManager().beginTransaction().add(R.id.media_fragment_container,
-                mTrackBrowseFragment).commit();
+                trackBrowseFragment).commit();
     }
 
     @Override
@@ -73,7 +71,11 @@ public class BrowseActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem menuItem) {
         switch (menuItem.getItemId()) {
             case R.id.sort_menu_button:
-                mTrackBrowseFragment.sort();
+                FragmentManager fragmentManager = getSupportFragmentManager();
+                Sortable fragment = (Sortable) fragmentManager.findFragmentById(
+                        R.id.media_fragment_container
+                );
+                fragment.sort();
                 return true;
 
             default:

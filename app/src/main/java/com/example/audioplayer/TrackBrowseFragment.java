@@ -12,7 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 public class TrackBrowseFragment extends ListFragment implements
-        LoaderManager.LoaderCallbacks<Cursor> {
+        Sortable, LoaderManager.LoaderCallbacks<Cursor> {
 
     private static final int MEDIA_LOADER = 0;
 
