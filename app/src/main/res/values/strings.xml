@@ -1,8 +1,19 @@
 <resources>
     <string name="app_name">AudioPlayer</string>
-    <string name="no_media">No audio to browse&#8230;</string>
+    <string name="no_tracks">No tracks to browse&#8230;</string>
+    <string name="no_artists">No artists to browse&#8230;</string>
     <string name="track_image">
         Visual identifier for the track, this will usually be album art
     </string>
     <string name="menu_sort">Sort</string>
+    <string name="browse_type_tracks">Tracks</string>
+    <string name="browse_type_artists">Artists</string>
+    <string name="browse_type_albums">Albums</string>
+    <string name="browse_type_playlists">Playlists</string>
+    <string-array name="browse_types">
+        <item>@string/browse_type_tracks</item>
+        <item>@string/browse_type_artists</item>
+        <item>@string/browse_type_albums</item>
+        <item>@string/browse_type_playlists</item>
+    </string-array>
 </resources>
