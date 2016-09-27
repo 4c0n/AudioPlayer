@@ -7,36 +7,38 @@ import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class TrackBrowseFragment extends ListFragment implements
+public class ArtistBrowseFragment extends ListFragment implements
         Sortable, LoaderManager.LoaderCallbacks<Cursor> {
 
-    private static final int MEDIA_LOADER = 0;
+    private static final int ARTIST_BROWSE = 0;
 
     private String[] mColumns = {
-            MediaStore.Audio.Media._ID,
-            MediaStore.Audio.Media.TITLE,
-            MediaStore.Audio.Media.ARTIST,
-            MediaStore.Audio.Media.ALBUM_ID
+            MediaStore.Audio.Artists._ID,
+            MediaStore.Audio.Artists.ARTIST,
+            MediaStore.Audio.Artists.NUMBER_OF_ALBUMS,
+            MediaStore.Audio.Artists.NUMBER_OF_TRACKS
     };
     private boolean mSortedAscending = true;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        getLoaderManager().initLoader(MEDIA_LOADER, null, this);
+        getLoaderManager().initLoader(ARTIST_BROWSE, null, this);
 
-        return inflater.inflate(R.layout.fragment_track_browse, container, false);
+        return inflater.inflate(R.layout.fragment_artist_browse, container, false);
     }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
-            case MEDIA_LOADER:
-                String sortOrder = MediaStore.Audio.Media.TITLE_KEY;
+            case ARTIST_BROWSE:
+                String sortOrder = MediaStore.Audio.Artists.ARTIST_KEY;
                 if (mSortedAscending) {
                     sortOrder += " ASC";
                 } else {
@@ -45,13 +47,12 @@ public class TrackBrowseFragment extends ListFragment implements
 
                 return new CursorLoader(
                         getActivity(),
-                        MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                        MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI,
                         mColumns,
-                        MediaStore.Audio.Media.IS_MUSIC + "=1",
+                        null,
                         null,
                         sortOrder
                 );
-
             default:
                 return null;
         }
@@ -59,19 +60,24 @@ public class TrackBrowseFragment extends ListFragment implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        MediaStoreAudioAdapter adapter = (MediaStoreAudioAdapter) getListAdapter();
-        adapter.changeCursor(data);
+        SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) getListAdapter();
+        String[] columnNames = data.getColumnNames();
+        for (String columnName : columnNames) {
+            Log.d("4c0n", columnName);
+        }
+        cursorAdapter.changeCursor(data);
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        MediaStoreAudioAdapter adapter = (MediaStoreAudioAdapter) getListAdapter();
-        adapter.changeCursor(null);
+        SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) getListAdapter();
+        cursorAdapter.changeCursor(null);
     }
 
+    @Override
     public void sort() {
         mSortedAscending = !mSortedAscending;
 
-        getLoaderManager().restartLoader(MEDIA_LOADER, null, this);
+        getLoaderManager().restartLoader(ARTIST_BROWSE, null, this);
     }
 }
