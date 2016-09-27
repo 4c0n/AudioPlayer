@@ -38,7 +38,7 @@ class ArtistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
                                         numberOfAlbums
                                 ),
                                 mResources.getQuantityString(
-                                        R.plurals.artist_info_tracks,
+                                        R.plurals.tracks,
                                         numberOfTracks,
                                         numberOfTracks
                                 )

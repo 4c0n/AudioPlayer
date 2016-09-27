@@ -65,6 +65,35 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
+    private AlbumBrowseFragment initAlbumBrowseFragment() {
+        AlbumBrowseFragment fragment = new AlbumBrowseFragment();
+        fragment.setRetainInstance(true);
+
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.album_browse_list_item,
+                null,
+                new String[] {
+                        MediaStore.Audio.AlbumColumns.ALBUM_ART,
+                        MediaStore.Audio.AlbumColumns.ALBUM,
+                        MediaStore.Audio.AlbumColumns.NUMBER_OF_SONGS,
+                        MediaStore.Audio.AlbumColumns.ARTIST
+                },
+                new int[] {
+                        R.id.album_album_art,
+                        R.id.album_title,
+                        R.id.album_info,
+                        R.id.album_info
+                },
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+        adapter.setViewBinder(new AlbumBrowseViewBinder(getResources()));
+
+        fragment.setListAdapter(adapter);
+
+        return fragment;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("4c0n", "onCreate");
@@ -148,9 +177,10 @@ public class BrowseActivity extends AppCompatActivity implements
             }
 
             newFragment = initArtistBrowseFragment();
-        } /*else if (text.equals(getString(R.string.browse_type_albums))) {
+        } else if (text.equals(getString(R.string.browse_type_albums))) {
             Log.d("onItemSelected", "Albums");
-        } else if (text.equals(getString(R.string.browse_type_playlists))) {
+            newFragment = initAlbumBrowseFragment();
+        } /*else if (text.equals(getString(R.string.browse_type_playlists))) {
             Log.d("onItemSelected", "Playlists");
         } */else {
             throw new IllegalStateException("Unsupported item selected.");
