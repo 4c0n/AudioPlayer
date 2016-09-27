@@ -94,6 +94,24 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
+    private PlaylistBrowseFragment initPlaylistBrowseFragment() {
+        PlaylistBrowseFragment fragment = new PlaylistBrowseFragment();
+        fragment.setRetainInstance(true);
+
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.playlist_browse_list_item,
+                null,
+                new String[] {MediaStore.Audio.PlaylistsColumns.NAME},
+                new int[] {R.id.playlist_name},
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+
+        fragment.setListAdapter(adapter);
+
+        return fragment;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("4c0n", "onCreate");
@@ -104,6 +122,7 @@ public class BrowseActivity extends AppCompatActivity implements
 
         if (savedInstanceState != null) {
             mSpinnerPosition = savedInstanceState.getInt(SPINNER_POSITION_KEY);
+            // TODO Restore sorting state
         }
     }
 
@@ -165,24 +184,17 @@ public class BrowseActivity extends AppCompatActivity implements
 
         if (text.equals(getString(R.string.browse_type_tracks))) {
             Log.d("4c0n", "Tracks");
-            if (fragment instanceof TrackBrowseFragment) {
-                return;
-            }
-
             newFragment = initTrackBrowseFragment();
         } else if (text.equals(getString(R.string.browse_type_artists))) {
             Log.d("4c0n", "Artists");
-            if (fragment instanceof ArtistBrowseFragment) {
-                return;
-            }
-
             newFragment = initArtistBrowseFragment();
         } else if (text.equals(getString(R.string.browse_type_albums))) {
-            Log.d("onItemSelected", "Albums");
+            Log.d("4c0n", "Albums");
             newFragment = initAlbumBrowseFragment();
-        } /*else if (text.equals(getString(R.string.browse_type_playlists))) {
-            Log.d("onItemSelected", "Playlists");
-        } */else {
+        } else if (text.equals(getString(R.string.browse_type_playlists))) {
+            Log.d("4c0n", "Playlists");
+            newFragment = initPlaylistBrowseFragment();
+        } else {
             throw new IllegalStateException("Unsupported item selected.");
         }
 
