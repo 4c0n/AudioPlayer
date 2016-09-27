@@ -75,8 +75,8 @@ public class ArtistBrowseFragment extends ListFragment implements
     }
 
     @Override
-    public void sort() {
-        mSortedAscending = !mSortedAscending;
+    public void sort(boolean ascending) {
+        mSortedAscending = ascending;
 
         getLoaderManager().restartLoader(ARTIST_BROWSE, null, this);
     }

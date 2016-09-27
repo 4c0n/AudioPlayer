@@ -72,8 +72,8 @@ public class AlbumBrowseFragment extends ListFragment implements
     }
 
     @Override
-    public void sort() {
-        mSortedAscending = !mSortedAscending;
+    public void sort(boolean ascending) {
+        mSortedAscending = ascending;
 
         getLoaderManager().restartLoader(ALBUM_BROWSE, null, this);
     }

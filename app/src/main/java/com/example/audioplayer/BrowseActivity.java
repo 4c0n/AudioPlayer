@@ -21,8 +21,10 @@ import android.widget.TextView;
 public class BrowseActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener {
     private static final String SPINNER_POSITION_KEY = "spinnerPosition";
+    private static final String LIST_SORTED_ASCENDING = "sortedAscending";
 
     private int mSpinnerPosition = 0;
+    private boolean mSortedAscending = true;
 
     private TrackBrowseFragment initTrackBrowseFragment() {
         Log.d("4c0n", "initTrackBrowseFragment");
@@ -122,7 +124,7 @@ public class BrowseActivity extends AppCompatActivity implements
 
         if (savedInstanceState != null) {
             mSpinnerPosition = savedInstanceState.getInt(SPINNER_POSITION_KEY);
-            // TODO Restore sorting state
+            mSortedAscending = savedInstanceState.getBoolean(LIST_SORTED_ASCENDING);
         }
     }
 
@@ -143,13 +145,13 @@ public class BrowseActivity extends AppCompatActivity implements
         browseTypeSpinner.setOnItemSelectedListener(this);
         browseTypeSpinner.setSelection(mSpinnerPosition);
 
-
         return super.onCreateOptionsMenu(menu);
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt(SPINNER_POSITION_KEY, mSpinnerPosition);
+        outState.putBoolean(LIST_SORTED_ASCENDING, mSortedAscending);
     }
 
     @Override
@@ -160,7 +162,8 @@ public class BrowseActivity extends AppCompatActivity implements
                 Sortable fragment = (Sortable) fragmentManager.findFragmentById(
                         R.id.media_fragment_container
                 );
-                fragment.sort();
+                mSortedAscending = !mSortedAscending;
+                fragment.sort(mSortedAscending);
                 return true;
 
             default:
@@ -178,7 +181,9 @@ public class BrowseActivity extends AppCompatActivity implements
                 R.id.media_fragment_container
         );
 
-        Log.d("4c0n", fragment == null ? "NULL" : "NOT NULL");
+        if (fragment != null) {
+            mSortedAscending = true;
+        }
 
         ListFragment newFragment;
 

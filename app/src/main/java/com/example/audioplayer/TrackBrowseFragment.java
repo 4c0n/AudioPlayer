@@ -69,8 +69,8 @@ public class TrackBrowseFragment extends ListFragment implements
         adapter.changeCursor(null);
     }
 
-    public void sort() {
-        mSortedAscending = !mSortedAscending;
+    public void sort(boolean ascending) {
+        mSortedAscending = ascending;
 
         getLoaderManager().restartLoader(MEDIA_LOADER, null, this);
     }

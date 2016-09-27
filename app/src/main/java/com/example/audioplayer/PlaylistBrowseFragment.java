@@ -68,8 +68,8 @@ public class PlaylistBrowseFragment extends ListFragment implements
     }
 
     @Override
-    public void sort() {
-        mSortedAscending = !mSortedAscending;
+    public void sort(boolean ascending) {
+        mSortedAscending = ascending;
 
         getLoaderManager().restartLoader(PLAYLIST_BROWSE, null, this);
     }

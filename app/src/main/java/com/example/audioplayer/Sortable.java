@@ -1,5 +1,5 @@
 package com.example.audioplayer;
 
 interface Sortable {
-    void sort();
+    void sort(boolean ascending);
 }
