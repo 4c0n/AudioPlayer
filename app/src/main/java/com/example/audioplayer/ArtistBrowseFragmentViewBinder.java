@@ -11,7 +11,7 @@ import android.widget.TextView;
 class ArtistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
     private Resources mResources;
 
-    public ArtistBrowseFragmentViewBinder(Resources resources) {
+    ArtistBrowseFragmentViewBinder(Resources resources) {
         mResources = resources;
     }
 

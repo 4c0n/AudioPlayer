@@ -87,7 +87,7 @@ public class BrowseActivity extends AppCompatActivity implements
                 },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
-        adapter.setViewBinder(new AlbumBrowseViewBinder(getResources()));
+        adapter.setViewBinder(new AlbumBrowseFragmentViewBinder(getResources()));
 
         fragment.setListAdapter(adapter);
 
