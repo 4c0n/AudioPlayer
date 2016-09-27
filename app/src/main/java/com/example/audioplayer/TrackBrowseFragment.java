@@ -36,7 +36,7 @@ public class TrackBrowseFragment extends ListFragment implements
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case MEDIA_LOADER:
-                String sortOrder = MediaStore.Audio.Media.TITLE;
+                String sortOrder = MediaStore.Audio.Media.TITLE_KEY;
                 if (mSortedAscending) {
                     sortOrder += " ASC";
                 } else {

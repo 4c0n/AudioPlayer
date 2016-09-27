@@ -1,9 +1,12 @@
 package com.example.audioplayer;
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
+import android.provider.MediaStore;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.ListFragment;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -15,43 +18,70 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-import java.util.List;
-
 public class BrowseActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener {
+    private static final String SPINNER_POSITION_KEY = "spinnerPosition";
+
+    private int mSpinnerPosition = 0;
+
+    private TrackBrowseFragment initTrackBrowseFragment() {
+        Log.d("4c0n", "initTrackBrowseFragment");
+        TrackBrowseFragment fragment = new TrackBrowseFragment();
+        fragment.setRetainInstance(true);
+
+        MediaStoreAudioAdapter mediaStoreAudioAdapter = new MediaStoreAudioAdapter(this,
+                getContentResolver());
+
+        fragment.setListAdapter(mediaStoreAudioAdapter);
+
+        return fragment;
+    }
+
+    private ArtistBrowseFragment initArtistBrowseFragment() {
+        Log.d("4c0n", "initArtistBrowseFragment");
+        ArtistBrowseFragment fragment = new ArtistBrowseFragment();
+        fragment.setRetainInstance(true);
+
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.artist_browse_list_item,
+                null,
+                new String[] {
+                        MediaStore.Audio.ArtistColumns.ARTIST,
+                        MediaStore.Audio.ArtistColumns.NUMBER_OF_ALBUMS,
+                        MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS
+                },
+                new int[] {
+                        R.id.artist_name,
+                        R.id.artist_info,
+                        R.id.artist_info
+                },
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+        adapter.setViewBinder(new ArtistBrowseFragmentViewBinder(getResources()));
+
+        fragment.setListAdapter(adapter);
+
+        return fragment;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d("4c0n", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media);
         Toolbar toolbar = (Toolbar) findViewById(R.id.media_toolbar);
         setSupportActionBar(toolbar);
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        TrackBrowseFragment trackBrowseFragment = (TrackBrowseFragment) fragmentManager.findFragmentById(
-                R.id.media_fragment_container
-        );
-
-        if (trackBrowseFragment == null) {
-            trackBrowseFragment = new TrackBrowseFragment();
-            trackBrowseFragment.setRetainInstance(true);
-        }
-
-        MediaStoreAudioAdapter mediaStoreAudioAdapter = new MediaStoreAudioAdapter(this,
-                getContentResolver());
-
-        trackBrowseFragment.setListAdapter(mediaStoreAudioAdapter);
-
         if (savedInstanceState != null) {
-            return;
+            mSpinnerPosition = savedInstanceState.getInt(SPINNER_POSITION_KEY);
         }
-
-        getSupportFragmentManager().beginTransaction().add(R.id.media_fragment_container,
-                trackBrowseFragment).commit();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        Log.d("4c0n", "create");
+
         getMenuInflater().inflate(R.menu.browse_menu, menu);
 
         MenuItem item = menu.findItem(R.id.menu_browse_type);
@@ -63,8 +93,15 @@ public class BrowseActivity extends AppCompatActivity implements
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         browseTypeSpinner.setAdapter(spinnerAdapter);
         browseTypeSpinner.setOnItemSelectedListener(this);
+        browseTypeSpinner.setSelection(mSpinnerPosition);
+
 
         return super.onCreateOptionsMenu(menu);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt(SPINNER_POSITION_KEY, mSpinnerPosition);
     }
 
     @Override
@@ -89,18 +126,41 @@ public class BrowseActivity extends AppCompatActivity implements
         String text = textView.getText().toString();
 
         FragmentManager fragmentManager = getSupportFragmentManager();
-        List<Fragment> fragmentList = fragmentManager.getFragments();
+        ListFragment fragment = (ListFragment) fragmentManager.findFragmentById(
+                R.id.media_fragment_container
+        );
 
+        Log.d("4c0n", fragment == null ? "NULL" : "NOT NULL");
+
+        ListFragment newFragment;
 
         if (text.equals(getString(R.string.browse_type_tracks))) {
-            Log.d("onItemSelected", "Tracks");
+            Log.d("4c0n", "Tracks");
+            if (fragment instanceof TrackBrowseFragment) {
+                return;
+            }
+
+            newFragment = initTrackBrowseFragment();
         } else if (text.equals(getString(R.string.browse_type_artists))) {
-            Log.d("onItemSelected", "Artists");
-        } else if (text.equals(getString(R.string.browse_type_albums))) {
+            Log.d("4c0n", "Artists");
+            if (fragment instanceof ArtistBrowseFragment) {
+                return;
+            }
+
+            newFragment = initArtistBrowseFragment();
+        } /*else if (text.equals(getString(R.string.browse_type_albums))) {
             Log.d("onItemSelected", "Albums");
         } else if (text.equals(getString(R.string.browse_type_playlists))) {
             Log.d("onItemSelected", "Playlists");
+        } */else {
+            throw new IllegalStateException("Unsupported item selected.");
         }
+
+        FragmentTransaction transaction = fragmentManager.beginTransaction();
+        transaction.replace(R.id.media_fragment_container, newFragment);
+        transaction.commit();
+
+        mSpinnerPosition = position;
     }
 
     @Override

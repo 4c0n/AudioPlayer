@@ -73,7 +73,7 @@ class MediaStoreAudioAdapter extends BaseAdapter {
         ViewHolder holder;
 
         if (convertView == null) {
-            convertView = mInflater.inflate(R.layout.list_item, parent, false);
+            convertView = mInflater.inflate(R.layout.track_browse_list_item, parent, false);
 
             holder = new ViewHolder();
             holder.title = (TextView) convertView.findViewById(R.id.track_title);

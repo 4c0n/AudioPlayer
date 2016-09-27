@@ -16,4 +16,13 @@
         <item>@string/browse_type_albums</item>
         <item>@string/browse_type_playlists</item>
     </string-array>
+    <plurals name="artist_info_albums">
+        <item quantity="one">%d album</item>
+        <item quantity="other">%d albums</item>
+    </plurals>
+    <plurals name="artist_info_tracks">
+        <item quantity="one">%d track</item>
+        <item quantity="other">%d tracks</item>
+    </plurals>
+    <string name="artist_info">%1$s, %2$s</string>
 </resources>
