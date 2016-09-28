@@ -49,6 +49,10 @@ public class BrowseActivity extends AppCompatActivity implements
                 BrowseFragment.ARGUMENT_SELECTION,
                 MediaStore.Audio.Media.IS_MUSIC + "=1"
         );
+        arguments.putString(
+                BrowseFragment.ARGUMENT_EMPTY_TEXT,
+                getString(R.string.no_tracks)
+        );
 
         BrowseFragment fragment = new BrowseFragment();
         fragment.setArguments(arguments);
@@ -80,6 +84,10 @@ public class BrowseActivity extends AppCompatActivity implements
                         MediaStore.Audio.ArtistColumns.NUMBER_OF_ALBUMS,
                         MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS
                 }
+        );
+        arguments.putString(
+                BrowseFragment.ARGUMENT_EMPTY_TEXT,
+                getString(R.string.no_artists)
         );
 
         BrowseFragment fragment = new BrowseFragment();
@@ -129,6 +137,10 @@ public class BrowseActivity extends AppCompatActivity implements
                         MediaStore.Audio.AlbumColumns.NUMBER_OF_SONGS
                 }
         );
+        arguments.putString(
+                BrowseFragment.ARGUMENT_EMPTY_TEXT,
+                getString(R.string.no_albums)
+        );
 
         BrowseFragment fragment = new BrowseFragment();
         fragment.setArguments(arguments);
@@ -176,6 +188,10 @@ public class BrowseActivity extends AppCompatActivity implements
                         MediaStore.Audio.PlaylistsColumns.NAME
                 }
         );
+        arguments.putString(
+                BrowseFragment.ARGUMENT_EMPTY_TEXT,
+                getString(R.string.no_playlists)
+        );
 
         BrowseFragment fragment = new BrowseFragment();
         fragment.setArguments(arguments);
@@ -211,6 +227,10 @@ public class BrowseActivity extends AppCompatActivity implements
                         MediaStore.Audio.Genres._ID,
                         MediaStore.Audio.GenresColumns.NAME
                 }
+        );
+        arguments.putString(
+                BrowseFragment.ARGUMENT_EMPTY_TEXT,
+                getString(R.string.no_genres)
         );
 
         BrowseFragment fragment = new BrowseFragment();

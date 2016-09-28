@@ -12,6 +12,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ListAdapter;
+import android.widget.TextView;
 
 public class BrowseFragment extends ListFragment implements
         Sortable, LoaderManager.LoaderCallbacks<Cursor> {
@@ -22,6 +23,7 @@ public class BrowseFragment extends ListFragment implements
     public static final String ARGUMENT_CONTENT_URI = "contentURI";
     public static final String ARGUMENT_COLUMNS = "columns";
     public static final String ARGUMENT_SELECTION = "selection";
+    public static final String ARGUMENT_EMPTY_TEXT = "empyText";
 
     private boolean mSortedAscending = true;
 
@@ -67,6 +69,18 @@ public class BrowseFragment extends ListFragment implements
         } else if (adapter instanceof  MediaStoreAudioAdapter) {
             MediaStoreAudioAdapter mediaStoreAudioAdapter = (MediaStoreAudioAdapter) adapter;
             mediaStoreAudioAdapter.changeCursor(data);
+        }
+
+        TextView emptyView = (TextView) getView().findViewById(R.id.no_data);
+        View loadingView = getView().findViewById(R.id.loading_data);
+
+        if (data.getCount() > 0) {
+            emptyView.setVisibility(View.INVISIBLE);
+            loadingView.setVisibility(View.VISIBLE);
+        } else {
+            emptyView.setVisibility(View.VISIBLE);
+            emptyView.setText(getArguments().getString(ARGUMENT_EMPTY_TEXT));
+            loadingView.setVisibility(View.INVISIBLE);
         }
     }
 
