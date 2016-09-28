@@ -39,9 +39,29 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
-    private ArtistBrowseFragment initArtistBrowseFragment() {
+    private BrowseFragment initArtistBrowseFragment() {
         Log.d("4c0n", "initArtistBrowseFragment");
-        ArtistBrowseFragment fragment = new ArtistBrowseFragment();
+        Bundle arguments = new Bundle();
+        arguments.putString(
+                BrowseFragment.ARGUMENT_SORT_COLUMN,
+                MediaStore.Audio.Artists.ARTIST_KEY
+        );
+        arguments.putParcelable(
+                BrowseFragment.ARGUMENT_CONTENT_URI,
+                MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI
+        );
+        arguments.putStringArray(
+                BrowseFragment.ARGUMENT_COLUMNS,
+                new String[] {
+                        MediaStore.Audio.Artists._ID,
+                        MediaStore.Audio.ArtistColumns.ARTIST,
+                        MediaStore.Audio.ArtistColumns.NUMBER_OF_ALBUMS,
+                        MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS
+                }
+        );
+
+        BrowseFragment fragment = new BrowseFragment();
+        fragment.setArguments(arguments);
         fragment.setRetainInstance(true);
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
