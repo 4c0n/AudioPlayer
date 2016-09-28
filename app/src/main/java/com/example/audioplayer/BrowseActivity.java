@@ -195,8 +195,26 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
-    private GenreBrowseFragment initGenreBrowseFragment() {
-        GenreBrowseFragment fragment = new GenreBrowseFragment();
+    private BrowseFragment initGenreBrowseFragment() {
+        Bundle arguments = new Bundle();
+        arguments.putString(
+                BrowseFragment.ARGUMENT_SORT_COLUMN,
+                MediaStore.Audio.GenresColumns.NAME
+        );
+        arguments.putParcelable(
+                BrowseFragment.ARGUMENT_CONTENT_URI,
+                MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI
+        );
+        arguments.putStringArray(
+                BrowseFragment.ARGUMENT_COLUMNS,
+                new String[] {
+                        MediaStore.Audio.Genres._ID,
+                        MediaStore.Audio.GenresColumns.NAME
+                }
+        );
+
+        BrowseFragment fragment = new BrowseFragment();
+        fragment.setArguments(arguments);
         fragment.setRetainInstance(true);
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
@@ -284,8 +302,7 @@ public class BrowseActivity extends AppCompatActivity implements
             mSortedAscending = true;
         }
 
-        // TODO: change to BrowseFragment
-        ListFragment newFragment;
+        BrowseFragment newFragment;
 
         if (text.equals(getString(R.string.browse_type_tracks))) {
             Log.d("4c0n", "Tracks");
