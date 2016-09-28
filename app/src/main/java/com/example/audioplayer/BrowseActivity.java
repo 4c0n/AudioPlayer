@@ -114,6 +114,24 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
+    private GenreBrowseFragment initGenreBrowseFragment() {
+        GenreBrowseFragment fragment = new GenreBrowseFragment();
+        fragment.setRetainInstance(true);
+
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.genre_browse_list_item,
+                null,
+                new String[] {MediaStore.Audio.GenresColumns.NAME},
+                new int[] {R.id.genre_name},
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+
+        fragment.setListAdapter(adapter);
+
+        return fragment;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("4c0n", "onCreate");
@@ -199,6 +217,9 @@ public class BrowseActivity extends AppCompatActivity implements
         } else if (text.equals(getString(R.string.browse_type_playlists))) {
             Log.d("4c0n", "Playlists");
             newFragment = initPlaylistBrowseFragment();
+        } else if (text.equals(getString(R.string.browse_type_genres))) {
+            Log.d("4c0n", "Genres");
+            newFragment = initGenreBrowseFragment();
         } else {
             throw new IllegalStateException("Unsupported item selected.");
         }
