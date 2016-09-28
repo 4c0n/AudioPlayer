@@ -26,9 +26,32 @@ public class BrowseActivity extends AppCompatActivity implements
     private int mSpinnerPosition = 0;
     private boolean mSortedAscending = true;
 
-    private TrackBrowseFragment initTrackBrowseFragment() {
-        Log.d("4c0n", "initTrackBrowseFragment");
-        TrackBrowseFragment fragment = new TrackBrowseFragment();
+    private BrowseFragment initTrackBrowseFragment() {
+        Bundle arguments = new Bundle();
+        arguments.putString(
+                BrowseFragment.ARGUMENT_SORT_COLUMN,
+                MediaStore.Audio.Media.TITLE_KEY
+        );
+        arguments.putParcelable(
+                BrowseFragment.ARGUMENT_CONTENT_URI,
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        );
+        arguments.putStringArray(
+                BrowseFragment.ARGUMENT_COLUMNS,
+                new String[] {
+                        MediaStore.Audio.Media._ID,
+                        MediaStore.Audio.Media.TITLE,
+                        MediaStore.Audio.Media.ARTIST,
+                        MediaStore.Audio.Media.ALBUM_ID
+                }
+        );
+        arguments.putString(
+                BrowseFragment.ARGUMENT_SELECTION,
+                MediaStore.Audio.Media.IS_MUSIC + "=1"
+        );
+
+        BrowseFragment fragment = new BrowseFragment();
+        fragment.setArguments(arguments);
         fragment.setRetainInstance(true);
 
         MediaStoreAudioAdapter mediaStoreAudioAdapter = new MediaStoreAudioAdapter(this,
@@ -40,7 +63,6 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     private BrowseFragment initArtistBrowseFragment() {
-        Log.d("4c0n", "initArtistBrowseFragment");
         Bundle arguments = new Bundle();
         arguments.putString(
                 BrowseFragment.ARGUMENT_SORT_COLUMN,
