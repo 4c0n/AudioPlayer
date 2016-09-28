@@ -28,7 +28,7 @@ public class GenreBrowseFragment extends ListFragment implements
                              Bundle savedInstanceState) {
         getLoaderManager().initLoader(GENRE_BROWSE, null, this);
 
-        return inflater.inflate(R.layout.fragment_genre_browse, container, false);
+        return inflater.inflate(R.layout.fragment_browse, container, false);
     }
 
     @Override

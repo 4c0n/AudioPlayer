@@ -29,7 +29,7 @@ public class TrackBrowseFragment extends ListFragment implements
                              Bundle savedInstanceState) {
         getLoaderManager().initLoader(MEDIA_LOADER, null, this);
 
-        return inflater.inflate(R.layout.fragment_track_browse, container, false);
+        return inflater.inflate(R.layout.fragment_browse, container, false);
     }
 
     @Override

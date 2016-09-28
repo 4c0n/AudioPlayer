@@ -31,7 +31,7 @@ public class AlbumBrowseFragment extends ListFragment implements
                              Bundle savedInstanceState) {
         getLoaderManager().initLoader(ALBUM_BROWSE, null, this);
 
-        return inflater.inflate(R.layout.fragment_album_browse, container, false);
+        return inflater.inflate(R.layout.fragment_browse, container, false);
     }
 
     @Override

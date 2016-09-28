@@ -27,7 +27,7 @@ public class PlaylistBrowseFragment extends ListFragment implements
                              Bundle savedInstanceState) {
         getLoaderManager().initLoader(PLAYLIST_BROWSE, null, this);
 
-        return inflater.inflate(R.layout.fragment_playlist_browse, container, false);
+        return inflater.inflate(R.layout.fragment_browse, container, false);
     }
 
     @Override
