@@ -29,8 +29,8 @@ class MediaStoreAudioAdapter extends BaseAdapter {
         ImageView albumArt;
     }
 
-    MediaStoreAudioAdapter(Context context, ContentResolver contentResolver) {
-        mContentResolver = contentResolver;
+    MediaStoreAudioAdapter(Context context) {
+        mContentResolver = context.getContentResolver();
         mInflater = LayoutInflater.from(context);
     }
 
