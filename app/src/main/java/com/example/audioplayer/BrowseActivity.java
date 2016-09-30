@@ -55,6 +55,7 @@ public class BrowseActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media);
         Toolbar toolbar = (Toolbar) findViewById(R.id.media_toolbar);
+        toolbar.setTitle("");
         setSupportActionBar(toolbar);
 
         if (savedInstanceState != null) {

@@ -120,7 +120,6 @@ class MediaStoreAudioAdapter extends BaseAdapter {
                 );
 
                 if (albumArtStr != null) {
-                    Log.d("albumart", albumArtStr);
                     holder.albumArt.setImageURI(Uri.fromFile(new File(albumArtStr)));
                 }
             }
@@ -130,7 +129,7 @@ class MediaStoreAudioAdapter extends BaseAdapter {
         return convertView;
     }
 
-    public void changeCursor(Cursor cursor) {
+    void changeCursor(Cursor cursor) {
         if (mMediaCursor != null) {
             mMediaCursor.close();
         }

@@ -45,7 +45,6 @@ class TrackBrowseFragmentInitializer implements BrowseFragmentInitializer {
         fragment.setRetainInstance(true);
 
         MediaStoreAudioAdapter mediaStoreAudioAdapter = new MediaStoreAudioAdapter(mContext);
-
         fragment.setListAdapter(mediaStoreAudioAdapter);
 
         return fragment;
