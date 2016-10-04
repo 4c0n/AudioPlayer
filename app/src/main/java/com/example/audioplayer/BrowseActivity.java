@@ -57,7 +57,7 @@ public class BrowseActivity extends AppCompatActivity implements
         Log.d("4c0n", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_media);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.media_toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.browse_activity_toolbar);
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
 
@@ -71,10 +71,9 @@ public class BrowseActivity extends AppCompatActivity implements
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d("4c0n", "create");
 
-        getMenuInflater().inflate(R.menu.browse_menu, menu);
+        //getMenuInflater().inflate(R.menu.browse_activity_menu, menu);
 
-        MenuItem item = menu.findItem(R.id.menu_browse_type);
-        Spinner browseTypeSpinner = (Spinner) MenuItemCompat.getActionView(item);
+        Spinner browseTypeSpinner = (Spinner) findViewById(R.id.browse_type_spinner);
 
         ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this,
                 R.array.browse_types, android.R.layout.simple_spinner_item);
@@ -84,7 +83,7 @@ public class BrowseActivity extends AppCompatActivity implements
         browseTypeSpinner.setOnItemSelectedListener(this);
         browseTypeSpinner.setSelection(mSpinnerPosition);
 
-        return super.onCreateOptionsMenu(menu);
+        return true;
     }
 
     @Override
