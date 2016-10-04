@@ -5,15 +5,8 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.widget.SimpleCursorAdapter;
 
-class AlbumBrowseFragmentInitializer implements BrowseFragmentInitializer {
-    private Context mContext;
-
-    public AlbumBrowseFragmentInitializer(Context context) {
-        mContext = context;
-    }
-
-    @Override
-    public BrowseFragment initialize() {
+public class AlbumBrowseFragment extends BrowseFragment {
+    public static AlbumBrowseFragment getInstance(Context context, boolean sortedAscending) {
         Bundle arguments = new Bundle();
         arguments.putString(
                 BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -35,15 +28,15 @@ class AlbumBrowseFragmentInitializer implements BrowseFragmentInitializer {
         );
         arguments.putString(
                 BrowseFragment.ARGUMENT_EMPTY_TEXT,
-                mContext.getString(R.string.no_albums)
+                context.getString(R.string.no_albums)
         );
 
-        BrowseFragment fragment = new BrowseFragment();
+        AlbumBrowseFragment fragment = new AlbumBrowseFragment();
         fragment.setArguments(arguments);
-        fragment.setRetainInstance(true);
+        fragment.setSortedAscending(sortedAscending);
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                mContext,
+                context,
                 R.layout.album_browse_list_item,
                 null,
                 new String[] {
@@ -60,7 +53,7 @@ class AlbumBrowseFragmentInitializer implements BrowseFragmentInitializer {
                 },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
-        adapter.setViewBinder(new AlbumBrowseFragmentViewBinder(mContext.getResources()));
+        adapter.setViewBinder(new AlbumBrowseFragmentViewBinder(context.getResources()));
 
         fragment.setListAdapter(adapter);
 

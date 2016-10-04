@@ -36,8 +36,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     private BrowseFragment initAlbumBrowseFragment() {
-        AlbumBrowseFragmentInitializer initializer = new AlbumBrowseFragmentInitializer(this);
-        return initializer.initialize();
+        return AlbumBrowseFragment.getInstance(this, mSortedAscending);
     }
 
     private BrowseFragment initPlaylistBrowseFragment() {
