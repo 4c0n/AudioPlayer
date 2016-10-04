@@ -8,18 +8,19 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.ImageButton;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
 public class BrowseFragment extends ListFragment implements
-        Sortable, LoaderManager.LoaderCallbacks<Cursor> {
+        Sortable, LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener {
 
     private static final int BROWSE_LOADER = 0;
-
     public static final String ARGUMENT_SORT_COLUMN = "sortColumn";
     public static final String ARGUMENT_CONTENT_URI = "contentURI";
     public static final String ARGUMENT_COLUMNS = "columns";
@@ -30,12 +31,30 @@ public class BrowseFragment extends ListFragment implements
 
     private AdapterView.OnItemClickListener mOnItemClickListener;
 
+    public BrowseFragment() {
+        Log.d("4c0n", "BrowseFragment");
+    }
+
+    public void setSortedAscending(boolean ascending) {
+        mSortedAscending = ascending;
+    }
+
+    public boolean getSortedAscending() {
+        return mSortedAscending;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        getLoaderManager().initLoader(BROWSE_LOADER, null, this);
 
-        return inflater.inflate(R.layout.fragment_browse, container, false);
+        View view = inflater.inflate(R.layout.fragment_browse, container, false);
+        ImageButton sortButton = (ImageButton) view.findViewById(R.id.sort_menu_button);
+        sortButton.setOnClickListener(this);
+
+        Log.d("4c0n", "onCreateView " + mSortedAscending);
+        getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
+
+        return view;
     }
 
     @Override
@@ -49,6 +68,7 @@ public class BrowseFragment extends ListFragment implements
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        Log.d("4c0n", "onCreateLoader " + mSortedAscending);
         switch (id) {
             case BROWSE_LOADER:
                 Bundle arguments = getArguments();
@@ -76,6 +96,7 @@ public class BrowseFragment extends ListFragment implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        Log.d("4c0n", "onLoadFinished");
         ListAdapter adapter = getListAdapter();
         if (adapter instanceof SimpleCursorAdapter) {
             SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) adapter;
@@ -118,5 +139,12 @@ public class BrowseFragment extends ListFragment implements
 
     public void setOnItemClickListener(AdapterView.OnItemClickListener listener) {
         mOnItemClickListener = listener;
+    }
+
+    @Override
+    public void onClick(View v) {
+        if (v.getId() == R.id.sort_menu_button) {
+            sort(!mSortedAscending);
+        }
     }
 }

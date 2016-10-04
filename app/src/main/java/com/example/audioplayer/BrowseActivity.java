@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
-import android.support.v4.view.MenuItemCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -25,8 +24,7 @@ public class BrowseActivity extends AppCompatActivity implements
     private boolean mSortedAscending = true;
 
     private BrowseFragment initTrackBrowseFragment() {
-        TrackBrowseFragmentInitializer initializer = new TrackBrowseFragmentInitializer(this);
-        return initializer.initialize();
+        return TrackBrowseFragment.getInstance(this, mSortedAscending);
     }
 
     private BrowseFragment initArtistBrowseFragment() {
@@ -89,27 +87,13 @@ public class BrowseActivity extends AppCompatActivity implements
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt(SPINNER_POSITION_KEY, mSpinnerPosition);
-        outState.putBoolean(LIST_SORTED_ASCENDING, mSortedAscending);
-    }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem menuItem) {
-        /*
-         * TODO: Move sorting to BrowseFragment
-         */
-        switch (menuItem.getItemId()) {
-            case R.id.sort_menu_button:
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                Sortable fragment = (Sortable) fragmentManager.findFragmentById(
-                        R.id.media_fragment_container
-                );
-                mSortedAscending = !mSortedAscending;
-                fragment.sort(mSortedAscending);
-                return true;
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        BrowseFragment fragment = (BrowseFragment) fragmentManager.findFragmentById(
+                R.id.media_fragment_container
+        );
 
-            default:
-                return super.onOptionsItemSelected(menuItem);
-        }
+        outState.putBoolean(LIST_SORTED_ASCENDING, fragment.getSortedAscending());
     }
 
     @Override
