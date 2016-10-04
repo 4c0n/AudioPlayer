@@ -33,7 +33,13 @@ public class ArtistDetailsFragment extends Fragment implements
         getLoaderManager().initLoader(ALBUM_LOADER, null, this);
         getLoaderManager().initLoader(TRACK_LOADER, null, this);
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_artist_details, container, false);
+
+        View view = inflater.inflate(R.layout.fragment_artist_details, container, false);
+        ExpandableListView listView = (ExpandableListView) view.findViewById(
+                R.id.artist_detail_list
+        );
+        listView.setGroupIndicator(null);
+        return view;
     }
 
     @Override
