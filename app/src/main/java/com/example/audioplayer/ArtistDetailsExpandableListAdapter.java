@@ -59,7 +59,7 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
     @Override
     public int getChildrenCount(int groupPosition) {
         Cursor cursor = mCursors[groupPosition];
-        if (cursor != null) {
+        if (cursor != null && !cursor.isClosed()) {
             return cursor.getCount();
         }
 
