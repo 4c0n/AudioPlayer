@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -115,6 +116,8 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
         TextView textView = (TextView) convertView;
         textView.setText(PARENT_ITEMS[groupPosition]);
 
+        ((ExpandableListView) parent).expandGroup(groupPosition);
+
         return textView;
     }
 
@@ -147,23 +150,11 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
             );
             albumTitle.setText(title);
 
-            // TODO: this code is similar to that in AlbumBrowseViewBinder, refactoring is in order
             int numberOfTracks = cursor.getInt(
                     cursor.getColumnIndex(MediaStore.Audio.AlbumColumns.NUMBER_OF_SONGS)
             );
-            String artist = cursor.getString(
-                    cursor.getColumnIndex(MediaStore.Audio.AlbumColumns.ARTIST)
-            );
             albumInfo.setText(
-                    mResources.getString(
-                            R.string.album_info,
-                            mResources.getQuantityString(
-                                    R.plurals.tracks,
-                                    numberOfTracks,
-                                    numberOfTracks
-                            ),
-                            artist
-                    )
+                    mResources.getQuantityString(R.plurals.tracks, numberOfTracks, numberOfTracks)
             );
         } else {
             // Tracks
@@ -180,7 +171,7 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
                     cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
             );
 
-            // TODO: use cursorloader or other means of threading
+            // TODO: use cursor loader or other means of threading
             Cursor albumCursor = mContentResolver.query(
                     MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
                     new String[] {MediaStore.Audio.Albums.ALBUM_ART},

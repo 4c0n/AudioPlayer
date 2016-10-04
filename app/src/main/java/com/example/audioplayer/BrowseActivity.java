@@ -30,7 +30,10 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     private BrowseFragment initArtistBrowseFragment() {
-        ArtistBrowseFragmentInitializer initializer = new ArtistBrowseFragmentInitializer(this);
+        ArtistBrowseFragmentInitializer initializer = new ArtistBrowseFragmentInitializer(
+                this,
+                getSupportFragmentManager()
+        );
         return initializer.initialize();
     }
 
@@ -92,6 +95,9 @@ public class BrowseActivity extends AppCompatActivity implements
 
     @Override
     public boolean onOptionsItemSelected(MenuItem menuItem) {
+        /*
+         * TODO: Move sorting to BrowseFragment
+         */
         switch (menuItem.getItemId()) {
             case R.id.sort_menu_button:
                 FragmentManager fragmentManager = getSupportFragmentManager();

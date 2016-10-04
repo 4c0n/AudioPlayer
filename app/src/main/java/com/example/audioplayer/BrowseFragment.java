@@ -11,6 +11,7 @@ import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListAdapter;
 import android.widget.TextView;
 
@@ -27,11 +28,24 @@ public class BrowseFragment extends ListFragment implements
 
     private boolean mSortedAscending = true;
 
+    private AdapterView.OnItemClickListener mOnItemClickListener;
+
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
         getLoaderManager().initLoader(BROWSE_LOADER, null, this);
 
-        return inflater.inflate(R.layout.fragment_browse, container, false);    }
+        return inflater.inflate(R.layout.fragment_browse, container, false);
+    }
+
+    @Override
+    public void onViewCreated(View view, Bundle savedInstanceState) {
+        if (mOnItemClickListener != null) {
+            getListView().setOnItemClickListener(mOnItemClickListener);
+        }
+
+        super.onViewCreated(view, savedInstanceState);
+    }
 
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
@@ -100,5 +114,9 @@ public class BrowseFragment extends ListFragment implements
     public void sort(boolean ascending) {
         mSortedAscending = ascending;
         getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
+    }
+
+    public void setOnItemClickListener(AdapterView.OnItemClickListener listener) {
+        mOnItemClickListener = listener;
     }
 }

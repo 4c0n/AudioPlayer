@@ -3,13 +3,17 @@ package com.example.audioplayer;
 import android.content.Context;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.view.LayoutInflater;
 
 class ArtistBrowseFragmentInitializer implements BrowseFragmentInitializer {
     private Context mContext;
+    private FragmentManager mFragmentManager;
 
-    ArtistBrowseFragmentInitializer(Context context) {
+    ArtistBrowseFragmentInitializer(Context context, FragmentManager fragmentManager) {
         mContext = context;
+        mFragmentManager = fragmentManager;
     }
 
     @Override
@@ -60,6 +64,15 @@ class ArtistBrowseFragmentInitializer implements BrowseFragmentInitializer {
         adapter.setViewBinder(new ArtistBrowseFragmentViewBinder(mContext.getResources()));
 
         fragment.setListAdapter(adapter);
+
+        fragment.setOnItemClickListener(
+                new ArtistBrowseListViewOnItemClickListener(
+                        mFragmentManager,
+                        LayoutInflater.from(mContext),
+                        mContext.getResources(),
+                        mContext.getContentResolver()
+                )
+        );
 
         return fragment;
     }
