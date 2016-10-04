@@ -58,7 +58,10 @@ public class ArtistDetailsFragment extends Fragment implements
             case ALBUM_LOADER:
                 return new CursorLoader(
                         getActivity(),
-                        MediaStore.Audio.Artists.Albums.getContentUri("external", Long.parseLong(artistId)),
+                        MediaStore.Audio.Artists.Albums.getContentUri(
+                                "external",
+                                Long.parseLong(artistId)
+                        ),
                         new String[] {
                                 MediaStore.Audio.Albums._ID,
                                 MediaStore.Audio.Artists.Albums.ALBUM,
