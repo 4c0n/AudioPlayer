@@ -1,11 +1,8 @@
 package com.example.audioplayer;
 
-import android.content.Context;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.view.LayoutInflater;
 
 public class ArtistBrowseFragment extends BrowseFragment {
     public static ArtistBrowseFragment getInstance(BrowseActivity activity,

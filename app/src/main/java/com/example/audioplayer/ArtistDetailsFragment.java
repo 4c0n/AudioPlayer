@@ -6,9 +6,11 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +32,7 @@ public class ArtistDetailsFragment extends Fragment implements
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        Log.d("4c0n", "ArtistDetailFragment onCreateView");
         getLoaderManager().initLoader(ALBUM_LOADER, null, this);
         getLoaderManager().initLoader(TRACK_LOADER, null, this);
         // Inflate the layout for this fragment
@@ -39,15 +42,20 @@ public class ArtistDetailsFragment extends Fragment implements
                 R.id.artist_detail_list
         );
         listView.setGroupIndicator(null);
+
         return view;
     }
 
     @Override
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        Log.d("4c0n", "ArtistDetailFragment onViewCreated");
         ExpandableListView listView = (ExpandableListView) view.findViewById(
                 R.id.artist_detail_list
         );
         listView.setAdapter(mAdapter);
+
+
+        Log.d("4c0n", "here");
         super.onViewCreated(view, savedInstanceState);
     }
 
