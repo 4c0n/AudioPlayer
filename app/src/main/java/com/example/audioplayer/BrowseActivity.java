@@ -8,7 +8,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -40,8 +39,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     private BrowseFragment initPlaylistBrowseFragment() {
-        PlaylistBrowseFragmentInitializer initializer = new PlaylistBrowseFragmentInitializer(this);
-        return initializer.initialize();
+        return PlaylistBrowseFragment.getInstance(this, mSortedAscending);
     }
 
     private BrowseFragment initGenreBrowseFragment() {
