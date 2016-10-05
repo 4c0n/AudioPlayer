@@ -55,6 +55,9 @@ public class BrowseFragment extends ListFragment implements
         Spinner browseTypeSpinner = (Spinner) getActivity().findViewById(R.id.browse_type_spinner);
         browseTypeSpinner.setVisibility(View.VISIBLE);
 
+        TextView menuTextView = (TextView) getActivity().findViewById(R.id.menu_text);
+        menuTextView.setVisibility(View.GONE);
+
         Log.d("4c0n", "onCreateView " + mSortedAscending);
         getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
 

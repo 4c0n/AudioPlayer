@@ -5,6 +5,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 class ArtistBrowseListViewOnItemClickListener implements AdapterView.OnItemClickListener {
     private BrowseActivity mActivity;
@@ -15,7 +16,7 @@ class ArtistBrowseListViewOnItemClickListener implements AdapterView.OnItemClick
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Log.d("4c0n", "onItemClick");
+        Log.d("4c0n", "onItemClick " + view.toString());
         Bundle arguments = new Bundle();
         arguments.putString(ArtistDetailsFragment.ARGUMENT_ARTIST_ID, "" + id);
 
@@ -31,6 +32,11 @@ class ArtistBrowseListViewOnItemClickListener implements AdapterView.OnItemClick
 
         Spinner browseTypeSpinner = (Spinner) mActivity.findViewById(R.id.browse_type_spinner);
         browseTypeSpinner.setVisibility(View.GONE);
+
+        TextView artistNameTextView = (TextView) view.findViewById(R.id.artist_name);
+        TextView menuTextView = (TextView) mActivity.findViewById(R.id.menu_text);
+        menuTextView.setText(artistNameTextView.getText());
+        menuTextView.setVisibility(View.VISIBLE);
 
         mActivity.getSupportFragmentManager().beginTransaction()
                 .replace(R.id.media_fragment_container, fragment)
