@@ -2,9 +2,11 @@ package com.example.audioplayer;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.v4.content.res.ResourcesCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +23,7 @@ class TrackBrowseListAdapter extends BaseAdapter {
     private Cursor mMediaCursor;
     private LayoutInflater mInflater;
     private ContentResolver mContentResolver;
+    private Resources mResources;
 
     private static class ViewHolder {
         TextView title;
@@ -31,6 +34,17 @@ class TrackBrowseListAdapter extends BaseAdapter {
     TrackBrowseListAdapter(Context context) {
         mContentResolver = context.getContentResolver();
         mInflater = LayoutInflater.from(context);
+        mResources = context.getResources();
+    }
+
+    private void setDrawableToImageView(ViewHolder holder) {
+        holder.albumArt.setImageDrawable(
+                ResourcesCompat.getDrawable(
+                        mResources,
+                        R.drawable.ic_music_note_black_24dp,
+                        null
+                )
+        );
     }
 
     @Override
@@ -109,8 +123,8 @@ class TrackBrowseListAdapter extends BaseAdapter {
                 null
         );
 
-        // TODO: set default image
         holder.albumArt.setImageURI(null);
+        holder.albumArt.setImageDrawable(null);
         if (albumCursor != null) {
             if (albumCursor.getCount() > 0) {
                 albumCursor.moveToFirst();
@@ -121,9 +135,15 @@ class TrackBrowseListAdapter extends BaseAdapter {
 
                 if (albumArtStr != null) {
                     holder.albumArt.setImageURI(Uri.fromFile(new File(albumArtStr)));
+                } else {
+                    setDrawableToImageView(holder);
                 }
+            } else {
+                setDrawableToImageView(holder);
             }
             albumCursor.close();
+        } else {
+            setDrawableToImageView(holder);
         }
 
         return convertView;
