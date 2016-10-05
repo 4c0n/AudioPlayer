@@ -18,7 +18,7 @@ import android.widget.ListAdapter;
 import android.widget.Spinner;
 import android.widget.TextView;
 
-public class BrowseFragment extends ListFragment implements
+abstract public class BrowseFragment extends ListFragment implements
         Sortable, LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener {
 
     private static final int BROWSE_LOADER = 0;

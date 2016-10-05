@@ -34,10 +34,10 @@ public class GenreBrowseFragment extends BrowseFragment {
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                 context,
-                R.layout.genre_browse_list_item,
+                R.layout.browse_list_item,
                 null,
                 new String[] {MediaStore.Audio.GenresColumns.NAME},
-                new int[] {R.id.genre_name},
+                new int[] {R.id.browse_list_top_text},
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
 

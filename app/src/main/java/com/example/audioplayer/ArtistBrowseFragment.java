@@ -36,7 +36,7 @@ public class ArtistBrowseFragment extends BrowseFragment {
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                 activity,
-                R.layout.artist_browse_list_item,
+                R.layout.browse_list_item,
                 null,
                 new String[] {
                         MediaStore.Audio.ArtistColumns.ARTIST,
@@ -44,9 +44,9 @@ public class ArtistBrowseFragment extends BrowseFragment {
                         MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS
                 },
                 new int[] {
-                        R.id.artist_name,
-                        R.id.artist_info,
-                        R.id.artist_info
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_bottom_text,
+                        R.id.browse_list_bottom_text
                 },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );

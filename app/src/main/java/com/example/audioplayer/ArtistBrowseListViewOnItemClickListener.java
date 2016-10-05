@@ -33,7 +33,7 @@ class ArtistBrowseListViewOnItemClickListener implements AdapterView.OnItemClick
         Spinner browseTypeSpinner = (Spinner) mActivity.findViewById(R.id.browse_type_spinner);
         browseTypeSpinner.setVisibility(View.GONE);
 
-        TextView artistNameTextView = (TextView) view.findViewById(R.id.artist_name);
+        TextView artistNameTextView = (TextView) view.findViewById(R.id.browse_list_top_text);
         TextView menuTextView = (TextView) mActivity.findViewById(R.id.menu_text);
         menuTextView.setText(artistNameTextView.getText());
         menuTextView.setVisibility(View.VISIBLE);

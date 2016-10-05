@@ -127,44 +127,39 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
         Cursor cursor = mCursors[groupPosition];
         cursor.moveToPosition(childPosition);
 
+        // TODO: cache child views
+        if (convertView == null) {
+            convertView = mInflater.inflate(R.layout.browse_list_item, parent, false);
+        }
+        ImageView image = (ImageView) convertView.findViewById(R.id.browse_list_image);
+        TextView topText = (TextView) convertView.findViewById(R.id.browse_list_top_text);
+        TextView bottomText = (TextView) convertView.findViewById(R.id.browse_list_bottom_text);
+
         // TODO: consolidate list item layouts as they are basically the same
         if (groupPosition == 0) {
             // Albums
-            // TODO: cache child views
-            if (convertView == null) {
-                convertView = mInflater.inflate(R.layout.browse_list_item, parent, false);
-            }
-            ImageView albumArt = (ImageView) convertView.findViewById(R.id.album_album_art);
-            TextView albumTitle = (TextView) convertView.findViewById(R.id.album_title);
-            TextView albumInfo = (TextView) convertView.findViewById(R.id.album_info);
-
             String albumArtStr = cursor.getString(
                     cursor.getColumnIndex(MediaStore.Audio.AlbumColumns.ALBUM_ART)
             );
+
+            image.setImageURI(null);
             if (albumArtStr != null) {
-                albumArt.setImageURI(Uri.fromFile(new File(albumArtStr)));
+                image.setImageURI(Uri.fromFile(new File(albumArtStr)));
             }
 
             String title = cursor.getString(
                     cursor.getColumnIndex(MediaStore.Audio.AlbumColumns.ALBUM)
             );
-            albumTitle.setText(title);
+            topText.setText(title);
 
             int numberOfTracks = cursor.getInt(
                     cursor.getColumnIndex(MediaStore.Audio.AlbumColumns.NUMBER_OF_SONGS)
             );
-            albumInfo.setText(
+            bottomText.setText(
                     mResources.getQuantityString(R.plurals.tracks, numberOfTracks, numberOfTracks)
             );
         } else {
             // Tracks
-            // TODO: cache child views
-            if (convertView == null) {
-                convertView = mInflater.inflate(R.layout.track_browse_list_item, parent, false);
-            }
-            ImageView albumArt = (ImageView) convertView.findViewById(R.id.track_album_art);
-            TextView trackTitle = (TextView) convertView.findViewById(R.id.track_title);
-            TextView trackArtist = (TextView) convertView.findViewById(R.id.track_artist);
 
             // TODO: this code is similar to that in MediaStoreAudioAdapter, refactoring is in order
             int albumId = cursor.getInt(
@@ -180,7 +175,7 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
                     null
             );
 
-            albumArt.setImageURI(null);
+            image.setImageURI(null);
             if (albumCursor != null) {
                 if (albumCursor.getCount() > 0) {
                     albumCursor.moveToFirst();
@@ -190,7 +185,7 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
                     );
 
                     if (albumArtStr != null) {
-                        albumArt.setImageURI(Uri.fromFile(new File(albumArtStr)));
+                        image.setImageURI(Uri.fromFile(new File(albumArtStr)));
                     }
                 }
                 albumCursor.close();
@@ -199,12 +194,12 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
             String title = cursor.getString(
                     cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
             );
-            trackTitle.setText(title);
+            topText.setText(title);
 
             String artist = cursor.getString(
                     cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
             );
-            trackArtist.setText(artist);
+            bottomText.setText(artist);
         }
 
         return convertView;
@@ -213,20 +208,6 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
     @Override
     public boolean isChildSelectable(int groupPosition, int childPosition) {
         return true;
-    }
-
-    @Override
-    public int getChildType(int groupPosition, int childPosition) {
-        if (groupPosition == 0) {
-            return ALBUM_VIEW_TYPE;
-        }
-
-        return TRACK_VIEW_TYPE;
-    }
-
-    @Override
-    public int getChildTypeCount() {
-        return getGroupCount();
     }
 
     void changeAlbumCursor(Cursor cursor) {

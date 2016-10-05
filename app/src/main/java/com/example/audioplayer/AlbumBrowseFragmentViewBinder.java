@@ -16,7 +16,7 @@ class AlbumBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
 
     @Override
     public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-        if (view.getId() == R.id.album_info) {
+        if (view.getId() == R.id.browse_list_bottom_text) {
             if (columnIndex == 3) {
                 // Album info
                 int numberOfTracks = cursor.getInt(

@@ -72,12 +72,12 @@ class MediaStoreAudioAdapter extends BaseAdapter {
         ViewHolder holder;
 
         if (convertView == null) {
-            convertView = mInflater.inflate(R.layout.track_browse_list_item, parent, false);
+            convertView = mInflater.inflate(R.layout.browse_list_item, parent, false);
 
             holder = new ViewHolder();
-            holder.title = (TextView) convertView.findViewById(R.id.track_title);
-            holder.artist = (TextView) convertView.findViewById(R.id.track_artist);
-            holder.albumArt = (ImageView) convertView.findViewById(R.id.track_album_art);
+            holder.title = (TextView) convertView.findViewById(R.id.browse_list_top_text);
+            holder.artist = (TextView) convertView.findViewById(R.id.browse_list_bottom_text);
+            holder.albumArt = (ImageView) convertView.findViewById(R.id.browse_list_image);
 
             convertView.setTag(holder);
         } else {
@@ -109,6 +109,7 @@ class MediaStoreAudioAdapter extends BaseAdapter {
                 null
         );
 
+        // TODO: set default image
         holder.albumArt.setImageURI(null);
         if (albumCursor != null) {
             if (albumCursor.getCount() > 0) {

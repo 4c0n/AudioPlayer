@@ -34,10 +34,10 @@ public class PlaylistBrowseFragment extends BrowseFragment {
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                 context,
-                R.layout.playlist_browse_list_item,
+                R.layout.browse_list_item,
                 null,
                 new String[] {MediaStore.Audio.PlaylistsColumns.NAME},
-                new int[] {R.id.playlist_name},
+                new int[] {R.id.browse_list_top_text},
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
 

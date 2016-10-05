@@ -19,7 +19,7 @@ class ArtistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
     public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
         Log.d("setViewValue", view.toString());
         Log.d("columnIndex", "" + columnIndex);
-        if (view.getId() == R.id.artist_info) {
+        if (view.getId() == R.id.browse_list_bottom_text) {
             TextView textView = (TextView) view;
             if (columnIndex == 2) {
                 // Number of albums
