@@ -5,15 +5,8 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.widget.SimpleCursorAdapter;
 
-class GenreBrowseFragmentInitializer implements BrowseFragmentInitializer {
-    private Context mContext;
-
-    GenreBrowseFragmentInitializer(Context context) {
-        mContext = context;
-    }
-
-    @Override
-    public BrowseFragment initialize() {
+public class GenreBrowseFragment extends BrowseFragment {
+    public static GenreBrowseFragment getInstance(Context context, boolean sortedAscending) {
         Bundle arguments = new Bundle();
         arguments.putString(
                 BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -32,15 +25,15 @@ class GenreBrowseFragmentInitializer implements BrowseFragmentInitializer {
         );
         arguments.putString(
                 BrowseFragment.ARGUMENT_EMPTY_TEXT,
-                mContext.getString(R.string.no_genres)
+                context.getString(R.string.no_genres)
         );
 
-        BrowseFragment fragment = new BrowseFragment();
+        GenreBrowseFragment fragment = new GenreBrowseFragment();
         fragment.setArguments(arguments);
-        fragment.setRetainInstance(true);
+        fragment.setSortedAscending(sortedAscending);
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                mContext,
+                context,
                 R.layout.genre_browse_list_item,
                 null,
                 new String[] {MediaStore.Audio.GenresColumns.NAME},

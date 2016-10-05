@@ -43,8 +43,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     private BrowseFragment initGenreBrowseFragment() {
-        GenreBrowseFragmentInitializer initializer = new GenreBrowseFragmentInitializer(this);
-        return initializer.initialize();
+        return GenreBrowseFragment.getInstance(this, mSortedAscending);
     }
 
     @Override
