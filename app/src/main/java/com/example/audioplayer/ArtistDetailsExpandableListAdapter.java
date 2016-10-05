@@ -5,6 +5,7 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.provider.MediaStore;
+import android.support.v4.content.res.ResourcesCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -143,8 +144,17 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
             );
 
             image.setImageURI(null);
+            image.setImageDrawable(null);
             if (albumArtStr != null) {
                 image.setImageURI(Uri.fromFile(new File(albumArtStr)));
+            } else {
+                image.setImageDrawable(
+                        ResourcesCompat.getDrawable(
+                                mResources,
+                                R.drawable.ic_album_black_24dp,
+                                null
+                        )
+                );
             }
 
             String title = cursor.getString(
@@ -176,6 +186,7 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
             );
 
             image.setImageURI(null);
+            image.setImageDrawable(null);
             if (albumCursor != null) {
                 if (albumCursor.getCount() > 0) {
                     albumCursor.moveToFirst();
@@ -186,6 +197,14 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
 
                     if (albumArtStr != null) {
                         image.setImageURI(Uri.fromFile(new File(albumArtStr)));
+                    } else {
+                        image.setImageDrawable(
+                                ResourcesCompat.getDrawable(
+                                        mResources,
+                                        R.drawable.ic_music_note_black_24dp,
+                                        null
+                                )
+                        );
                     }
                 }
                 albumCursor.close();
