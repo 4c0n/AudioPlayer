@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content">
 
-    <ImageView android:id="@+id/track_album_art"
+    <ImageView android:id="@+id/browse_list_image"
         android:layout_width="50dp"
         android:layout_height="50dp"
         android:contentDescription="@string/track_image" />
@@ -15,7 +15,7 @@
         android:layout_height="match_parent"
         android:paddingLeft="5dp">
 
-        <TextView android:id="@+id/track_title"
+        <TextView android:id="@+id/browse_list_top_text"
             android:textStyle="bold"
             android:textSize="15sp"
             android:ellipsize="end"
@@ -24,7 +24,7 @@
             android:layout_weight="1"
             android:layout_height="0dp" />
 
-        <TextView android:id="@+id/track_artist"
+        <TextView android:id="@+id/browse_list_bottom_text"
             android:ellipsize="end"
             android:maxLines="1"
             android:layout_width="wrap_content"

@@ -37,7 +37,7 @@ public class AlbumBrowseFragment extends BrowseFragment {
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                 context,
-                R.layout.album_browse_list_item,
+                R.layout.browse_list_item,
                 null,
                 new String[] {
                         MediaStore.Audio.AlbumColumns.ALBUM_ART,

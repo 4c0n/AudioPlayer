@@ -132,7 +132,7 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
             // Albums
             // TODO: cache child views
             if (convertView == null) {
-                convertView = mInflater.inflate(R.layout.album_browse_list_item, parent, false);
+                convertView = mInflater.inflate(R.layout.browse_list_item, parent, false);
             }
             ImageView albumArt = (ImageView) convertView.findViewById(R.id.album_album_art);
             TextView albumTitle = (TextView) convertView.findViewById(R.id.album_title);
