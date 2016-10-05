@@ -27,11 +27,11 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     private BrowseFragment initArtistBrowseFragment() {
-        ArtistBrowseFragmentInitializer initializer = new ArtistBrowseFragmentInitializer(
+        return ArtistBrowseFragment.getInstance(
                 this,
+                mSortedAscending,
                 getSupportFragmentManager()
         );
-        return initializer.initialize();
     }
 
     private BrowseFragment initAlbumBrowseFragment() {

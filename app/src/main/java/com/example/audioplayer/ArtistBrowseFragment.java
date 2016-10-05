@@ -7,17 +7,9 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.view.LayoutInflater;
 
-class ArtistBrowseFragmentInitializer implements BrowseFragmentInitializer {
-    private Context mContext;
-    private FragmentManager mFragmentManager;
-
-    ArtistBrowseFragmentInitializer(Context context, FragmentManager fragmentManager) {
-        mContext = context;
-        mFragmentManager = fragmentManager;
-    }
-
-    @Override
-    public BrowseFragment initialize() {
+public class ArtistBrowseFragment extends BrowseFragment {
+    public static ArtistBrowseFragment getInstance(Context context, boolean sortedAscending,
+                                                   FragmentManager fragmentManager) {
         Bundle arguments = new Bundle();
         arguments.putString(
                 BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -38,15 +30,15 @@ class ArtistBrowseFragmentInitializer implements BrowseFragmentInitializer {
         );
         arguments.putString(
                 BrowseFragment.ARGUMENT_EMPTY_TEXT,
-                mContext.getString(R.string.no_artists)
+                context.getString(R.string.no_artists)
         );
 
-        BrowseFragment fragment = new BrowseFragment();
+        ArtistBrowseFragment fragment = new ArtistBrowseFragment();
         fragment.setArguments(arguments);
-        fragment.setRetainInstance(true);
+        fragment.setSortedAscending(sortedAscending);
 
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                mContext,
+                context,
                 R.layout.artist_browse_list_item,
                 null,
                 new String[] {
@@ -61,16 +53,16 @@ class ArtistBrowseFragmentInitializer implements BrowseFragmentInitializer {
                 },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
-        adapter.setViewBinder(new ArtistBrowseFragmentViewBinder(mContext.getResources()));
+        adapter.setViewBinder(new ArtistBrowseFragmentViewBinder(context.getResources()));
 
         fragment.setListAdapter(adapter);
 
         fragment.setOnItemClickListener(
                 new ArtistBrowseListViewOnItemClickListener(
-                        mFragmentManager,
-                        LayoutInflater.from(mContext),
-                        mContext.getResources(),
-                        mContext.getContentResolver()
+                        fragmentManager,
+                        LayoutInflater.from(context),
+                        context.getResources(),
+                        context.getContentResolver()
                 )
         );
 
