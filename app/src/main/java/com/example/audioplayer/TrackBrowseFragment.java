@@ -37,8 +37,8 @@ public class TrackBrowseFragment extends BrowseFragment {
          fragment.setArguments(arguments);
          fragment.setSortedAscending(sortedAscending);
 
-         MediaStoreAudioAdapter mediaStoreAudioAdapter = new MediaStoreAudioAdapter(context);
-         fragment.setListAdapter(mediaStoreAudioAdapter);
+         TrackBrowseListAdapter trackBrowseListAdapter = new TrackBrowseListAdapter(context);
+         fragment.setListAdapter(trackBrowseListAdapter);
 
          return fragment;
      }

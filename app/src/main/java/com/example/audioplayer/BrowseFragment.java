@@ -108,9 +108,9 @@ abstract public class BrowseFragment extends ListFragment implements
         if (adapter instanceof SimpleCursorAdapter) {
             SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) adapter;
             cursorAdapter.changeCursor(data);
-        } else if (adapter instanceof  MediaStoreAudioAdapter) {
-            MediaStoreAudioAdapter mediaStoreAudioAdapter = (MediaStoreAudioAdapter) adapter;
-            mediaStoreAudioAdapter.changeCursor(data);
+        } else if (adapter instanceof TrackBrowseListAdapter) {
+            TrackBrowseListAdapter trackBrowseListAdapter = (TrackBrowseListAdapter) adapter;
+            trackBrowseListAdapter.changeCursor(data);
         }
 
         TextView emptyView = (TextView) getView().findViewById(R.id.no_data);
@@ -132,9 +132,9 @@ abstract public class BrowseFragment extends ListFragment implements
         if (adapter instanceof SimpleCursorAdapter) {
             SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) adapter;
             cursorAdapter.changeCursor(null);
-        } else if (adapter instanceof  MediaStoreAudioAdapter) {
-            MediaStoreAudioAdapter mediaStoreAudioAdapter = (MediaStoreAudioAdapter) adapter;
-            mediaStoreAudioAdapter.changeCursor(null);
+        } else if (adapter instanceof TrackBrowseListAdapter) {
+            TrackBrowseListAdapter trackBrowseListAdapter = (TrackBrowseListAdapter) adapter;
+            trackBrowseListAdapter.changeCursor(null);
         }
     }
 

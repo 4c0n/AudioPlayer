@@ -161,7 +161,7 @@ class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
         } else {
             // Tracks
 
-            // TODO: this code is similar to that in MediaStoreAudioAdapter, refactoring is in order
+            // TODO: this code is similar to that in TrackBrowseListAdapter, refactoring is in order
             int albumId = cursor.getInt(
                     cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
             );

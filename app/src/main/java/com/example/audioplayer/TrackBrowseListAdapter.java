@@ -17,7 +17,7 @@ import java.io.File;
 /**
  * TODO: Register as data observer so the list is updated when songs are added to the MediaStore
  */
-class MediaStoreAudioAdapter extends BaseAdapter {
+class TrackBrowseListAdapter extends BaseAdapter {
     private Cursor mMediaCursor;
     private LayoutInflater mInflater;
     private ContentResolver mContentResolver;
@@ -28,7 +28,7 @@ class MediaStoreAudioAdapter extends BaseAdapter {
         ImageView albumArt;
     }
 
-    MediaStoreAudioAdapter(Context context) {
+    TrackBrowseListAdapter(Context context) {
         mContentResolver = context.getContentResolver();
         mInflater = LayoutInflater.from(context);
     }
