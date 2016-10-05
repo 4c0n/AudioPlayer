@@ -3,6 +3,7 @@ package com.example.audioplayer;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
@@ -15,6 +16,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ListAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 
 public class BrowseFragment extends ListFragment implements
@@ -50,6 +52,9 @@ public class BrowseFragment extends ListFragment implements
         View view = inflater.inflate(R.layout.fragment_browse, container, false);
         ImageButton sortButton = (ImageButton) view.findViewById(R.id.sort_menu_button);
         sortButton.setOnClickListener(this);
+
+        Spinner browseTypeSpinner = (Spinner) getActivity().findViewById(R.id.browse_type_spinner);
+        browseTypeSpinner.setVisibility(View.VISIBLE);
 
         Log.d("4c0n", "onCreateView " + mSortedAscending);
         getLoaderManager().restartLoader(BROWSE_LOADER, null, this);

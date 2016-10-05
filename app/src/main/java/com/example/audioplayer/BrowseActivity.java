@@ -29,8 +29,7 @@ public class BrowseActivity extends AppCompatActivity implements
     private BrowseFragment initArtistBrowseFragment() {
         return ArtistBrowseFragment.getInstance(
                 this,
-                mSortedAscending,
-                getSupportFragmentManager()
+                mSortedAscending
         );
     }
 
