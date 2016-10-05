@@ -20,6 +20,8 @@ public class BrowseActivity extends AppCompatActivity implements
     private static final String LIST_SORTED_ASCENDING = "sortedAscending";
 
     private int mSpinnerPosition = 0;
+
+    // TODO: let fragments retain their instance, rendering this property useless
     private boolean mSortedAscending = true;
 
     private BrowseFragment initTrackBrowseFragment() {
@@ -63,8 +65,6 @@ public class BrowseActivity extends AppCompatActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         Log.d("4c0n", "create");
-
-        //getMenuInflater().inflate(R.menu.browse_activity_menu, menu);
 
         Spinner browseTypeSpinner = (Spinner) findViewById(R.id.browse_type_spinner);
 
