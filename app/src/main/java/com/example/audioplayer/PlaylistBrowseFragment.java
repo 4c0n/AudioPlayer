@@ -36,10 +36,18 @@ public class PlaylistBrowseFragment extends BrowseFragment {
                 context,
                 R.layout.browse_list_item,
                 null,
-                new String[] {MediaStore.Audio.PlaylistsColumns.NAME},
-                new int[] {R.id.browse_list_top_text},
+                new String[] {
+                        MediaStore.Audio.PlaylistsColumns.NAME,
+                        MediaStore.Audio.Playlists._ID
+                },
+                new int[] {
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_image
+                },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
+
+        adapter.setViewBinder(new PlaylistBrowseFragmentViewBinder(context.getResources()));
 
         fragment.setListAdapter(adapter);
 
