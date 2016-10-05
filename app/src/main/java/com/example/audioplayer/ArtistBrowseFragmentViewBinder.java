@@ -3,9 +3,11 @@ package com.example.audioplayer;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.provider.MediaStore;
+import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 class ArtistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
@@ -52,6 +54,13 @@ class ArtistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
                 // Number of tracks (Already set)
                 return true;
             }
+        } else if(view.getId() == R.id.browse_list_image) {
+            // TODO: this only needs to be done one time
+            ImageView imageView = (ImageView) view;
+            imageView.setImageDrawable(
+                    ResourcesCompat.getDrawable(mResources, R.drawable.ic_person_black_24dp, null)
+            );
+            return true;
         }
 
         return false;

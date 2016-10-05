@@ -41,12 +41,14 @@ public class ArtistBrowseFragment extends BrowseFragment {
                 new String[] {
                         MediaStore.Audio.ArtistColumns.ARTIST,
                         MediaStore.Audio.ArtistColumns.NUMBER_OF_ALBUMS,
-                        MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS
+                        MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS,
+                        MediaStore.Audio.Artists._ID
                 },
                 new int[] {
                         R.id.browse_list_top_text,
                         R.id.browse_list_bottom_text,
-                        R.id.browse_list_bottom_text
+                        R.id.browse_list_bottom_text,
+                        R.id.browse_list_image
                 },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
