@@ -36,10 +36,18 @@ public class GenreBrowseFragment extends BrowseFragment {
                 context,
                 R.layout.browse_list_item,
                 null,
-                new String[] {MediaStore.Audio.GenresColumns.NAME},
-                new int[] {R.id.browse_list_top_text},
+                new String[] {
+                        MediaStore.Audio.GenresColumns.NAME,
+                        MediaStore.Audio.Genres._ID
+                },
+                new int[] {
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_image
+                },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
+
+        adapter.setViewBinder(new GenreBrowseFragmentViewBinder(context.getResources()));
 
         fragment.setListAdapter(adapter);
 
