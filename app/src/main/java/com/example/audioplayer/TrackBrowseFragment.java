@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.provider.MediaStore;
 
+// TODO: nest in activity (static final)
 public class TrackBrowseFragment extends BrowseFragment {
      public static TrackBrowseFragment getInstance(Context context, boolean sortedAscending) {
          Bundle arguments = new Bundle();
@@ -37,6 +38,7 @@ public class TrackBrowseFragment extends BrowseFragment {
          fragment.setArguments(arguments);
          fragment.setSortedAscending(sortedAscending);
 
+         // TODO: init adapter outside of this method
          TrackBrowseListAdapter trackBrowseListAdapter = new TrackBrowseListAdapter(context);
          fragment.setListAdapter(trackBrowseListAdapter);
 

@@ -17,6 +17,9 @@ class ArtistBrowseListViewOnItemClickListener implements AdapterView.OnItemClick
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Log.d("4c0n", "onItemClick " + view.toString());
+
+        // TODO: start new activity
+
         Bundle arguments = new Bundle();
         arguments.putString(ArtistDetailsFragment.ARGUMENT_ARTIST_ID, "" + id);
 

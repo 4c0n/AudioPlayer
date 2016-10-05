@@ -114,7 +114,7 @@ class TrackBrowseListAdapter extends BaseAdapter {
                 mMediaCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
         );
 
-        // TODO: use cursorloader or other means of threading
+        // TODO: use cursor loader or other means of threading
         Cursor albumCursor = mContentResolver.query(
                 MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
                 new String[] {MediaStore.Audio.Albums.ALBUM_ART},

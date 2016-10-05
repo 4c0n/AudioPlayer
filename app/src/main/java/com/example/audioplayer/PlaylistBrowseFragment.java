@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.widget.SimpleCursorAdapter;
 
+// TODO: nest in activity (static final)
 public class PlaylistBrowseFragment extends BrowseFragment {
     public static PlaylistBrowseFragment getInstance(Context context, boolean sortedAscending) {
         Bundle arguments = new Bundle();
@@ -32,6 +33,7 @@ public class PlaylistBrowseFragment extends BrowseFragment {
         fragment.setArguments(arguments);
         fragment.setSortedAscending(sortedAscending);
 
+        // TODO: init adapter outside of this method
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                 context,
                 R.layout.browse_list_item,
