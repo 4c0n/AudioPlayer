@@ -46,10 +46,10 @@ public class AlbumBrowseFragment extends BrowseFragment {
                         MediaStore.Audio.AlbumColumns.ARTIST
                 },
                 new int[] {
-                        R.id.album_album_art,
-                        R.id.album_title,
-                        R.id.album_info,
-                        R.id.album_info
+                        R.id.browse_list_image,
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_bottom_text,
+                        R.id.browse_list_bottom_text
                 },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
