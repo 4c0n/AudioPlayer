@@ -67,7 +67,30 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     private BrowseFragment initAlbumBrowseFragment() {
-        return AlbumBrowseFragment.getInstance(this, mSortedAscending);
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.browse_list_item,
+                null,
+                new String[] {
+                        MediaStore.Audio.AlbumColumns.ALBUM_ART,
+                        MediaStore.Audio.AlbumColumns.ALBUM,
+                        MediaStore.Audio.AlbumColumns.NUMBER_OF_SONGS,
+                        MediaStore.Audio.AlbumColumns.ARTIST
+                },
+                new int[] {
+                        R.id.browse_list_image,
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_bottom_text,
+                        R.id.browse_list_bottom_text
+                },
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+        adapter.setViewBinder(new AlbumBrowseFragmentViewBinder(getResources()));
+
+        AlbumBrowseFragment fragment = AlbumBrowseFragment.getInstance(this, mSortedAscending);
+        fragment.setListAdapter(adapter);
+
+        return fragment;
     }
 
     private BrowseFragment initPlaylistBrowseFragment() {
