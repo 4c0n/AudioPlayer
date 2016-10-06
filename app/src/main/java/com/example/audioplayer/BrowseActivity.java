@@ -231,7 +231,7 @@ public class BrowseActivity extends AppCompatActivity implements
             }
 
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.media_fragment_container, newFragment);
+            transaction.replace(R.id.browse_fragment_container, newFragment);
             transaction.commit();
         }
 
