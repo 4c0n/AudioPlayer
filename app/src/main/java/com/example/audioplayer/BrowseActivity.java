@@ -168,7 +168,7 @@ public class BrowseActivity extends AppCompatActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         Log.d("4c0n", "onCreate");
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_media);
+        setContentView(R.layout.activity_browse);
         Toolbar toolbar = (Toolbar) findViewById(R.id.browse_activity_toolbar);
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
