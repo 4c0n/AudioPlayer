@@ -469,9 +469,12 @@ public class BrowseActivity extends AppCompatActivity implements
         public void onListItemClick(ListView l, View v, int position, long id) {
             super.onListItemClick(l, v, position, id);
 
+            TextView textView = (TextView) v.findViewById(R.id.browse_list_top_text);
+
             Intent intent = new Intent();
             intent.setClass(getActivity(), ArtistDetailsActivity.class);
             intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_ID, "" + id);
+            intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_NAME, textView.getText());
             startActivity(intent);
         }
 

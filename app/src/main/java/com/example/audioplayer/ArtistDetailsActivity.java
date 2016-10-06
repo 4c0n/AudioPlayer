@@ -16,6 +16,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseExpandableListAdapter;
@@ -27,6 +28,7 @@ import java.io.File;
 
 public class ArtistDetailsActivity extends AppCompatActivity {
     public static final String INTENT_EXTRA_ARTIST_ID = "artistId";
+    public static final String INTENT_EXTRA_ARTIST_NAME = "artistName";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -60,6 +62,16 @@ public class ArtistDetailsActivity extends AppCompatActivity {
                 .commit();
     }
 
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        String artistName = getIntent().getStringExtra(INTENT_EXTRA_ARTIST_NAME);
+
+        TextView menuText = (TextView) findViewById(R.id.menu_text);
+        menuText.setText(artistName);
+
+        return true;
+    }
+
     public static final class ArtistDetailsFragment extends Fragment implements
             LoaderManager.LoaderCallbacks<Cursor> {
         private static final int ALBUM_LOADER = 0;
@@ -87,9 +99,9 @@ public class ArtistDetailsActivity extends AppCompatActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            Log.d("4c0n", "ArtistDetailFragment onCreateView");
-            getLoaderManager().initLoader(ALBUM_LOADER, null, this);
-            getLoaderManager().initLoader(TRACK_LOADER, null, this);
+            Log.d("4c0n", "ArtistDetailFragment onCreateView: " + getArguments().getString(ARGUMENT_ARTIST_ID));
+            getLoaderManager().restartLoader(ALBUM_LOADER, null, this);
+            getLoaderManager().restartLoader(TRACK_LOADER, null, this);
             // Inflate the layout for this fragment
 
             View view = inflater.inflate(R.layout.fragment_artist_details, container, false);
@@ -103,7 +115,7 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
         @Override
         public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-            Log.d("4c0n", "ArtistDetailFragment onViewCreated");
+            Log.d("4c0n", "ArtistDetailFragment onViewCreated " + mAdapter.toString());
             ExpandableListView listView = (ExpandableListView) view.findViewById(
                     R.id.artist_detail_list
             );
@@ -116,6 +128,7 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+            Log.d("4c0n", "onCreateLoader");
             String artistId = getArguments().getString(ARGUMENT_ARTIST_ID);
             switch (id) {
                 case ALBUM_LOADER:
@@ -157,6 +170,7 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+            Log.d("4c0n", "onLoadFinished");
             switch (loader.getId()) {
                 case ALBUM_LOADER:
                     mAdapter.changeAlbumCursor(data);
@@ -168,6 +182,7 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
+            Log.d("4c0n", "onLoaderReset");
             switch (loader.getId()) {
                 case ALBUM_LOADER:
                     mAdapter.changeAlbumCursor(null);
