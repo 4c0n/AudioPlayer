@@ -594,6 +594,7 @@ public class BrowseActivity extends AppCompatActivity implements
                 Log.d("4c0n", "onItemClick " + view.toString());
 
                 // TODO: start new activity
+            }
         }
     }
 
