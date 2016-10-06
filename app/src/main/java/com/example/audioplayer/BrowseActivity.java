@@ -17,7 +17,6 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -168,7 +167,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("4c0n", "onCreate");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browse);
         Toolbar toolbar = (Toolbar) findViewById(R.id.browse_activity_toolbar);
@@ -183,8 +181,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        Log.d("4c0n", "create");
-
         Spinner browseTypeSpinner = (Spinner) findViewById(R.id.browse_type_spinner);
 
         ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this,
@@ -214,19 +210,14 @@ public class BrowseActivity extends AppCompatActivity implements
             BrowseFragment newFragment;
 
             if (text.equals(getString(R.string.browse_type_tracks))) {
-                Log.d("4c0n", "Tracks");
                 newFragment = initTrackBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_artists))) {
-                Log.d("4c0n", "Artists");
                 newFragment = initArtistBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_albums))) {
-                Log.d("4c0n", "Albums");
                 newFragment = initAlbumBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_playlists))) {
-                Log.d("4c0n", "Playlists");
                 newFragment = initPlaylistBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_genres))) {
-                Log.d("4c0n", "Genres");
                 newFragment = initGenreBrowseFragment();
             } else {
                 throw new IllegalStateException("Unsupported item selected.");
@@ -260,7 +251,6 @@ public class BrowseActivity extends AppCompatActivity implements
         private String mEmptyText;
 
         public BrowseFragment() {
-            Log.d("4c0n", "BrowseFragment");
         }
 
         public void setEmptyText(String emptyText) {
@@ -275,7 +265,6 @@ public class BrowseActivity extends AppCompatActivity implements
             ImageButton sortButton = (ImageButton) view.findViewById(R.id.sort_menu_button);
             sortButton.setOnClickListener(this);
 
-            Log.d("4c0n", "onCreateView " + mSortedAscending);
             getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
 
             return view;
@@ -283,7 +272,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            Log.d("4c0n", "onCreateLoader " + mSortedAscending);
             switch (id) {
                 case BROWSE_LOADER:
                     Bundle arguments = getArguments();
@@ -311,7 +299,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            Log.d("4c0n", "onLoadFinished");
             ListAdapter adapter = getListAdapter();
             if (adapter instanceof SimpleCursorAdapter) {
                 SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) adapter;
@@ -497,8 +484,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
             @Override
             public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-                Log.d("setViewValue", view.toString());
-                Log.d("columnIndex", "" + columnIndex);
                 if (view.getId() == R.id.browse_list_bottom_text) {
                     TextView textView = (TextView) view;
                     if (columnIndex == 2) {
