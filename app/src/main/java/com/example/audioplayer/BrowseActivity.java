@@ -1,9 +1,11 @@
 package com.example.audioplayer;
 
 import android.os.Bundle;
+import android.provider.MediaStore;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -25,26 +27,118 @@ public class BrowseActivity extends AppCompatActivity implements
     private boolean mSortedAscending = true;
 
     private BrowseFragment initTrackBrowseFragment() {
-        return TrackBrowseFragment.getInstance(this, mSortedAscending);
+        TrackBrowseListAdapter trackBrowseListAdapter = new TrackBrowseListAdapter(this);
+
+        TrackBrowseFragment fragment = TrackBrowseFragment.getInstance(this, mSortedAscending);
+        fragment.setListAdapter(trackBrowseListAdapter);
+
+        return fragment;
     }
 
     private BrowseFragment initArtistBrowseFragment() {
-        return ArtistBrowseFragment.getInstance(
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.browse_list_item,
+                null,
+                new String[] {
+                        MediaStore.Audio.ArtistColumns.ARTIST,
+                        MediaStore.Audio.ArtistColumns.NUMBER_OF_ALBUMS,
+                        MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS,
+                        MediaStore.Audio.Artists._ID
+                },
+                new int[] {
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_bottom_text,
+                        R.id.browse_list_bottom_text,
+                        R.id.browse_list_image
+                },
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+        adapter.setViewBinder(new ArtistBrowseFragmentViewBinder(getResources()));
+
+        ArtistBrowseFragment fragment = ArtistBrowseFragment.getInstance(
                 this,
                 mSortedAscending
         );
+        fragment.setListAdapter(adapter);
+        fragment.setOnItemClickListener(new ArtistBrowseListViewOnItemClickListener(this));
+
+        return fragment;
     }
 
     private BrowseFragment initAlbumBrowseFragment() {
-        return AlbumBrowseFragment.getInstance(this, mSortedAscending);
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.browse_list_item,
+                null,
+                new String[] {
+                        MediaStore.Audio.AlbumColumns.ALBUM_ART,
+                        MediaStore.Audio.AlbumColumns.ALBUM,
+                        MediaStore.Audio.AlbumColumns.NUMBER_OF_SONGS,
+                        MediaStore.Audio.AlbumColumns.ARTIST
+                },
+                new int[] {
+                        R.id.browse_list_image,
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_bottom_text,
+                        R.id.browse_list_bottom_text
+                },
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+        adapter.setViewBinder(new AlbumBrowseFragmentViewBinder(getResources()));
+
+        AlbumBrowseFragment fragment = AlbumBrowseFragment.getInstance(this, mSortedAscending);
+        fragment.setListAdapter(adapter);
+
+        return fragment;
     }
 
     private BrowseFragment initPlaylistBrowseFragment() {
-        return PlaylistBrowseFragment.getInstance(this, mSortedAscending);
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.browse_list_item,
+                null,
+                new String[] {
+                        MediaStore.Audio.PlaylistsColumns.NAME,
+                        MediaStore.Audio.Playlists._ID
+                },
+                new int[] {
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_image
+                },
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+
+        adapter.setViewBinder(new PlaylistBrowseFragmentViewBinder(getResources()));
+
+        PlaylistBrowseFragment fragment = PlaylistBrowseFragment.getInstance(this, mSortedAscending);
+        fragment.setListAdapter(adapter);
+
+        return fragment;
     }
 
     private BrowseFragment initGenreBrowseFragment() {
-        return GenreBrowseFragment.getInstance(this, mSortedAscending);
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.browse_list_item,
+                null,
+                new String[] {
+                        MediaStore.Audio.GenresColumns.NAME,
+                        MediaStore.Audio.Genres._ID
+                },
+                new int[] {
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_image
+                },
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+
+        adapter.setViewBinder(new GenreBrowseFragmentViewBinder(getResources()));
+
+        GenreBrowseFragment fragment = GenreBrowseFragment.getInstance(this, mSortedAscending);
+        fragment.setListAdapter(adapter);
+
+        return fragment;
     }
 
     @Override

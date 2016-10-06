@@ -3,7 +3,6 @@ package com.example.audioplayer;
 import android.content.Context;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.widget.SimpleCursorAdapter;
 
 // TODO: nest in activity (static final)
 public class PlaylistBrowseFragment extends BrowseFragment {
@@ -32,26 +31,6 @@ public class PlaylistBrowseFragment extends BrowseFragment {
         PlaylistBrowseFragment fragment = new PlaylistBrowseFragment();
         fragment.setArguments(arguments);
         fragment.setSortedAscending(sortedAscending);
-
-        // TODO: init adapter outside of this method
-        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
-                context,
-                R.layout.browse_list_item,
-                null,
-                new String[] {
-                        MediaStore.Audio.PlaylistsColumns.NAME,
-                        MediaStore.Audio.Playlists._ID
-                },
-                new int[] {
-                        R.id.browse_list_top_text,
-                        R.id.browse_list_image
-                },
-                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
-        );
-
-        adapter.setViewBinder(new PlaylistBrowseFragmentViewBinder(context.getResources()));
-
-        fragment.setListAdapter(adapter);
 
         return fragment;
     }
