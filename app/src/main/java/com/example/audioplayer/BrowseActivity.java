@@ -112,7 +112,7 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
-    private BrowseFragment initPlaylistBrowseFragment() {
+    private PlaylistBrowseFragment initPlaylistBrowseFragment() {
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                 this,
                 R.layout.browse_list_item,
@@ -128,7 +128,9 @@ public class BrowseActivity extends AppCompatActivity implements
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
 
-        adapter.setViewBinder(new PlaylistBrowseFragmentViewBinder(getResources()));
+        adapter.setViewBinder(
+                new PlaylistBrowseFragment.PlaylistBrowseFragmentViewBinder(getResources())
+        );
 
         PlaylistBrowseFragment fragment = PlaylistBrowseFragment.getInstance(this, mSortedAscending);
         fragment.setListAdapter(adapter);
@@ -659,6 +661,63 @@ public class BrowseActivity extends AppCompatActivity implements
                             ResourcesCompat.getDrawable(
                                     mResources,
                                     R.drawable.ic_queue_music_black_24dp,
+                                    null
+                            )
+                    );
+
+                    return true;
+                }
+
+                return false;
+            }
+        }
+    }
+
+    public static final class PlaylistBrowseFragment extends BrowseFragment {
+        public static PlaylistBrowseFragment getInstance(Context context, boolean sortedAscending) {
+            Bundle arguments = new Bundle();
+            arguments.putString(
+                    BrowseFragment.ARGUMENT_SORT_COLUMN,
+                    MediaStore.Audio.PlaylistsColumns.NAME
+            );
+            arguments.putParcelable(
+                    BrowseFragment.ARGUMENT_CONTENT_URI,
+                    MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI
+            );
+            arguments.putStringArray(
+                    BrowseFragment.ARGUMENT_COLUMNS,
+                    new String[] {
+                            MediaStore.Audio.Playlists._ID,
+                            MediaStore.Audio.PlaylistsColumns.NAME
+                    }
+            );
+            arguments.putString(
+                    BrowseFragment.ARGUMENT_EMPTY_TEXT,
+                    context.getString(R.string.no_playlists)
+            );
+
+            PlaylistBrowseFragment fragment = new PlaylistBrowseFragment();
+            fragment.setArguments(arguments);
+            fragment.setSortedAscending(sortedAscending);
+
+            return fragment;
+        }
+
+        static final class PlaylistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
+            private Resources mResources;
+
+            PlaylistBrowseFragmentViewBinder(Resources resources) {
+                mResources = resources;
+            }
+
+            @Override
+            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+                if (view.getId() == R.id.browse_list_image) {
+                    ImageView imageView = (ImageView) view;
+                    imageView.setImageDrawable(
+                            ResourcesCompat.getDrawable(
+                                    mResources,
+                                    R.drawable.ic_playlist_play_black_24dp,
                                     null
                             )
                     );
