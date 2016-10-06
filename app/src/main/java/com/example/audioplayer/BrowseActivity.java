@@ -48,7 +48,7 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
-    private BrowseFragment initArtistBrowseFragment() {
+    private ArtistBrowseFragment initArtistBrowseFragment() {
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                 this,
                 R.layout.browse_list_item,
@@ -67,7 +67,9 @@ public class BrowseActivity extends AppCompatActivity implements
                 },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
-        adapter.setViewBinder(new ArtistBrowseFragmentViewBinder(getResources()));
+        adapter.setViewBinder(
+                new ArtistBrowseFragment.ArtistBrowseFragmentViewBinder(getResources())
+        );
 
         ArtistBrowseFragment fragment = ArtistBrowseFragment.getInstance(
                 this,
@@ -469,6 +471,97 @@ public class BrowseActivity extends AppCompatActivity implements
 
                         return true;
                     }
+                }
+
+                return false;
+            }
+        }
+    }
+
+    public static final class ArtistBrowseFragment extends BrowseFragment {
+        public static ArtistBrowseFragment getInstance(BrowseActivity activity,
+                                                       boolean sortedAscending) {
+            Bundle arguments = new Bundle();
+            arguments.putString(
+                    BrowseFragment.ARGUMENT_SORT_COLUMN,
+                    MediaStore.Audio.Artists.ARTIST_KEY
+            );
+            arguments.putParcelable(
+                    BrowseFragment.ARGUMENT_CONTENT_URI,
+                    MediaStore.Audio.Artists.EXTERNAL_CONTENT_URI
+            );
+            arguments.putStringArray(
+                    BrowseFragment.ARGUMENT_COLUMNS,
+                    new String[] {
+                            MediaStore.Audio.Artists._ID,
+                            MediaStore.Audio.ArtistColumns.ARTIST,
+                            MediaStore.Audio.ArtistColumns.NUMBER_OF_ALBUMS,
+                            MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS
+                    }
+            );
+            arguments.putString(
+                    BrowseFragment.ARGUMENT_EMPTY_TEXT,
+                    activity.getString(R.string.no_artists)
+            );
+
+            ArtistBrowseFragment fragment = new ArtistBrowseFragment();
+            fragment.setArguments(arguments);
+            fragment.setSortedAscending(sortedAscending);
+
+            return fragment;
+        }
+
+        static final class ArtistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
+            private Resources mResources;
+
+            ArtistBrowseFragmentViewBinder(Resources resources) {
+                mResources = resources;
+            }
+
+            @Override
+            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+                Log.d("setViewValue", view.toString());
+                Log.d("columnIndex", "" + columnIndex);
+                if (view.getId() == R.id.browse_list_bottom_text) {
+                    TextView textView = (TextView) view;
+                    if (columnIndex == 2) {
+                        // Number of albums
+                        int numberOfAlbums = cursor.getInt(
+                                cursor.getColumnIndex(MediaStore.Audio.Artists.NUMBER_OF_ALBUMS)
+                        );
+                        int numberOfTracks = cursor.getInt(
+                                cursor.getColumnIndex(MediaStore.Audio.Artists.NUMBER_OF_TRACKS)
+                        );
+                        textView.setText(
+                                mResources.getString(
+                                        R.string.artist_info,
+                                        mResources.getQuantityString(
+                                                R.plurals.artist_info_albums,
+                                                numberOfAlbums,
+                                                numberOfAlbums
+                                        ),
+                                        mResources.getQuantityString(
+                                                R.plurals.tracks,
+                                                numberOfTracks,
+                                                numberOfTracks
+                                        )
+                                )
+                        );
+
+                        return true;
+                    }
+
+                    if (columnIndex == 3) {
+                        // Number of tracks (Already set)
+                        return true;
+                    }
+                } else if(view.getId() == R.id.browse_list_image) {
+                    // TODO: this only needs to be done one time
+                    ImageView imageView = (ImageView) view;
+                    imageView.setImageDrawable(
+                            ResourcesCompat.getDrawable(mResources, R.drawable.ic_person_black_24dp, null)
+                    );
+                    return true;
                 }
 
                 return false;
