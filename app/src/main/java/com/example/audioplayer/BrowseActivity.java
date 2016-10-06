@@ -39,9 +39,6 @@ public class BrowseActivity extends AppCompatActivity implements
     private int mSpinnerPosition = 0;
     private boolean mInit = true;
 
-    // TODO: let fragments retain their instance, rendering this property useless
-    private boolean mSortedAscending = true;
-
     private TrackBrowseFragment initTrackBrowseFragment() {
         TrackBrowseFragment.TrackBrowseListAdapter trackBrowseListAdapter =
                 new TrackBrowseFragment.TrackBrowseListAdapter(this);
@@ -79,9 +76,6 @@ public class BrowseActivity extends AppCompatActivity implements
         ArtistBrowseFragment fragment = ArtistBrowseFragment.getInstance();
         fragment.setListAdapter(adapter);
         fragment.setEmptyText(getString(R.string.no_artists));
-        fragment.setOnItemClickListener(
-                new ArtistBrowseFragment.ArtistBrowseListViewOnItemClickListener(this)
-        );
 
         return fragment;
     }
@@ -261,8 +255,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
         private boolean mSortedAscending = true;
 
-        private AdapterView.OnItemClickListener mOnItemClickListener;
-
         private String mEmptyText;
 
         public BrowseFragment() {
@@ -291,15 +283,6 @@ public class BrowseActivity extends AppCompatActivity implements
             getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
 
             return view;
-        }
-
-        @Override
-        public void onViewCreated(View view, Bundle savedInstanceState) {
-            if (mOnItemClickListener != null) {
-                getListView().setOnItemClickListener(mOnItemClickListener);
-            }
-
-            super.onViewCreated(view, savedInstanceState);
         }
 
         @Override
@@ -374,10 +357,6 @@ public class BrowseActivity extends AppCompatActivity implements
         public void sort(boolean ascending) {
             mSortedAscending = ascending;
             getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
-        }
-
-        public void setOnItemClickListener(AdapterView.OnItemClickListener listener) {
-            mOnItemClickListener = listener;
         }
 
         @Override
@@ -557,21 +536,6 @@ public class BrowseActivity extends AppCompatActivity implements
                 }
 
                 return false;
-            }
-        }
-
-        static final class ArtistBrowseListViewOnItemClickListener implements AdapterView.OnItemClickListener {
-            private BrowseActivity mActivity;
-
-            ArtistBrowseListViewOnItemClickListener(BrowseActivity activity) {
-                mActivity = activity;
-            }
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.d("4c0n", "onItemClick " + view.toString());
-
-                // TODO: start new activity
             }
         }
     }
