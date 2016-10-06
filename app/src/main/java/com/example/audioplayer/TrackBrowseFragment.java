@@ -38,10 +38,6 @@ public class TrackBrowseFragment extends BrowseFragment {
          fragment.setArguments(arguments);
          fragment.setSortedAscending(sortedAscending);
 
-         // TODO: init adapter outside of this method
-         TrackBrowseListAdapter trackBrowseListAdapter = new TrackBrowseListAdapter(context);
-         fragment.setListAdapter(trackBrowseListAdapter);
-
          return fragment;
      }
 }

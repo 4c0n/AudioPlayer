@@ -25,7 +25,12 @@ public class BrowseActivity extends AppCompatActivity implements
     private boolean mSortedAscending = true;
 
     private BrowseFragment initTrackBrowseFragment() {
-        return TrackBrowseFragment.getInstance(this, mSortedAscending);
+        TrackBrowseListAdapter trackBrowseListAdapter = new TrackBrowseListAdapter(this);
+
+        TrackBrowseFragment fragment = TrackBrowseFragment.getInstance(this, mSortedAscending);
+        fragment.setListAdapter(trackBrowseListAdapter);
+
+        return fragment;
     }
 
     private BrowseFragment initArtistBrowseFragment() {
