@@ -2,6 +2,7 @@ package com.example.audioplayer;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
@@ -27,6 +28,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -73,7 +75,7 @@ public class BrowseActivity extends AppCompatActivity implements
                 new ArtistBrowseFragment.ArtistBrowseFragmentViewBinder(getResources())
         );
 
-        ArtistBrowseFragment fragment = ArtistBrowseFragment.getInstance();
+        ArtistBrowseFragment fragment = ArtistBrowseFragment.newInstance();
         fragment.setListAdapter(adapter);
         fragment.setEmptyText(getString(R.string.no_artists));
 
@@ -273,12 +275,6 @@ public class BrowseActivity extends AppCompatActivity implements
             ImageButton sortButton = (ImageButton) view.findViewById(R.id.sort_menu_button);
             sortButton.setOnClickListener(this);
 
-            Spinner browseTypeSpinner = (Spinner) getActivity().findViewById(R.id.browse_type_spinner);
-            browseTypeSpinner.setVisibility(View.VISIBLE);
-
-            TextView menuTextView = (TextView) getActivity().findViewById(R.id.menu_text);
-            menuTextView.setVisibility(View.GONE);
-
             Log.d("4c0n", "onCreateView " + mSortedAscending);
             getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
 
@@ -455,7 +451,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     public static final class ArtistBrowseFragment extends BrowseFragment {
-        public static ArtistBrowseFragment getInstance() {
+        public static ArtistBrowseFragment newInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
                     BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -480,6 +476,16 @@ public class BrowseActivity extends AppCompatActivity implements
             fragment.setArguments(arguments);
 
             return fragment;
+        }
+
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), ArtistDetailsActivity.class);
+            intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_ID, "" + id);
+            startActivity(intent);
         }
 
         static final class ArtistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {

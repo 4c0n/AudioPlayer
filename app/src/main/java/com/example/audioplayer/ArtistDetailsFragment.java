@@ -37,6 +37,15 @@ public class ArtistDetailsFragment extends Fragment implements
         // Required empty public constructor
     }
 
+    public static ArtistDetailsFragment newInstance(String artistId) {
+        Bundle args = new Bundle();
+        args.putString(ARGUMENT_ARTIST_ID, artistId);
+
+        ArtistDetailsFragment fragment = new ArtistDetailsFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
