@@ -2,6 +2,7 @@ package com.example.audioplayer;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
@@ -16,7 +17,6 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
@@ -27,6 +27,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListAdapter;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -73,7 +74,7 @@ public class BrowseActivity extends AppCompatActivity implements
                 new ArtistBrowseFragment.ArtistBrowseFragmentViewBinder(getResources())
         );
 
-        ArtistBrowseFragment fragment = ArtistBrowseFragment.getInstance();
+        ArtistBrowseFragment fragment = ArtistBrowseFragment.newInstance();
         fragment.setListAdapter(adapter);
         fragment.setEmptyText(getString(R.string.no_artists));
 
@@ -166,9 +167,8 @@ public class BrowseActivity extends AppCompatActivity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.d("4c0n", "onCreate");
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_media);
+        setContentView(R.layout.activity_browse);
         Toolbar toolbar = (Toolbar) findViewById(R.id.browse_activity_toolbar);
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
@@ -181,8 +181,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        Log.d("4c0n", "create");
-
         Spinner browseTypeSpinner = (Spinner) findViewById(R.id.browse_type_spinner);
 
         ArrayAdapter<CharSequence> spinnerAdapter = ArrayAdapter.createFromResource(this,
@@ -212,26 +210,21 @@ public class BrowseActivity extends AppCompatActivity implements
             BrowseFragment newFragment;
 
             if (text.equals(getString(R.string.browse_type_tracks))) {
-                Log.d("4c0n", "Tracks");
                 newFragment = initTrackBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_artists))) {
-                Log.d("4c0n", "Artists");
                 newFragment = initArtistBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_albums))) {
-                Log.d("4c0n", "Albums");
                 newFragment = initAlbumBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_playlists))) {
-                Log.d("4c0n", "Playlists");
                 newFragment = initPlaylistBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_genres))) {
-                Log.d("4c0n", "Genres");
                 newFragment = initGenreBrowseFragment();
             } else {
                 throw new IllegalStateException("Unsupported item selected.");
             }
 
             FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-            transaction.replace(R.id.media_fragment_container, newFragment);
+            transaction.replace(R.id.browse_fragment_container, newFragment);
             transaction.commit();
         }
 
@@ -258,7 +251,6 @@ public class BrowseActivity extends AppCompatActivity implements
         private String mEmptyText;
 
         public BrowseFragment() {
-            Log.d("4c0n", "BrowseFragment");
         }
 
         public void setEmptyText(String emptyText) {
@@ -273,13 +265,6 @@ public class BrowseActivity extends AppCompatActivity implements
             ImageButton sortButton = (ImageButton) view.findViewById(R.id.sort_menu_button);
             sortButton.setOnClickListener(this);
 
-            Spinner browseTypeSpinner = (Spinner) getActivity().findViewById(R.id.browse_type_spinner);
-            browseTypeSpinner.setVisibility(View.VISIBLE);
-
-            TextView menuTextView = (TextView) getActivity().findViewById(R.id.menu_text);
-            menuTextView.setVisibility(View.GONE);
-
-            Log.d("4c0n", "onCreateView " + mSortedAscending);
             getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
 
             return view;
@@ -287,7 +272,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            Log.d("4c0n", "onCreateLoader " + mSortedAscending);
             switch (id) {
                 case BROWSE_LOADER:
                     Bundle arguments = getArguments();
@@ -315,7 +299,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            Log.d("4c0n", "onLoadFinished");
             ListAdapter adapter = getListAdapter();
             if (adapter instanceof SimpleCursorAdapter) {
                 SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) adapter;
@@ -455,7 +438,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     public static final class ArtistBrowseFragment extends BrowseFragment {
-        public static ArtistBrowseFragment getInstance() {
+        public static ArtistBrowseFragment newInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
                     BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -482,6 +465,19 @@ public class BrowseActivity extends AppCompatActivity implements
             return fragment;
         }
 
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+
+            TextView textView = (TextView) v.findViewById(R.id.browse_list_top_text);
+
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), ArtistDetailsActivity.class);
+            intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_ID, "" + id);
+            intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_NAME, textView.getText());
+            startActivity(intent);
+        }
+
         static final class ArtistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
             private Resources mResources;
 
@@ -491,8 +487,6 @@ public class BrowseActivity extends AppCompatActivity implements
 
             @Override
             public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
-                Log.d("setViewValue", view.toString());
-                Log.d("columnIndex", "" + columnIndex);
                 if (view.getId() == R.id.browse_list_bottom_text) {
                     TextView textView = (TextView) view;
                     if (columnIndex == 2) {
