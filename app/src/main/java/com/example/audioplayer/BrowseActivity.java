@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
@@ -36,9 +35,9 @@ import java.io.File;
 public class BrowseActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener {
     private static final String SPINNER_POSITION_KEY = "spinnerPosition";
-    private static final String LIST_SORTED_ASCENDING = "sortedAscending";
 
     private int mSpinnerPosition = 0;
+    private boolean mInit = true;
 
     // TODO: let fragments retain their instance, rendering this property useless
     private boolean mSortedAscending = true;
@@ -47,7 +46,8 @@ public class BrowseActivity extends AppCompatActivity implements
         TrackBrowseFragment.TrackBrowseListAdapter trackBrowseListAdapter =
                 new TrackBrowseFragment.TrackBrowseListAdapter(this);
 
-        TrackBrowseFragment fragment = TrackBrowseFragment.getInstance(this, mSortedAscending);
+        TrackBrowseFragment fragment = TrackBrowseFragment.getInstance();
+        fragment.setEmptyText(getString(R.string.no_tracks));
         fragment.setListAdapter(trackBrowseListAdapter);
 
         return fragment;
@@ -76,11 +76,9 @@ public class BrowseActivity extends AppCompatActivity implements
                 new ArtistBrowseFragment.ArtistBrowseFragmentViewBinder(getResources())
         );
 
-        ArtistBrowseFragment fragment = ArtistBrowseFragment.getInstance(
-                this,
-                mSortedAscending
-        );
+        ArtistBrowseFragment fragment = ArtistBrowseFragment.getInstance();
         fragment.setListAdapter(adapter);
+        fragment.setEmptyText(getString(R.string.no_artists));
         fragment.setOnItemClickListener(
                 new ArtistBrowseFragment.ArtistBrowseListViewOnItemClickListener(this)
         );
@@ -111,8 +109,9 @@ public class BrowseActivity extends AppCompatActivity implements
                 new AlbumBrowseFragment.AlbumBrowseFragmentViewBinder(getResources())
         );
 
-        AlbumBrowseFragment fragment = AlbumBrowseFragment.getInstance(this, mSortedAscending);
+        AlbumBrowseFragment fragment = AlbumBrowseFragment.getInstance();
         fragment.setListAdapter(adapter);
+        fragment.setEmptyText(getString(R.string.no_albums));
 
         return fragment;
     }
@@ -137,7 +136,8 @@ public class BrowseActivity extends AppCompatActivity implements
                 new PlaylistBrowseFragment.PlaylistBrowseFragmentViewBinder(getResources())
         );
 
-        PlaylistBrowseFragment fragment = PlaylistBrowseFragment.getInstance(this, mSortedAscending);
+        PlaylistBrowseFragment fragment = PlaylistBrowseFragment.getInstance();
+        fragment.setEmptyText(getString(R.string.no_playlists));
         fragment.setListAdapter(adapter);
 
         return fragment;
@@ -163,7 +163,8 @@ public class BrowseActivity extends AppCompatActivity implements
                 new GenreBrowseFragment.GenreBrowseFragmentViewBinder(getResources())
         );
 
-        GenreBrowseFragment fragment = GenreBrowseFragment.getInstance(this, mSortedAscending);
+        GenreBrowseFragment fragment = GenreBrowseFragment.getInstance();
+        fragment.setEmptyText(getString(R.string.no_genres));
         fragment.setListAdapter(adapter);
 
         return fragment;
@@ -180,7 +181,7 @@ public class BrowseActivity extends AppCompatActivity implements
 
         if (savedInstanceState != null) {
             mSpinnerPosition = savedInstanceState.getInt(SPINNER_POSITION_KEY);
-            mSortedAscending = savedInstanceState.getBoolean(LIST_SORTED_ASCENDING);
+            mInit = false;
         }
     }
 
@@ -203,56 +204,45 @@ public class BrowseActivity extends AppCompatActivity implements
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
         outState.putInt(SPINNER_POSITION_KEY, mSpinnerPosition);
-
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        BrowseFragment fragment = (BrowseFragment) fragmentManager.findFragmentById(
-                R.id.media_fragment_container
-        );
-
-        outState.putBoolean(LIST_SORTED_ASCENDING, fragment.getSortedAscending());
     }
 
     @Override
     public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        TextView textView = (TextView) view;
-        String text = textView.getText().toString();
+        if (mInit) {
+            TextView textView = (TextView) view;
+            String text = textView.getText().toString();
 
-        FragmentManager fragmentManager = getSupportFragmentManager();
-        ListFragment fragment = (ListFragment) fragmentManager.findFragmentById(
-                R.id.media_fragment_container
-        );
+            BrowseFragment newFragment;
 
-        if (fragment != null) {
-            mSortedAscending = true;
+            if (text.equals(getString(R.string.browse_type_tracks))) {
+                Log.d("4c0n", "Tracks");
+                newFragment = initTrackBrowseFragment();
+            } else if (text.equals(getString(R.string.browse_type_artists))) {
+                Log.d("4c0n", "Artists");
+                newFragment = initArtistBrowseFragment();
+            } else if (text.equals(getString(R.string.browse_type_albums))) {
+                Log.d("4c0n", "Albums");
+                newFragment = initAlbumBrowseFragment();
+            } else if (text.equals(getString(R.string.browse_type_playlists))) {
+                Log.d("4c0n", "Playlists");
+                newFragment = initPlaylistBrowseFragment();
+            } else if (text.equals(getString(R.string.browse_type_genres))) {
+                Log.d("4c0n", "Genres");
+                newFragment = initGenreBrowseFragment();
+            } else {
+                throw new IllegalStateException("Unsupported item selected.");
+            }
+
+            FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+            transaction.replace(R.id.media_fragment_container, newFragment);
+            transaction.commit();
         }
-
-        BrowseFragment newFragment;
-
-        if (text.equals(getString(R.string.browse_type_tracks))) {
-            Log.d("4c0n", "Tracks");
-            newFragment = initTrackBrowseFragment();
-        } else if (text.equals(getString(R.string.browse_type_artists))) {
-            Log.d("4c0n", "Artists");
-            newFragment = initArtistBrowseFragment();
-        } else if (text.equals(getString(R.string.browse_type_albums))) {
-            Log.d("4c0n", "Albums");
-            newFragment = initAlbumBrowseFragment();
-        } else if (text.equals(getString(R.string.browse_type_playlists))) {
-            Log.d("4c0n", "Playlists");
-            newFragment = initPlaylistBrowseFragment();
-        } else if (text.equals(getString(R.string.browse_type_genres))) {
-            Log.d("4c0n", "Genres");
-            newFragment = initGenreBrowseFragment();
-        } else {
-            throw new IllegalStateException("Unsupported item selected.");
-        }
-
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-        transaction.replace(R.id.media_fragment_container, newFragment);
-        transaction.commit();
 
         mSpinnerPosition = position;
+        mInit = true;
     }
 
     @Override
@@ -268,22 +258,19 @@ public class BrowseActivity extends AppCompatActivity implements
         public static final String ARGUMENT_CONTENT_URI = "contentURI";
         public static final String ARGUMENT_COLUMNS = "columns";
         public static final String ARGUMENT_SELECTION = "selection";
-        public static final String ARGUMENT_EMPTY_TEXT = "empyText";
 
         private boolean mSortedAscending = true;
 
         private AdapterView.OnItemClickListener mOnItemClickListener;
 
+        private String mEmptyText;
+
         public BrowseFragment() {
             Log.d("4c0n", "BrowseFragment");
         }
 
-        public void setSortedAscending(boolean ascending) {
-            mSortedAscending = ascending;
-        }
-
-        public boolean getSortedAscending() {
-            return mSortedAscending;
+        public void setEmptyText(String emptyText) {
+            mEmptyText = emptyText;
         }
 
         @Override
@@ -365,7 +352,7 @@ public class BrowseActivity extends AppCompatActivity implements
                 loadingView.setVisibility(View.VISIBLE);
             } else {
                 emptyView.setVisibility(View.VISIBLE);
-                emptyView.setText(getArguments().getString(ARGUMENT_EMPTY_TEXT));
+                emptyView.setText(mEmptyText);
                 loadingView.setVisibility(View.INVISIBLE);
             }
         }
@@ -402,7 +389,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     public static final class AlbumBrowseFragment extends BrowseFragment {
-        public static AlbumBrowseFragment getInstance(Context context, boolean sortedAscending) {
+        public static AlbumBrowseFragment getInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
                     BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -422,14 +409,10 @@ public class BrowseActivity extends AppCompatActivity implements
                             MediaStore.Audio.AlbumColumns.NUMBER_OF_SONGS
                     }
             );
-            arguments.putString(
-                    BrowseFragment.ARGUMENT_EMPTY_TEXT,
-                    context.getString(R.string.no_albums)
-            );
 
             AlbumBrowseFragment fragment = new AlbumBrowseFragment();
             fragment.setArguments(arguments);
-            fragment.setSortedAscending(sortedAscending);
+            fragment.setRetainInstance(true);
 
             return fragment;
         }
@@ -493,8 +476,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     public static final class ArtistBrowseFragment extends BrowseFragment {
-        public static ArtistBrowseFragment getInstance(BrowseActivity activity,
-                                                       boolean sortedAscending) {
+        public static ArtistBrowseFragment getInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
                     BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -513,14 +495,10 @@ public class BrowseActivity extends AppCompatActivity implements
                             MediaStore.Audio.ArtistColumns.NUMBER_OF_TRACKS
                     }
             );
-            arguments.putString(
-                    BrowseFragment.ARGUMENT_EMPTY_TEXT,
-                    activity.getString(R.string.no_artists)
-            );
 
             ArtistBrowseFragment fragment = new ArtistBrowseFragment();
+            fragment.setRetainInstance(true);
             fragment.setArguments(arguments);
-            fragment.setSortedAscending(sortedAscending);
 
             return fragment;
         }
@@ -599,7 +577,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     public static final class GenreBrowseFragment extends BrowseFragment {
-        public static GenreBrowseFragment getInstance(Context context, boolean sortedAscending) {
+        public static GenreBrowseFragment getInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
                     BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -616,14 +594,10 @@ public class BrowseActivity extends AppCompatActivity implements
                             MediaStore.Audio.GenresColumns.NAME
                     }
             );
-            arguments.putString(
-                    BrowseFragment.ARGUMENT_EMPTY_TEXT,
-                    context.getString(R.string.no_genres)
-            );
 
             GenreBrowseFragment fragment = new GenreBrowseFragment();
             fragment.setArguments(arguments);
-            fragment.setSortedAscending(sortedAscending);
+            fragment.setRetainInstance(true);
 
             return fragment;
         }
@@ -656,7 +630,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     public static final class PlaylistBrowseFragment extends BrowseFragment {
-        public static PlaylistBrowseFragment getInstance(Context context, boolean sortedAscending) {
+        public static PlaylistBrowseFragment getInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
                     BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -673,14 +647,10 @@ public class BrowseActivity extends AppCompatActivity implements
                             MediaStore.Audio.PlaylistsColumns.NAME
                     }
             );
-            arguments.putString(
-                    BrowseFragment.ARGUMENT_EMPTY_TEXT,
-                    context.getString(R.string.no_playlists)
-            );
 
             PlaylistBrowseFragment fragment = new PlaylistBrowseFragment();
             fragment.setArguments(arguments);
-            fragment.setSortedAscending(sortedAscending);
+            fragment.setRetainInstance(true);
 
             return fragment;
         }
@@ -713,7 +683,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     public static final class TrackBrowseFragment extends BrowseFragment {
-        public static TrackBrowseFragment getInstance(Context context, boolean sortedAscending) {
+        public static TrackBrowseFragment getInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
                     BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -736,14 +706,10 @@ public class BrowseActivity extends AppCompatActivity implements
                     BrowseFragment.ARGUMENT_SELECTION,
                     MediaStore.Audio.Media.IS_MUSIC + "=1"
             );
-            arguments.putString(
-                    BrowseFragment.ARGUMENT_EMPTY_TEXT,
-                    context.getString(R.string.no_tracks)
-            );
 
             TrackBrowseFragment fragment = new TrackBrowseFragment();
             fragment.setArguments(arguments);
-            fragment.setSortedAscending(sortedAscending);
+            fragment.setRetainInstance(true);
 
             return fragment;
         }
