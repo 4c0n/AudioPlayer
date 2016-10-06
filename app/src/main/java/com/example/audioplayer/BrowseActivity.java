@@ -136,7 +136,7 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
-    private BrowseFragment initGenreBrowseFragment() {
+    private GenreBrowseFragment initGenreBrowseFragment() {
         SimpleCursorAdapter adapter = new SimpleCursorAdapter(
                 this,
                 R.layout.browse_list_item,
@@ -152,7 +152,9 @@ public class BrowseActivity extends AppCompatActivity implements
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
 
-        adapter.setViewBinder(new GenreBrowseFragmentViewBinder(getResources()));
+        adapter.setViewBinder(
+                new GenreBrowseFragment.GenreBrowseFragmentViewBinder(getResources())
+        );
 
         GenreBrowseFragment fragment = GenreBrowseFragment.getInstance(this, mSortedAscending);
         fragment.setListAdapter(adapter);
@@ -608,6 +610,63 @@ public class BrowseActivity extends AppCompatActivity implements
                         .replace(R.id.media_fragment_container, fragment)
                         .addToBackStack(null)
                         .commit();
+            }
+        }
+    }
+
+    public static final class GenreBrowseFragment extends BrowseFragment {
+        public static GenreBrowseFragment getInstance(Context context, boolean sortedAscending) {
+            Bundle arguments = new Bundle();
+            arguments.putString(
+                    BrowseFragment.ARGUMENT_SORT_COLUMN,
+                    MediaStore.Audio.GenresColumns.NAME
+            );
+            arguments.putParcelable(
+                    BrowseFragment.ARGUMENT_CONTENT_URI,
+                    MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI
+            );
+            arguments.putStringArray(
+                    BrowseFragment.ARGUMENT_COLUMNS,
+                    new String[] {
+                            MediaStore.Audio.Genres._ID,
+                            MediaStore.Audio.GenresColumns.NAME
+                    }
+            );
+            arguments.putString(
+                    BrowseFragment.ARGUMENT_EMPTY_TEXT,
+                    context.getString(R.string.no_genres)
+            );
+
+            GenreBrowseFragment fragment = new GenreBrowseFragment();
+            fragment.setArguments(arguments);
+            fragment.setSortedAscending(sortedAscending);
+
+            return fragment;
+        }
+
+        static final class GenreBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
+            private Resources mResources;
+
+            GenreBrowseFragmentViewBinder(Resources resources) {
+                mResources = resources;
+            }
+
+            @Override
+            public boolean setViewValue(View view, Cursor cursor, int columnIndex) {
+                if (view.getId() == R.id.browse_list_image) {
+                    ImageView imageView = (ImageView) view;
+                    imageView.setImageDrawable(
+                            ResourcesCompat.getDrawable(
+                                    mResources,
+                                    R.drawable.ic_queue_music_black_24dp,
+                                    null
+                            )
+                    );
+
+                    return true;
+                }
+
+                return false;
             }
         }
     }
