@@ -18,6 +18,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ArtistDetailsActivity" />
+        <activity android:name=".AlbumDetailsActivity" />
     </application>
 
 </manifest>
