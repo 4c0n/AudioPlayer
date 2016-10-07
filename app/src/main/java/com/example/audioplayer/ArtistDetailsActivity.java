@@ -1,6 +1,7 @@
 package com.example.audioplayer;
 
 import android.content.ContentResolver;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
@@ -19,7 +20,9 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.BaseExpandableListAdapter;
+import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -120,6 +123,30 @@ public class ArtistDetailsActivity extends AppCompatActivity {
                     R.id.artist_detail_list
             );
             listView.setAdapter(mAdapter);
+            listView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
+                @Override
+                public boolean onChildClick(ExpandableListView parent, View v, int groupPosition,
+                                            int childPosition, long id) {
+                    ExpandableListAdapter adapter = parent.getExpandableListAdapter();
+                    if (adapter.getGroup(groupPosition) ==
+                            ArtistDetailsExpandableListAdapter.ALBUMS) {
+
+                        TextView textView = (TextView) v.findViewById(R.id.browse_list_top_text);
+
+                        Intent intent = new Intent();
+                        intent.setClass(getActivity(), AlbumDetailsActivity.class);
+                        intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_ID, "" + id);
+                        intent.putExtra(
+                                AlbumDetailsActivity.INTENT_EXTRA_ALBUM_NAME,
+                                textView.getText()
+                        );
+                        startActivity(intent);
+
+                        return true;
+                    }
+                    return false;
+                }
+            });
 
 
             Log.d("4c0n", "here");
@@ -200,7 +227,10 @@ public class ArtistDetailsActivity extends AppCompatActivity {
          * TODO: Register as data observer so the list is updated when songs are added to the MediaStore
          */
         static final class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
-            private static final String[] PARENT_ITEMS = {"Albums", "Tracks"};
+            public static final String ALBUMS = "Albums";
+            public static final String TRACKS = "Tracks";
+
+            private static final String[] PARENT_ITEMS = {ALBUMS, TRACKS};
 
             private Cursor[] mCursors = {null, null};
             private LayoutInflater mInflater;
