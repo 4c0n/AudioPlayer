@@ -52,7 +52,7 @@ public class ArtistDetailsActivity extends AppCompatActivity {
                         getContentResolver()
                 );
 
-        String artistId = getIntent().getStringExtra(INTENT_EXTRA_ARTIST_ID);
+        long artistId = getIntent().getLongExtra(INTENT_EXTRA_ARTIST_ID, -1);
 
         ArtistDetailsFragment fragment = ArtistDetailsFragment.newInstance(artistId);
         fragment.setAdapter(adapter);
@@ -86,9 +86,9 @@ public class ArtistDetailsActivity extends AppCompatActivity {
             // Required empty public constructor
         }
 
-        public static ArtistDetailsFragment newInstance(String artistId) {
+        public static ArtistDetailsFragment newInstance(long artistId) {
             Bundle args = new Bundle();
-            args.putString(ARGUMENT_ARTIST_ID, artistId);
+            args.putString(ARGUMENT_ARTIST_ID, "" + artistId);
 
             ArtistDetailsFragment fragment = new ArtistDetailsFragment();
             fragment.setArguments(args);

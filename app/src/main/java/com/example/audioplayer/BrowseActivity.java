@@ -261,7 +261,7 @@ public class BrowseActivity extends AppCompatActivity implements
 
             Intent intent = new Intent();
             intent.setClass(getActivity(), AlbumDetailsActivity.class);
-            intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_ID, "" + id);
+            intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_ID, id);
             intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_NAME, textView.getText());
             startActivity(intent);
         }
@@ -360,7 +360,7 @@ public class BrowseActivity extends AppCompatActivity implements
 
             Intent intent = new Intent();
             intent.setClass(getActivity(), ArtistDetailsActivity.class);
-            intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_ID, "" + id);
+            intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_ID, id);
             intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_NAME, textView.getText());
             startActivity(intent);
         }

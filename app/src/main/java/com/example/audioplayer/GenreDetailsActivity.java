@@ -29,7 +29,7 @@ public class GenreDetailsActivity extends AppCompatActivity {
         TrackBrowseFragment.TrackBrowseListAdapter adapter =
                 new TrackBrowseFragment.TrackBrowseListAdapter(this);
 
-        TrackBrowseFragment fragment = TrackBrowseFragment.newInstance(
+        TrackBrowseFragment fragment = TrackBrowseFragment.newGenreBasedInstance(
                 getIntent().getLongExtra(INTENT_EXTRA_GENRE_ID, -1)
         );
 

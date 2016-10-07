@@ -29,8 +29,8 @@ public class AlbumDetailsActivity extends AppCompatActivity {
         TrackBrowseFragment.TrackBrowseListAdapter adapter =
                 new TrackBrowseFragment.TrackBrowseListAdapter(this);
 
-        TrackBrowseFragment fragment = TrackBrowseFragment.newInstance(
-                getIntent().getStringExtra(INTENT_EXTRA_ALBUM_ID)
+        TrackBrowseFragment fragment = TrackBrowseFragment.newAlbumBasedInstance(
+                getIntent().getLongExtra(INTENT_EXTRA_ALBUM_ID, -1)
         );
 
         fragment.setEmptyText(getString(R.string.no_tracks));

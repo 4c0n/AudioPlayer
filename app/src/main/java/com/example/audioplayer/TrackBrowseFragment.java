@@ -74,12 +74,12 @@ public final class TrackBrowseFragment extends BrowseFragment {
         );
     }
 
-    public static TrackBrowseFragment newInstance(String albumId) {
+    public static TrackBrowseFragment newAlbumBasedInstance(long albumId) {
         String selection = getDefaultSelection();
         ArrayList<String> defaultSelectionArgs = getDefaultSelectionArgs();
 
         selection += " AND " + MediaStore.Audio.Media.ALBUM_ID + "=?";
-        defaultSelectionArgs.add(albumId);
+        defaultSelectionArgs.add("" + albumId);
 
         return newInstance(
                 selection,
@@ -88,7 +88,7 @@ public final class TrackBrowseFragment extends BrowseFragment {
         );
     }
 
-    public static TrackBrowseFragment newInstance(long genreId) {
+    public static TrackBrowseFragment newGenreBasedInstance(long genreId) {
         return newInstance(
                 getDefaultSelection(),
                 getDefaultSelectionArgs(),
