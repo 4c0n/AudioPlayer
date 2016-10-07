@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
@@ -44,7 +45,7 @@ public class BrowseActivity extends AppCompatActivity implements
         TrackBrowseFragment.TrackBrowseListAdapter trackBrowseListAdapter =
                 new TrackBrowseFragment.TrackBrowseListAdapter(this);
 
-        TrackBrowseFragment fragment = TrackBrowseFragment.getInstance();
+        TrackBrowseFragment fragment = TrackBrowseFragment.newInstance(null);
         fragment.setEmptyText(getString(R.string.no_tracks));
         fragment.setListAdapter(trackBrowseListAdapter);
 
@@ -166,7 +167,7 @@ public class BrowseActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_browse);
         Toolbar toolbar = (Toolbar) findViewById(R.id.browse_activity_toolbar);
@@ -237,119 +238,6 @@ public class BrowseActivity extends AppCompatActivity implements
         // The way the spinner is set up it is impossible to select nothing
     }
 
-    abstract public static class BrowseFragment extends ListFragment implements
-            Sortable, LoaderManager.LoaderCallbacks<Cursor>, View.OnClickListener {
-
-        private static final int BROWSE_LOADER = 0;
-        public static final String ARGUMENT_SORT_COLUMN = "sortColumn";
-        public static final String ARGUMENT_CONTENT_URI = "contentURI";
-        public static final String ARGUMENT_COLUMNS = "columns";
-        public static final String ARGUMENT_SELECTION = "selection";
-
-        private boolean mSortedAscending = true;
-
-        private String mEmptyText;
-
-        public BrowseFragment() {
-        }
-
-        public void setEmptyText(String emptyText) {
-            mEmptyText = emptyText;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-
-            View view = inflater.inflate(R.layout.fragment_browse, container, false);
-            ImageButton sortButton = (ImageButton) view.findViewById(R.id.sort_menu_button);
-            sortButton.setOnClickListener(this);
-
-            getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
-
-            return view;
-        }
-
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            switch (id) {
-                case BROWSE_LOADER:
-                    Bundle arguments = getArguments();
-                    String sortOrder = arguments.getString(ARGUMENT_SORT_COLUMN);
-                    if (sortOrder != null) {
-                        if (mSortedAscending) {
-                            sortOrder += " ASC";
-                        } else {
-                            sortOrder += " DESC";
-                        }
-                    }
-
-                    return new CursorLoader(
-                            getActivity(),
-                            (Uri) arguments.get(ARGUMENT_CONTENT_URI),
-                            arguments.getStringArray(ARGUMENT_COLUMNS),
-                            arguments.getString(ARGUMENT_SELECTION),
-                            null,
-                            sortOrder
-                    );
-                default:
-                    return null;
-            }
-        }
-
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            ListAdapter adapter = getListAdapter();
-            if (adapter instanceof SimpleCursorAdapter) {
-                SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) adapter;
-                cursorAdapter.changeCursor(data);
-            } else if (adapter instanceof TrackBrowseFragment.TrackBrowseListAdapter) {
-                TrackBrowseFragment.TrackBrowseListAdapter trackBrowseListAdapter =
-                        (TrackBrowseFragment.TrackBrowseListAdapter) adapter;
-                trackBrowseListAdapter.changeCursor(data);
-            }
-
-            @SuppressWarnings("ConstantConditions")
-            TextView emptyView = (TextView) getView().findViewById(R.id.no_data);
-            View loadingView = getView().findViewById(R.id.loading_data);
-
-            if (data.getCount() > 0) {
-                emptyView.setVisibility(View.INVISIBLE);
-                loadingView.setVisibility(View.VISIBLE);
-            } else {
-                emptyView.setVisibility(View.VISIBLE);
-                emptyView.setText(mEmptyText);
-                loadingView.setVisibility(View.INVISIBLE);
-            }
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {
-            ListAdapter adapter = getListAdapter();
-            if (adapter instanceof SimpleCursorAdapter) {
-                SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) adapter;
-                cursorAdapter.changeCursor(null);
-            } else if (adapter instanceof TrackBrowseFragment.TrackBrowseListAdapter) {
-                TrackBrowseFragment.TrackBrowseListAdapter trackBrowseListAdapter =
-                        (TrackBrowseFragment.TrackBrowseListAdapter) adapter;
-                trackBrowseListAdapter.changeCursor(null);
-            }
-        }
-
-        @Override
-        public void sort(boolean ascending) {
-            mSortedAscending = ascending;
-            getLoaderManager().restartLoader(BROWSE_LOADER, null, this);
-        }
-
-        @Override
-        public void onClick(View v) {
-            if (v.getId() == R.id.sort_menu_button) {
-                sort(!mSortedAscending);
-            }
-        }
-    }
-
     public static final class AlbumBrowseFragment extends BrowseFragment {
         public static AlbumBrowseFragment getInstance() {
             Bundle arguments = new Bundle();
@@ -377,6 +265,19 @@ public class BrowseActivity extends AppCompatActivity implements
             fragment.setRetainInstance(true);
 
             return fragment;
+        }
+
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+
+            TextView textView = (TextView) v.findViewById(R.id.browse_list_top_text);
+
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), AlbumDetailsActivity.class);
+            intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_ID, "" + id);
+            intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_NAME, textView.getText());
+            startActivity(intent);
         }
 
         static final class AlbumBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
@@ -636,183 +537,6 @@ public class BrowseActivity extends AppCompatActivity implements
                 }
 
                 return false;
-            }
-        }
-    }
-
-    public static final class TrackBrowseFragment extends BrowseFragment {
-        public static TrackBrowseFragment getInstance() {
-            Bundle arguments = new Bundle();
-            arguments.putString(
-                    BrowseFragment.ARGUMENT_SORT_COLUMN,
-                    MediaStore.Audio.Media.TITLE_KEY
-            );
-            arguments.putParcelable(
-                    BrowseFragment.ARGUMENT_CONTENT_URI,
-                    MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-            );
-            arguments.putStringArray(
-                    BrowseFragment.ARGUMENT_COLUMNS,
-                    new String[] {
-                            MediaStore.Audio.Media._ID,
-                            MediaStore.Audio.Media.TITLE,
-                            MediaStore.Audio.Media.ARTIST,
-                            MediaStore.Audio.Media.ALBUM_ID
-                    }
-            );
-            arguments.putString(
-                    BrowseFragment.ARGUMENT_SELECTION,
-                    MediaStore.Audio.Media.IS_MUSIC + "=1"
-            );
-
-            TrackBrowseFragment fragment = new TrackBrowseFragment();
-            fragment.setArguments(arguments);
-            fragment.setRetainInstance(true);
-
-            return fragment;
-        }
-
-        static final class TrackBrowseListAdapter extends BaseAdapter {
-            private Cursor mMediaCursor;
-            private LayoutInflater mInflater;
-            private ContentResolver mContentResolver;
-            private Resources mResources;
-
-            private static class ViewHolder {
-                TextView title;
-                TextView artist;
-                ImageView albumArt;
-            }
-
-            TrackBrowseListAdapter(Context context) {
-                mContentResolver = context.getContentResolver();
-                mInflater = LayoutInflater.from(context);
-                mResources = context.getResources();
-            }
-
-            private void setDrawableToImageView(ViewHolder holder) {
-                holder.albumArt.setImageDrawable(
-                        ResourcesCompat.getDrawable(
-                                mResources,
-                                R.drawable.ic_music_note_black_24dp,
-                                null
-                        )
-                );
-            }
-
-            @Override
-            public int getCount() {
-                if (mMediaCursor != null) {
-                    return mMediaCursor.getCount();
-                }
-
-                return 0;
-            }
-
-            @Override
-            public Object getItem(int position) {
-                if (mMediaCursor != null) {
-                    mMediaCursor.moveToPosition(position);
-                    return mMediaCursor;
-                }
-
-                return null;
-            }
-
-            @Override
-            public long getItemId(int position) {
-                if (mMediaCursor != null) {
-                    if (mMediaCursor.moveToPosition(position)) {
-                        return mMediaCursor.getLong(
-                                mMediaCursor.getColumnIndex(MediaStore.Audio.Media._ID)
-                        );
-                    }
-
-                    return 0;
-                }
-
-                return 0;
-            }
-
-            @Override
-            public View getView(int position, View convertView, ViewGroup parent) {
-                ViewHolder holder;
-
-                if (convertView == null) {
-                    convertView = mInflater.inflate(R.layout.browse_list_item, parent, false);
-
-                    holder = new ViewHolder();
-                    holder.title = (TextView) convertView.findViewById(R.id.browse_list_top_text);
-                    holder.artist = (TextView) convertView.findViewById(R.id.browse_list_bottom_text);
-                    holder.albumArt = (ImageView) convertView.findViewById(R.id.browse_list_image);
-
-                    convertView.setTag(holder);
-                } else {
-                    holder = (ViewHolder) convertView.getTag();
-                }
-
-                mMediaCursor.moveToPosition(position);
-
-                String titleText = mMediaCursor.getString(
-                        mMediaCursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
-                );
-                holder.title.setText(titleText);
-
-                String artistText = mMediaCursor.getString(
-                        mMediaCursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)
-                );
-                holder.artist.setText(artistText);
-
-                int albumId = mMediaCursor.getInt(
-                        mMediaCursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
-                );
-
-                // TODO: use cursor loader or other means of threading
-                Cursor albumCursor = mContentResolver.query(
-                        MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
-                        new String[] {MediaStore.Audio.Albums.ALBUM_ART},
-                        "_id=" + albumId,
-                        null,
-                        null
-                );
-
-                holder.albumArt.setImageURI(null);
-                holder.albumArt.setImageDrawable(null);
-                if (albumCursor != null) {
-                    if (albumCursor.getCount() > 0) {
-                        albumCursor.moveToFirst();
-
-                        String albumArtStr = albumCursor.getString(
-                                albumCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)
-                        );
-
-                        if (albumArtStr != null) {
-                            holder.albumArt.setImageURI(Uri.fromFile(new File(albumArtStr)));
-                        } else {
-                            setDrawableToImageView(holder);
-                        }
-                    } else {
-                        setDrawableToImageView(holder);
-                    }
-                    albumCursor.close();
-                } else {
-                    setDrawableToImageView(holder);
-                }
-
-                return convertView;
-            }
-
-            void changeCursor(Cursor cursor) {
-                if (mMediaCursor != null) {
-                    mMediaCursor.close();
-                }
-
-                if (cursor != null) {
-                    mMediaCursor = cursor;
-                    notifyDataSetChanged();
-                } else {
-                    notifyDataSetInvalidated();
-                }
             }
         }
     }
