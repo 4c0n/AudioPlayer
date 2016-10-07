@@ -1,38 +1,24 @@
 package com.example.audioplayer;
 
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTransaction;
-import android.support.v4.app.ListFragment;
-import android.support.v4.app.LoaderManager;
-import android.support.v4.content.CursorLoader;
-import android.support.v4.content.Loader;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
-
-import java.io.File;
 
 public class BrowseActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener {
@@ -45,7 +31,7 @@ public class BrowseActivity extends AppCompatActivity implements
         TrackBrowseFragment.TrackBrowseListAdapter trackBrowseListAdapter =
                 new TrackBrowseFragment.TrackBrowseListAdapter(this);
 
-        TrackBrowseFragment fragment = TrackBrowseFragment.newInstance(null);
+        TrackBrowseFragment fragment = TrackBrowseFragment.newInstance();
         fragment.setEmptyText(getString(R.string.no_tracks));
         fragment.setListAdapter(trackBrowseListAdapter);
 
@@ -459,6 +445,19 @@ public class BrowseActivity extends AppCompatActivity implements
             fragment.setRetainInstance(true);
 
             return fragment;
+        }
+
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+
+            TextView textView = (TextView) v.findViewById(R.id.browse_list_top_text);
+
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), GenreDetailsActivity.class);
+            intent.putExtra(GenreDetailsActivity.INTENT_EXTRA_GENRE_ID, id);
+            intent.putExtra(GenreDetailsActivity.INTENT_EXTRA_GENRE_NAME, textView.getText());
+            startActivity(intent);
         }
 
         static final class GenreBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {

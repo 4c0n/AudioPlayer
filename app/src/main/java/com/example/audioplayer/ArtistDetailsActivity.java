@@ -15,12 +15,10 @@ import android.support.v4.content.Loader;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
@@ -102,7 +100,6 @@ public class ArtistDetailsActivity extends AppCompatActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
-            Log.d("4c0n", "ArtistDetailFragment onCreateView: " + getArguments().getString(ARGUMENT_ARTIST_ID));
             getLoaderManager().restartLoader(ALBUM_LOADER, null, this);
             getLoaderManager().restartLoader(TRACK_LOADER, null, this);
             // Inflate the layout for this fragment
@@ -118,7 +115,6 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
         @Override
         public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-            Log.d("4c0n", "ArtistDetailFragment onViewCreated " + mAdapter.toString());
             ExpandableListView listView = (ExpandableListView) view.findViewById(
                     R.id.artist_detail_list
             );
@@ -148,14 +144,11 @@ public class ArtistDetailsActivity extends AppCompatActivity {
                 }
             });
 
-
-            Log.d("4c0n", "here");
             super.onViewCreated(view, savedInstanceState);
         }
 
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            Log.d("4c0n", "onCreateLoader");
             String artistId = getArguments().getString(ARGUMENT_ARTIST_ID);
             switch (id) {
                 case ALBUM_LOADER:
@@ -197,7 +190,6 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
         @Override
         public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            Log.d("4c0n", "onLoadFinished");
             switch (loader.getId()) {
                 case ALBUM_LOADER:
                     mAdapter.changeAlbumCursor(data);
@@ -209,7 +201,6 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-            Log.d("4c0n", "onLoaderReset");
             switch (loader.getId()) {
                 case ALBUM_LOADER:
                     mAdapter.changeAlbumCursor(null);
@@ -227,8 +218,8 @@ public class ArtistDetailsActivity extends AppCompatActivity {
          * TODO: Register as data observer so the list is updated when songs are added to the MediaStore
          */
         static final class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
-            public static final String ALBUMS = "Albums";
-            public static final String TRACKS = "Tracks";
+            static final String ALBUMS = "Albums";
+            static final String TRACKS = "Tracks";
 
             private static final String[] PARENT_ITEMS = {ALBUMS, TRACKS};
 

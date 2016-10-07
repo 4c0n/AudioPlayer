@@ -8,21 +8,21 @@ import android.view.Menu;
 import android.widget.TextView;
 
 
-public class AlbumDetailsActivity extends AppCompatActivity {
-    public static final String INTENT_EXTRA_ALBUM_ID = "albumId";
-    public static final String INTENT_EXTRA_ALBUM_NAME = "albumName";
+public class GenreDetailsActivity extends AppCompatActivity {
+    public static final String INTENT_EXTRA_GENRE_ID = "genreId";
+    public static final String INTENT_EXTRA_GENRE_NAME = "genreName";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_album_details);
+        setContentView(R.layout.activity_genre_details);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.album_details_activity_toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.genre_details_activity_toolbar);
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
 
-        if (savedInstanceState != null) {
+        if(savedInstanceState != null) {
             return;
         }
 
@@ -30,7 +30,7 @@ public class AlbumDetailsActivity extends AppCompatActivity {
                 new TrackBrowseFragment.TrackBrowseListAdapter(this);
 
         TrackBrowseFragment fragment = TrackBrowseFragment.newInstance(
-                getIntent().getStringExtra(INTENT_EXTRA_ALBUM_ID)
+                getIntent().getLongExtra(INTENT_EXTRA_GENRE_ID, -1)
         );
 
         fragment.setEmptyText(getString(R.string.no_tracks));
@@ -38,16 +38,16 @@ public class AlbumDetailsActivity extends AppCompatActivity {
 
         getSupportFragmentManager()
                 .beginTransaction()
-                .add(R.id.album_details_fragment_container, fragment)
+                .add(R.id.genre_details_fragment_container, fragment)
                 .commit();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        String albumName = getIntent().getStringExtra(INTENT_EXTRA_ALBUM_NAME);
+        String genreName = getIntent().getStringExtra(INTENT_EXTRA_GENRE_NAME);
 
         TextView menuText = (TextView) findViewById(R.id.menu_text);
-        menuText.setText(albumName);
+        menuText.setText(genreName);
 
         return true;
     }
