@@ -30,7 +30,8 @@ public final class TrackBrowseFragment extends BrowseFragment {
         return selectionArgs;
     }
 
-    private static TrackBrowseFragment newInstance(String selection, String[] selectionArgs) {
+    private static TrackBrowseFragment newInstance(String selection, String[] selectionArgs,
+                                                   Uri contentUri) {
         Bundle arguments = new Bundle();
         arguments.putString(
                 BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -38,7 +39,7 @@ public final class TrackBrowseFragment extends BrowseFragment {
         );
         arguments.putParcelable(
                 BrowseFragment.ARGUMENT_CONTENT_URI,
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                contentUri
         );
         arguments.putStringArray(
                 BrowseFragment.ARGUMENT_COLUMNS,
@@ -63,7 +64,12 @@ public final class TrackBrowseFragment extends BrowseFragment {
         ArrayList<String> defaultSelectionArgs = getDefaultSelectionArgs();
         String[] selectionArgs = new String[defaultSelectionArgs.size()];
         defaultSelectionArgs.toArray(selectionArgs);
-        return newInstance(getDefaultSelection(), selectionArgs);
+
+        return newInstance(
+                getDefaultSelection(),
+                selectionArgs,
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        );
     }
 
     public static TrackBrowseFragment newInstance(String albumId) {
@@ -76,7 +82,19 @@ public final class TrackBrowseFragment extends BrowseFragment {
         String[] selectionArgs = new String[defaultSelectionArgs.size()];
         defaultSelectionArgs.toArray(selectionArgs);
 
-        return newInstance(selection, selectionArgs);
+        return newInstance(selection, selectionArgs, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
+    }
+
+    public static TrackBrowseFragment newInstance(long genreId) {
+        ArrayList<String> defaultSelectionArgs = getDefaultSelectionArgs();
+        String[] selectionArgs = new String[defaultSelectionArgs.size()];
+        defaultSelectionArgs.toArray(selectionArgs);
+
+        return newInstance(
+                getDefaultSelection(),
+                selectionArgs,
+                MediaStore.Audio.Genres.Members.getContentUri("external", genreId)
+        );
     }
 
     static final class TrackBrowseListAdapter extends BaseAdapter {

@@ -447,6 +447,19 @@ public class BrowseActivity extends AppCompatActivity implements
             return fragment;
         }
 
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+
+            TextView textView = (TextView) v.findViewById(R.id.browse_list_top_text);
+
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), GenreDetailsActivity.class);
+            intent.putExtra(GenreDetailsActivity.INTENT_EXTRA_GENRE_ID, id);
+            intent.putExtra(GenreDetailsActivity.INTENT_EXTRA_GENRE_NAME, textView.getText());
+            startActivity(intent);
+        }
+
         static final class GenreBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
             private Resources mResources;
 
