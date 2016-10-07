@@ -5,6 +5,8 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Menu;
+import android.widget.TextView;
 
 
 public class AlbumDetailsActivity extends AppCompatActivity {
@@ -18,7 +20,7 @@ public class AlbumDetailsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_album_details);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.album_details_activity_toolbar);
-        toolbar.setTitle(getIntent().getStringExtra(INTENT_EXTRA_ALBUM_NAME));
+        toolbar.setTitle("");
         setSupportActionBar(toolbar);
 
         if (savedInstanceState != null) {
@@ -39,5 +41,15 @@ public class AlbumDetailsActivity extends AppCompatActivity {
                 .beginTransaction()
                 .add(R.id.album_details_fragment_container, fragment)
                 .commit();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        String albumName = getIntent().getStringExtra(INTENT_EXTRA_ALBUM_NAME);
+
+        TextView menuText = (TextView) findViewById(R.id.menu_text);
+        menuText.setText(albumName);
+
+        return true;
     }
 }
