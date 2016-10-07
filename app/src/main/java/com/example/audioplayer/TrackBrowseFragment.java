@@ -1,6 +1,5 @@
 package com.example.audioplayer;
 
-
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.res.Resources;
@@ -8,7 +7,6 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.annotation.Nullable;
 import android.support.v4.content.res.ResourcesCompat;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,9 +16,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public final class TrackBrowseFragment extends BrowseFragment {
-    public static TrackBrowseFragment newInstance(@Nullable String albumId) {
+    private static String getDefaultSelection() {
+        return MediaStore.Audio.Media.IS_MUSIC + "=?";
+    }
+
+    private static ArrayList<String> getDefaultSelectionArgs() {
+        ArrayList<String> selectionArgs = new ArrayList<>();
+        selectionArgs.add("1");
+
+        return selectionArgs;
+    }
+
+    private static TrackBrowseFragment newInstance(String selection, String[] selectionArgs) {
         Bundle arguments = new Bundle();
         arguments.putString(
                 BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -39,14 +49,6 @@ public final class TrackBrowseFragment extends BrowseFragment {
                         MediaStore.Audio.Media.ALBUM_ID
                 }
         );
-
-        String selection = MediaStore.Audio.Media.IS_MUSIC + "=?";
-        String[] selectionArgs = {"1"};
-        if (albumId != null) {
-            selection += " AND " + MediaStore.Audio.Media.ALBUM_ID + "=?";
-            selectionArgs = new String[] {selectionArgs[0], albumId};
-        }
-
         arguments.putString(BrowseFragment.ARGUMENT_SELECTION, selection);
         arguments.putStringArray(BrowseFragment.ARGUMENT_SELECTION_ARGS, selectionArgs);
 
@@ -55,6 +57,26 @@ public final class TrackBrowseFragment extends BrowseFragment {
         fragment.setRetainInstance(true);
 
         return fragment;
+    }
+
+    public static TrackBrowseFragment newInstance() {
+        ArrayList<String> defaultSelectionArgs = getDefaultSelectionArgs();
+        String[] selectionArgs = new String[defaultSelectionArgs.size()];
+        defaultSelectionArgs.toArray(selectionArgs);
+        return newInstance(getDefaultSelection(), selectionArgs);
+    }
+
+    public static TrackBrowseFragment newInstance(String albumId) {
+        String selection = getDefaultSelection();
+        ArrayList<String> defaultSelectionArgs = getDefaultSelectionArgs();
+
+        selection += " AND " + MediaStore.Audio.Media.ALBUM_ID + "=?";
+        defaultSelectionArgs.add(albumId);
+
+        String[] selectionArgs = new String[defaultSelectionArgs.size()];
+        defaultSelectionArgs.toArray(selectionArgs);
+
+        return newInstance(selection, selectionArgs);
     }
 
     static final class TrackBrowseListAdapter extends BaseAdapter {
