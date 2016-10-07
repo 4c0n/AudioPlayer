@@ -218,8 +218,8 @@ public class ArtistDetailsActivity extends AppCompatActivity {
          * TODO: Register as data observer so the list is updated when songs are added to the MediaStore
          */
         static final class ArtistDetailsExpandableListAdapter extends BaseExpandableListAdapter {
-            public static final String ALBUMS = "Albums";
-            public static final String TRACKS = "Tracks";
+            static final String ALBUMS = "Albums";
+            static final String TRACKS = "Tracks";
 
             private static final String[] PARENT_ITEMS = {ALBUMS, TRACKS};
 
