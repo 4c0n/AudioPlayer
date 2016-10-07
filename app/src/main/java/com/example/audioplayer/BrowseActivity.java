@@ -261,7 +261,7 @@ public class BrowseActivity extends AppCompatActivity implements
 
             Intent intent = new Intent();
             intent.setClass(getActivity(), AlbumDetailsActivity.class);
-            intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_ID, "" + id);
+            intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_ID, id);
             intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_NAME, textView.getText());
             startActivity(intent);
         }
@@ -360,7 +360,7 @@ public class BrowseActivity extends AppCompatActivity implements
 
             Intent intent = new Intent();
             intent.setClass(getActivity(), ArtistDetailsActivity.class);
-            intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_ID, "" + id);
+            intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_ID, id);
             intent.putExtra(ArtistDetailsActivity.INTENT_EXTRA_ARTIST_NAME, textView.getText());
             startActivity(intent);
         }
@@ -511,6 +511,19 @@ public class BrowseActivity extends AppCompatActivity implements
             fragment.setRetainInstance(true);
 
             return fragment;
+        }
+
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+
+            TextView textView = (TextView) v.findViewById(R.id.browse_list_top_text);
+
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), PlaylistDetailsActivity.class);
+            intent.putExtra(PlaylistDetailsActivity.INTENT_EXTRA_PLAYLIST_ID, id);
+            intent.putExtra(PlaylistDetailsActivity.INTENT_EXTRA_PLAYLIST_NAME, textView.getText());
+            startActivity(intent);
         }
 
         static final class PlaylistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {

@@ -8,29 +8,29 @@ import android.view.Menu;
 import android.widget.TextView;
 
 
-public class GenreDetailsActivity extends AppCompatActivity {
-    public static final String INTENT_EXTRA_GENRE_ID = "genreId";
-    public static final String INTENT_EXTRA_GENRE_NAME = "genreName";
+public class PlaylistDetailsActivity extends AppCompatActivity {
+    public static final String INTENT_EXTRA_PLAYLIST_ID = "playlistId";
+    public static final String INTENT_EXTRA_PLAYLIST_NAME = "playlistName";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_genre_details);
+        setContentView(R.layout.activity_playlist_details);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.genre_details_activity_toolbar);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.playlist_details_activity_toolbar);
         toolbar.setTitle("");
         setSupportActionBar(toolbar);
 
-        if(savedInstanceState != null) {
+        if (savedInstanceState != null) {
             return;
         }
 
         TrackBrowseFragment.TrackBrowseListAdapter adapter =
                 new TrackBrowseFragment.TrackBrowseListAdapter(this);
 
-        TrackBrowseFragment fragment = TrackBrowseFragment.newGenreBasedInstance(
-                getIntent().getLongExtra(INTENT_EXTRA_GENRE_ID, -1)
+        TrackBrowseFragment fragment = TrackBrowseFragment.newPlaylistBasedInstance(
+                getIntent().getLongExtra(INTENT_EXTRA_PLAYLIST_ID, -1)
         );
 
         fragment.setEmptyText(getString(R.string.no_tracks));
@@ -38,16 +38,16 @@ public class GenreDetailsActivity extends AppCompatActivity {
 
         getSupportFragmentManager()
                 .beginTransaction()
-                .add(R.id.genre_details_fragment_container, fragment)
+                .add(R.id.playlist_details_fragment_container, fragment)
                 .commit();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        String genreName = getIntent().getStringExtra(INTENT_EXTRA_GENRE_NAME);
-
-        TextView menuText = (TextView) findViewById(R.id.menu_text);
-        menuText.setText(genreName);
+        TextView textView = (TextView) findViewById(R.id.menu_text);
+        textView.setText(
+                getIntent().getStringExtra(INTENT_EXTRA_PLAYLIST_NAME)
+        );
 
         return true;
     }

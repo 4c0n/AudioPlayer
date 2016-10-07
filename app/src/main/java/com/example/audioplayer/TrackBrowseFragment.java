@@ -30,8 +30,11 @@ public final class TrackBrowseFragment extends BrowseFragment {
         return selectionArgs;
     }
 
-    private static TrackBrowseFragment newInstance(String selection, String[] selectionArgs,
-                                                   Uri contentUri) {
+    private static TrackBrowseFragment newInstance(
+            String selection,
+            ArrayList<String> selectionArgs,
+            Uri contentUri
+    ) {
         Bundle arguments = new Bundle();
         arguments.putString(
                 BrowseFragment.ARGUMENT_SORT_COLUMN,
@@ -51,7 +54,10 @@ public final class TrackBrowseFragment extends BrowseFragment {
                 }
         );
         arguments.putString(BrowseFragment.ARGUMENT_SELECTION, selection);
-        arguments.putStringArray(BrowseFragment.ARGUMENT_SELECTION_ARGS, selectionArgs);
+
+        String[] selectionArguments = new String[selectionArgs.size()];
+        selectionArgs.toArray(selectionArguments);
+        arguments.putStringArray(BrowseFragment.ARGUMENT_SELECTION_ARGS, selectionArguments);
 
         TrackBrowseFragment fragment = new TrackBrowseFragment();
         fragment.setArguments(arguments);
@@ -61,39 +67,40 @@ public final class TrackBrowseFragment extends BrowseFragment {
     }
 
     public static TrackBrowseFragment newInstance() {
-        ArrayList<String> defaultSelectionArgs = getDefaultSelectionArgs();
-        String[] selectionArgs = new String[defaultSelectionArgs.size()];
-        defaultSelectionArgs.toArray(selectionArgs);
-
         return newInstance(
                 getDefaultSelection(),
-                selectionArgs,
+                getDefaultSelectionArgs(),
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         );
     }
 
-    public static TrackBrowseFragment newInstance(String albumId) {
+    public static TrackBrowseFragment newAlbumBasedInstance(long albumId) {
         String selection = getDefaultSelection();
         ArrayList<String> defaultSelectionArgs = getDefaultSelectionArgs();
 
         selection += " AND " + MediaStore.Audio.Media.ALBUM_ID + "=?";
-        defaultSelectionArgs.add(albumId);
-
-        String[] selectionArgs = new String[defaultSelectionArgs.size()];
-        defaultSelectionArgs.toArray(selectionArgs);
-
-        return newInstance(selection, selectionArgs, MediaStore.Audio.Media.EXTERNAL_CONTENT_URI);
-    }
-
-    public static TrackBrowseFragment newInstance(long genreId) {
-        ArrayList<String> defaultSelectionArgs = getDefaultSelectionArgs();
-        String[] selectionArgs = new String[defaultSelectionArgs.size()];
-        defaultSelectionArgs.toArray(selectionArgs);
+        defaultSelectionArgs.add("" + albumId);
 
         return newInstance(
+                selection,
+                defaultSelectionArgs,
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+        );
+    }
+
+    public static TrackBrowseFragment newGenreBasedInstance(long genreId) {
+        return newInstance(
                 getDefaultSelection(),
-                selectionArgs,
+                getDefaultSelectionArgs(),
                 MediaStore.Audio.Genres.Members.getContentUri("external", genreId)
+        );
+    }
+
+    public static TrackBrowseFragment newPlaylistBasedInstance(long playlistId) {
+        return newInstance(
+                getDefaultSelection(),
+                getDefaultSelectionArgs(),
+                MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId)
         );
     }
 
