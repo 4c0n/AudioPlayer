@@ -513,6 +513,19 @@ public class BrowseActivity extends AppCompatActivity implements
             return fragment;
         }
 
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+
+            TextView textView = (TextView) v.findViewById(R.id.browse_list_top_text);
+
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), PlaylistDetailsActivity.class);
+            intent.putExtra(PlaylistDetailsActivity.INTENT_EXTRA_PLAYLIST_ID, id);
+            intent.putExtra(PlaylistDetailsActivity.INTENT_EXTRA_PLAYLIST_NAME, textView.getText());
+            startActivity(intent);
+        }
+
         static final class PlaylistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
             private Resources mResources;
 

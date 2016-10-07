@@ -96,6 +96,14 @@ public final class TrackBrowseFragment extends BrowseFragment {
         );
     }
 
+    public static TrackBrowseFragment newPlaylistBasedInstance(long playlistId) {
+        return newInstance(
+                getDefaultSelection(),
+                getDefaultSelectionArgs(),
+                MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId)
+        );
+    }
+
     static final class TrackBrowseListAdapter extends BaseAdapter {
         private Cursor mMediaCursor;
         private LayoutInflater mInflater;

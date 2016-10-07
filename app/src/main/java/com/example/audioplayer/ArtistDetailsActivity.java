@@ -131,7 +131,7 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
                         Intent intent = new Intent();
                         intent.setClass(getActivity(), AlbumDetailsActivity.class);
-                        intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_ID, "" + id);
+                        intent.putExtra(AlbumDetailsActivity.INTENT_EXTRA_ALBUM_ID, id);
                         intent.putExtra(
                                 AlbumDetailsActivity.INTENT_EXTRA_ALBUM_NAME,
                                 textView.getText()
