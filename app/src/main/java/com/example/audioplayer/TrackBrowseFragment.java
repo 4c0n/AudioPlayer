@@ -33,12 +33,13 @@ public final class TrackBrowseFragment extends BrowseFragment {
     private static TrackBrowseFragment newInstance(
             String selection,
             ArrayList<String> selectionArgs,
-            Uri contentUri
+            Uri contentUri,
+            String sortColumn
     ) {
         Bundle arguments = new Bundle();
         arguments.putString(
                 BrowseFragment.ARGUMENT_SORT_COLUMN,
-                MediaStore.Audio.Media.TITLE_KEY
+                sortColumn
         );
         arguments.putParcelable(
                 BrowseFragment.ARGUMENT_CONTENT_URI,
@@ -70,7 +71,8 @@ public final class TrackBrowseFragment extends BrowseFragment {
         return newInstance(
                 getDefaultSelection(),
                 getDefaultSelectionArgs(),
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                MediaStore.Audio.Media.TITLE_KEY
         );
     }
 
@@ -84,7 +86,8 @@ public final class TrackBrowseFragment extends BrowseFragment {
         return newInstance(
                 selection,
                 defaultSelectionArgs,
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                MediaStore.Audio.Media.TITLE_KEY
         );
     }
 
@@ -92,7 +95,8 @@ public final class TrackBrowseFragment extends BrowseFragment {
         return newInstance(
                 getDefaultSelection(),
                 getDefaultSelectionArgs(),
-                MediaStore.Audio.Genres.Members.getContentUri("external", genreId)
+                MediaStore.Audio.Genres.Members.getContentUri("external", genreId),
+                MediaStore.Audio.Media.TITLE_KEY
         );
     }
 
@@ -100,7 +104,8 @@ public final class TrackBrowseFragment extends BrowseFragment {
         return newInstance(
                 getDefaultSelection(),
                 getDefaultSelectionArgs(),
-                MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId)
+                MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId),
+                MediaStore.Audio.Playlists.Members.PLAY_ORDER
         );
     }
 

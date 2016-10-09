@@ -11,7 +11,10 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.ContextMenu;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -19,6 +22,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class BrowseActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener {
@@ -487,7 +491,11 @@ public class BrowseActivity extends AppCompatActivity implements
         }
     }
 
-    public static final class PlaylistBrowseFragment extends BrowseFragment {
+    public static final class PlaylistBrowseFragment extends BrowseFragment implements
+            SimpleAsyncQueryHandler.OnDeleteCompleteListener {
+
+        private static final int ASYNC_DELETE_TOKEN = 1020;
+
         public static PlaylistBrowseFragment getInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
@@ -514,6 +522,49 @@ public class BrowseActivity extends AppCompatActivity implements
         }
 
         @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            registerForContextMenu(getListView());
+        }
+
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v,
+                                        ContextMenu.ContextMenuInfo menuInfo) {
+            super.onCreateContextMenu(menu, v, menuInfo);
+
+            MenuInflater inflater = getActivity().getMenuInflater();
+            inflater.inflate(R.menu.playlist_context_menu, menu);
+        }
+
+        @Override
+        public boolean onContextItemSelected(MenuItem item) {
+            AdapterView.AdapterContextMenuInfo menuInfo =
+                    (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+            switch (item.getItemId()) {
+                case R.id.playlist_delete:
+                    TextView textView =
+                            (TextView) menuInfo.targetView.findViewById(R.id.browse_list_top_text);
+
+                    SimpleAsyncQueryHandler asyncQueryHandler = new SimpleAsyncQueryHandler(
+                            getActivity().getContentResolver()
+                    );
+                    asyncQueryHandler.registerOnDeleteCompleteListener(this);
+                    asyncQueryHandler.startDelete(
+                            ASYNC_DELETE_TOKEN,
+                            textView.getText(),
+                            MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+                            MediaStore.Audio.Playlists._ID + "=?",
+                            new String[] {Long.toString(menuInfo.id)}
+                    );
+
+                    return true;
+                default:
+                    return super.onContextItemSelected(item);
+            }
+        }
+
+        @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
             super.onListItemClick(l, v, position, id);
 
@@ -524,6 +575,18 @@ public class BrowseActivity extends AppCompatActivity implements
             intent.putExtra(PlaylistDetailsActivity.INTENT_EXTRA_PLAYLIST_ID, id);
             intent.putExtra(PlaylistDetailsActivity.INTENT_EXTRA_PLAYLIST_NAME, textView.getText());
             startActivity(intent);
+        }
+
+        @Override
+        public void onDeleteComplete(int token, Object cookie, int result) {
+            switch (token) {
+                case ASYNC_DELETE_TOKEN:
+                    Toast.makeText(
+                            getActivity(),
+                            "Playlist \"" + cookie + "\" deleted.",
+                            Toast.LENGTH_SHORT
+                    ).show();
+            }
         }
 
         static final class PlaylistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
