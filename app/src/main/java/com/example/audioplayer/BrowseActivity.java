@@ -23,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class BrowseActivity extends AppCompatActivity implements
         AdapterView.OnItemSelectedListener {
@@ -491,7 +492,11 @@ public class BrowseActivity extends AppCompatActivity implements
         }
     }
 
-    public static final class PlaylistBrowseFragment extends BrowseFragment {
+    public static final class PlaylistBrowseFragment extends BrowseFragment implements
+            SimpleAsyncQueryHandler.OnDeleteCompleteListener {
+
+        private static final int ASYNC_DELETE_TOKEN = 1020;
+
         public static PlaylistBrowseFragment getInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
@@ -536,17 +541,25 @@ public class BrowseActivity extends AppCompatActivity implements
         public boolean onContextItemSelected(MenuItem item) {
             AdapterView.AdapterContextMenuInfo menuInfo =
                     (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
             switch (item.getItemId()) {
                 case R.id.playlist_delete:
-                    // TODO: delete async
-                    int rowsDeleted = getActivity().getContentResolver().delete(
+                    TextView textView =
+                            (TextView) menuInfo.targetView.findViewById(R.id.browse_list_top_text);
+
+                    SimpleAsyncQueryHandler asyncQueryHandler = new SimpleAsyncQueryHandler(
+                            getActivity().getContentResolver()
+                    );
+                    asyncQueryHandler.registerOnDeleteCompleteListener(this);
+                    asyncQueryHandler.startDelete(
+                            ASYNC_DELETE_TOKEN,
+                            textView.getText(),
                             MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
                             MediaStore.Audio.Playlists._ID + "=?",
-                            new String[] {
-                                    "" + menuInfo.id
-                            }
+                            new String[] {Long.toString(menuInfo.id)}
                     );
-                    Log.d("4c0n", rowsDeleted + " rows deleted!");
+
+                    return true;
                 default:
                     return super.onContextItemSelected(item);
             }
@@ -563,6 +576,18 @@ public class BrowseActivity extends AppCompatActivity implements
             intent.putExtra(PlaylistDetailsActivity.INTENT_EXTRA_PLAYLIST_ID, id);
             intent.putExtra(PlaylistDetailsActivity.INTENT_EXTRA_PLAYLIST_NAME, textView.getText());
             startActivity(intent);
+        }
+
+        @Override
+        public void onDeleteComplete(int token, Object cookie, int result) {
+            switch (token) {
+                case ASYNC_DELETE_TOKEN:
+                    Toast.makeText(
+                            getActivity(),
+                            "Playlist \"" + (String) cookie + "\" deleted.",
+                            Toast.LENGTH_SHORT
+                    ).show();
+            }
         }
 
         static final class PlaylistBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
