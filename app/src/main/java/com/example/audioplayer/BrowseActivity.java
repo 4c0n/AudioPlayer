@@ -11,7 +11,11 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.ContextMenu;
 import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -511,6 +515,41 @@ public class BrowseActivity extends AppCompatActivity implements
             fragment.setRetainInstance(true);
 
             return fragment;
+        }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            registerForContextMenu(getListView());
+        }
+
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v,
+                                        ContextMenu.ContextMenuInfo menuInfo) {
+            super.onCreateContextMenu(menu, v, menuInfo);
+
+            MenuInflater inflater = getActivity().getMenuInflater();
+            inflater.inflate(R.menu.playlist_context_menu, menu);
+        }
+
+        @Override
+        public boolean onContextItemSelected(MenuItem item) {
+            AdapterView.AdapterContextMenuInfo menuInfo =
+                    (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+            switch (item.getItemId()) {
+                case R.id.playlist_delete:
+                    // TODO: delete async
+                    int rowsDeleted = getActivity().getContentResolver().delete(
+                            MediaStore.Audio.Playlists.EXTERNAL_CONTENT_URI,
+                            MediaStore.Audio.Playlists._ID + "=?",
+                            new String[] {
+                                    "" + menuInfo.id
+                            }
+                    );
+                    Log.d("4c0n", rowsDeleted + " rows deleted!");
+                default:
+                    return super.onContextItemSelected(item);
+            }
         }
 
         @Override
