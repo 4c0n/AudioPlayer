@@ -9,7 +9,7 @@ import java.util.ArrayList;
 class SimpleAsyncQueryHandler extends AsyncQueryHandler {
     private ArrayList<OnDeleteCompleteListener> mOnDeleteCompleteListeners;
 
-    public SimpleAsyncQueryHandler(ContentResolver cr) {
+    SimpleAsyncQueryHandler(ContentResolver cr) {
         super(cr);
         mOnDeleteCompleteListeners = new ArrayList<>(1);
     }
@@ -23,13 +23,13 @@ class SimpleAsyncQueryHandler extends AsyncQueryHandler {
         }
     }
 
-    public void registerOnDeleteCompleteListener(OnDeleteCompleteListener listener) {
+    void registerOnDeleteCompleteListener(OnDeleteCompleteListener listener) {
         if (!mOnDeleteCompleteListeners.contains(listener)) {
             mOnDeleteCompleteListeners.add(listener);
         }
     }
 
-    public void unregisterOnDeleteCompleteListener(OnDeleteCompleteListener listener) {
+    void unregisterOnDeleteCompleteListener(OnDeleteCompleteListener listener) {
         if (mOnDeleteCompleteListeners.contains(listener)) {
             mOnDeleteCompleteListeners.remove(listener);
         } else {

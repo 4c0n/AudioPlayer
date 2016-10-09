@@ -11,7 +11,6 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -584,7 +583,7 @@ public class BrowseActivity extends AppCompatActivity implements
                 case ASYNC_DELETE_TOKEN:
                     Toast.makeText(
                             getActivity(),
-                            "Playlist \"" + (String) cookie + "\" deleted.",
+                            "Playlist \"" + cookie + "\" deleted.",
                             Toast.LENGTH_SHORT
                     ).show();
             }
