@@ -431,7 +431,11 @@ public class BrowseActivity extends AppCompatActivity implements
         }
     }
 
-    public static final class GenreBrowseFragment extends BrowseFragment {
+    public static final class GenreBrowseFragment extends BrowseFragment implements
+            SimpleAsyncQueryHandler.OnDeleteCompleteListener {
+
+        private static final int ASYNC_DELETE_TOKEN = 1000;
+
         public static GenreBrowseFragment getInstance() {
             Bundle arguments = new Bundle();
             arguments.putString(
@@ -458,6 +462,47 @@ public class BrowseActivity extends AppCompatActivity implements
         }
 
         @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+            registerForContextMenu(getListView());
+        }
+
+        @Override
+        public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+            super.onCreateContextMenu(menu, v, menuInfo);
+
+            getActivity().getMenuInflater().inflate(R.menu.genre_context_menu, menu);
+        }
+
+        @Override
+        public boolean onContextItemSelected(MenuItem item) {
+            AdapterView.AdapterContextMenuInfo menuInfo =
+                    (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+            switch (item.getItemId()) {
+                case R.id.genre_delete:
+                    TextView textView =
+                            (TextView) menuInfo.targetView.findViewById(R.id.browse_list_top_text);
+
+                    SimpleAsyncQueryHandler queryHandler = new SimpleAsyncQueryHandler(
+                            getActivity().getContentResolver()
+                    );
+                    queryHandler.registerOnDeleteCompleteListener(this);
+                    queryHandler.startDelete(
+                            ASYNC_DELETE_TOKEN,
+                            textView.getText(),
+                            MediaStore.Audio.Genres.EXTERNAL_CONTENT_URI,
+                            MediaStore.Audio.Genres._ID + "=?",
+                            new String[] {Long.toString(menuInfo.id)}
+                    );
+
+                    return true;
+                default:
+                    return super.onContextItemSelected(item);
+            }
+        }
+
+        @Override
         public void onListItemClick(ListView l, View v, int position, long id) {
             super.onListItemClick(l, v, position, id);
 
@@ -468,6 +513,15 @@ public class BrowseActivity extends AppCompatActivity implements
             intent.putExtra(GenreDetailsActivity.INTENT_EXTRA_GENRE_ID, id);
             intent.putExtra(GenreDetailsActivity.INTENT_EXTRA_GENRE_NAME, textView.getText());
             startActivity(intent);
+        }
+
+        @Override
+        public void onDeleteComplete(int token, Object cookie, int result) {
+            Toast.makeText(
+                    getActivity(),
+                    "Genre \"" + cookie + "\" deleted.",
+                    Toast.LENGTH_SHORT
+            ).show();
         }
 
         static final class GenreBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
