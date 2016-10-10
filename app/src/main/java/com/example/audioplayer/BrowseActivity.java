@@ -1,5 +1,6 @@
 package com.example.audioplayer;
 
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
@@ -136,17 +137,22 @@ public class BrowseActivity extends AppCompatActivity implements
                 null,
                 new String[] {
                         MediaStore.Audio.GenresColumns.NAME,
+                        MediaStore.Audio.Genres._ID,
                         MediaStore.Audio.Genres._ID
                 },
                 new int[] {
                         R.id.browse_list_top_text,
+                        R.id.browse_list_bottom_text,
                         R.id.browse_list_image
                 },
                 SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
         );
 
         adapter.setViewBinder(
-                new GenreBrowseFragment.GenreBrowseFragmentViewBinder(getResources())
+                new GenreBrowseFragment.GenreBrowseFragmentViewBinder(
+                        getResources(),
+                        getContentResolver()
+                )
         );
 
         GenreBrowseFragment fragment = GenreBrowseFragment.getInstance();
@@ -466,9 +472,11 @@ public class BrowseActivity extends AppCompatActivity implements
 
         static final class GenreBrowseFragmentViewBinder implements SimpleCursorAdapter.ViewBinder {
             private Resources mResources;
+            private ContentResolver mContentResolver;
 
-            GenreBrowseFragmentViewBinder(Resources resources) {
+            GenreBrowseFragmentViewBinder(Resources resources, ContentResolver contentResolver) {
                 mResources = resources;
+                mContentResolver = contentResolver;
             }
 
             @Override
@@ -480,6 +488,30 @@ public class BrowseActivity extends AppCompatActivity implements
                                     mResources,
                                     R.drawable.ic_queue_music_black_24dp,
                                     null
+                            )
+                    );
+
+                    return true;
+                } else if (view.getId() == R.id.browse_list_bottom_text) {
+                    int numberOfTracks = mContentResolver.query(
+                            MediaStore.Audio.Genres.Members.getContentUri(
+                                    "external",
+                                    cursor.getLong(
+                                            cursor.getColumnIndex(MediaStore.Audio.Genres._ID)
+                                    )
+                            ),
+                            null,
+                            null,
+                            null,
+                            null
+                    ).getCount();
+
+                    TextView textView = (TextView) view;
+                    textView.setText(
+                            mResources.getQuantityString(
+                                    R.plurals.tracks,
+                                    numberOfTracks,
+                                    numberOfTracks
                             )
                     );
 
