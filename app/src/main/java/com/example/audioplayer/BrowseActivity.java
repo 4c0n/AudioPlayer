@@ -5,29 +5,39 @@ import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.ListFragment;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.Comparator;
+import java.util.HashMap;
+
 public class BrowseActivity extends AppCompatActivity implements
-        AdapterView.OnItemSelectedListener {
+        AdapterView.OnItemSelectedListener, SimpleAsyncQueryHandler.OnQueryCompleteListener {
     private static final String SPINNER_POSITION_KEY = "spinnerPosition";
+    private static final int QUERY_MEDIA = 47832;
 
     private int mSpinnerPosition = 0;
     private boolean mInit = true;
@@ -179,6 +189,20 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
+    private void initFolderBrowseFragment() {
+        SimpleAsyncQueryHandler queryHandler = new SimpleAsyncQueryHandler(getContentResolver());
+        queryHandler.registerOnQueryCompleteListener(this);
+        queryHandler.startQuery(
+                QUERY_MEDIA,
+                null,
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                new String[] {MediaStore.Audio.Media.DATA},
+                MediaStore.Audio.Media.IS_MUSIC + "=1",
+                null,
+                MediaStore.Audio.Media.DATA
+        );
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -233,6 +257,14 @@ public class BrowseActivity extends AppCompatActivity implements
                 newFragment = initPlaylistBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_genres))) {
                 newFragment = initGenreBrowseFragment();
+            } else if (text.equals(getString(R.string.browse_type_folders))) {
+                initFolderBrowseFragment();
+                // Returning because the query results on which the adapter is based will be
+                // processed asynchronously.
+                // TODO: pass position as cookie and set init to true in callback
+                mSpinnerPosition = position;
+                mInit = true;
+                return;
             } else {
                 throw new IllegalStateException("Unsupported item selected.");
             }
@@ -249,6 +281,46 @@ public class BrowseActivity extends AppCompatActivity implements
     @Override
     public void onNothingSelected(AdapterView<?> parent) {
         // The way the spinner is set up it is impossible to select nothing
+    }
+
+    @Override
+    public void onQueryComplete(int token, Object cookie, Cursor cursor) {
+        if (token == QUERY_MEDIA) {
+            // Actually init FolderBrowseFragment
+            HashMap<String, String> uniquePaths = new HashMap<>();
+
+            String externalPath = Environment.getExternalStorageDirectory().getPath();
+            Log.d("4c0n", externalPath);
+
+            while (cursor.moveToNext()) {
+                String path = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
+
+                String key = path.substring(0, path.lastIndexOf("/"));
+                Log.d("4c0n", key);
+
+                String folder = key.substring(key.lastIndexOf("/") + 1);
+                Log.d("4c0n", folder);
+
+                uniquePaths.put(key, folder);
+            }
+            cursor.close();
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                    this,
+                    R.layout.browse_list_item,
+                    R.id.browse_list_top_text
+            );
+            adapter.addAll(uniquePaths.values());
+
+            FolderBrowseFragment fragment = new FolderBrowseFragment();
+            fragment.setRetainInstance(true);
+            fragment.setListAdapter(adapter);
+
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.browse_fragment_container, fragment)
+                    .commit();
+        }
     }
 
     public static final class AlbumBrowseFragment extends BrowseFragment {
@@ -715,6 +787,47 @@ public class BrowseActivity extends AppCompatActivity implements
                 }
 
                 return false;
+            }
+        }
+    }
+
+    public static final class FolderBrowseFragment extends ListFragment implements
+            Sortable, View.OnClickListener {
+
+        private boolean mSortedAscending = true;
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View view = inflater.inflate(R.layout.fragment_browse, container, false);
+
+            ImageButton sortButton = (ImageButton) view.findViewById(R.id.sort_menu_button);
+            sortButton.setOnClickListener(this);
+
+            return view;
+        }
+
+        @Override
+        public void sort(boolean ascending) {
+            mSortedAscending = ascending;
+            ArrayAdapter<String> adapter = (ArrayAdapter<String>) getListAdapter();
+            adapter.sort(new Comparator<String>() {
+                @Override
+                public int compare(String o1, String o2) {
+                    int score = o1.compareTo(o2);
+                    if (mSortedAscending) {
+                        return score;
+                    } else {
+                        return 0 - score;
+                    }
+                }
+            });
+        }
+
+        @Override
+        public void onClick(View v) {
+            if (v.getId() == R.id.sort_menu_button) {
+                sort(!mSortedAscending);
             }
         }
     }
