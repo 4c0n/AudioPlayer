@@ -223,7 +223,7 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
             private static final String[] PARENT_ITEMS = {ALBUMS, TRACKS};
 
-            private Cursor[] mCursors = {null, null};
+            private Cursor[] mCursors = new Cursor[2];
             private LayoutInflater mInflater;
             private Resources mResources;
             private ContentResolver mContentResolver;
