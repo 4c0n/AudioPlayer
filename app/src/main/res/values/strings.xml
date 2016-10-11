@@ -16,12 +16,14 @@
     <string name="browse_type_albums">Albums</string>
     <string name="browse_type_playlists">Playlists</string>
     <string name="browse_type_genres">Genres</string>
+    <string name="browse_type_folders">Folders</string>
     <string-array name="browse_types">
         <item>@string/browse_type_tracks</item>
         <item>@string/browse_type_artists</item>
         <item>@string/browse_type_albums</item>
         <item>@string/browse_type_playlists</item>
         <item>@string/browse_type_genres</item>
+        <item>@string/browse_type_folders</item>
     </string-array>
     <plurals name="artist_info_albums">
         <item quantity="one">%d album</item>
