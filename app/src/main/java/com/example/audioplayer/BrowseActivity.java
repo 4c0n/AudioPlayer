@@ -1,12 +1,14 @@
 package com.example.audioplayer;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.os.Bundle;
-import android.os.Environment;
 import android.provider.MediaStore;
+import android.support.annotation.LayoutRes;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.app.ListFragment;
@@ -14,7 +16,6 @@ import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -287,29 +288,32 @@ public class BrowseActivity extends AppCompatActivity implements
     public void onQueryComplete(int token, Object cookie, Cursor cursor) {
         if (token == QUERY_MEDIA) {
             // Actually init FolderBrowseFragment
-            HashMap<String, String> uniquePaths = new HashMap<>();
-
-            String externalPath = Environment.getExternalStorageDirectory().getPath();
-            Log.d("4c0n", externalPath);
+            HashMap<String, FolderBrowseFragment.MediaFolder> uniquePaths = new HashMap<>();
 
             while (cursor.moveToNext()) {
                 String path = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
-
                 String key = path.substring(0, path.lastIndexOf("/"));
-                Log.d("4c0n", key);
 
-                String folder = key.substring(key.lastIndexOf("/") + 1);
-                Log.d("4c0n", folder);
+                if (uniquePaths.containsKey(key)) {
+                    uniquePaths.get(key).numberOfTracks++;
+                } else {
+                    FolderBrowseFragment.MediaFolder folder =
+                            new FolderBrowseFragment.MediaFolder();
 
-                uniquePaths.put(key, folder);
+                    folder.path = key;
+                    folder.numberOfTracks = 1;
+                    folder.name = key.substring(key.lastIndexOf("/") + 1);
+                    uniquePaths.put(key, folder);
+                }
             }
             cursor.close();
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(
-                    this,
-                    R.layout.browse_list_item,
-                    R.id.browse_list_top_text
-            );
+            FolderBrowseFragment.MediaFolderArrayAdapter adapter =
+                    new FolderBrowseFragment.MediaFolderArrayAdapter(
+                            this,
+                            R.layout.browse_list_item
+                    );
+
             adapter.addAll(uniquePaths.values());
 
             FolderBrowseFragment fragment = new FolderBrowseFragment();
@@ -810,11 +814,12 @@ public class BrowseActivity extends AppCompatActivity implements
         @Override
         public void sort(boolean ascending) {
             mSortedAscending = ascending;
-            ArrayAdapter<String> adapter = (ArrayAdapter<String>) getListAdapter();
-            adapter.sort(new Comparator<String>() {
+            MediaFolderArrayAdapter adapter = (MediaFolderArrayAdapter) getListAdapter();
+            adapter.sort(new Comparator<MediaFolder>() {
                 @Override
-                public int compare(String o1, String o2) {
-                    int score = o1.compareTo(o2);
+                public int compare(MediaFolder o1, MediaFolder o2) {
+                    int score = o1.name.compareTo(o2.name);
+
                     if (mSortedAscending) {
                         return score;
                     } else {
@@ -828,6 +833,61 @@ public class BrowseActivity extends AppCompatActivity implements
         public void onClick(View v) {
             if (v.getId() == R.id.sort_menu_button) {
                 sort(!mSortedAscending);
+            }
+        }
+
+        static class MediaFolder {
+            String path;
+            int numberOfTracks;
+            String name;
+        }
+
+        static class MediaFolderArrayAdapter extends ArrayAdapter<MediaFolder> {
+            private int resource;
+
+            MediaFolderArrayAdapter(@NonNull Context context, @LayoutRes int resource) {
+                super(context, resource);
+                this.resource = resource;
+            }
+
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView,
+                                @NonNull ViewGroup parent) {
+                Context context = getContext();
+                LayoutInflater inflater = LayoutInflater.from(context);
+
+                if (convertView == null) {
+                    convertView = inflater.inflate(resource, parent, false);
+                    ImageView imageView =
+                            (ImageView) convertView.findViewById(R.id.browse_list_image);
+
+                    imageView.setImageDrawable(
+                            ResourcesCompat.getDrawable(
+                                    context.getResources(),
+                                    R.drawable.ic_folder_open_black_24dp,
+                                    null
+                            )
+                    );
+                }
+
+                MediaFolder folder = getItem(position);
+
+                TextView topTextView =
+                        (TextView) convertView.findViewById(R.id.browse_list_top_text);
+                topTextView.setText(folder.name);
+
+                TextView bottomTextView =
+                        (TextView) convertView.findViewById(R.id.browse_list_bottom_text);
+                bottomTextView.setText(
+                        context.getResources().getQuantityString(
+                                R.plurals.tracks,
+                                folder.numberOfTracks,
+                                folder.numberOfTracks
+                        )
+                );
+
+                return convertView;
             }
         }
     }
