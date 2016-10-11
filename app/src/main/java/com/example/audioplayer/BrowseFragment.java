@@ -78,15 +78,8 @@ abstract public class BrowseFragment extends ListFragment implements
 
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        ListAdapter adapter = getListAdapter();
-        if (adapter instanceof SimpleCursorAdapter) {
-            SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) adapter;
-            cursorAdapter.changeCursor(data);
-        } else if (adapter instanceof TrackBrowseFragment.TrackBrowseListAdapter) {
-            TrackBrowseFragment.TrackBrowseListAdapter trackBrowseListAdapter =
-                    (TrackBrowseFragment.TrackBrowseListAdapter) adapter;
-            trackBrowseListAdapter.changeCursor(data);
-        }
+        SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) getListAdapter();
+        cursorAdapter.changeCursor(data);
 
         @SuppressWarnings("ConstantConditions")
         TextView emptyView = (TextView) getView().findViewById(R.id.no_data);
@@ -104,15 +97,8 @@ abstract public class BrowseFragment extends ListFragment implements
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
-        ListAdapter adapter = getListAdapter();
-        if (adapter instanceof SimpleCursorAdapter) {
-            SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) adapter;
-            cursorAdapter.changeCursor(null);
-        } else if (adapter instanceof TrackBrowseFragment.TrackBrowseListAdapter) {
-            TrackBrowseFragment.TrackBrowseListAdapter trackBrowseListAdapter =
-                    (TrackBrowseFragment.TrackBrowseListAdapter) adapter;
-            trackBrowseListAdapter.changeCursor(null);
-        }
+        SimpleCursorAdapter cursorAdapter = (SimpleCursorAdapter) getListAdapter();
+        cursorAdapter.changeCursor(null);
     }
 
     @Override

@@ -33,12 +33,29 @@ public class BrowseActivity extends AppCompatActivity implements
     private boolean mInit = true;
 
     private TrackBrowseFragment initTrackBrowseFragment() {
-        TrackBrowseFragment.TrackBrowseListAdapter trackBrowseListAdapter =
-                new TrackBrowseFragment.TrackBrowseListAdapter(this);
+        SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                this,
+                R.layout.browse_list_item,
+                null,
+                new String[] {
+                        MediaStore.Audio.Media.TITLE,
+                        MediaStore.Audio.Media.ARTIST,
+                        MediaStore.Audio.Media.ALBUM_ID
+                },
+                new int[] {
+                        R.id.browse_list_top_text,
+                        R.id.browse_list_bottom_text,
+                        R.id.browse_list_image
+                },
+                SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+        );
+        adapter.setViewBinder(
+                new TrackBrowseFragment.ViewBinder(getResources(), getContentResolver())
+        );
 
         TrackBrowseFragment fragment = TrackBrowseFragment.newInstance();
         fragment.setEmptyText(getString(R.string.no_tracks));
-        fragment.setListAdapter(trackBrowseListAdapter);
+        fragment.setListAdapter(adapter);
 
         return fragment;
     }
