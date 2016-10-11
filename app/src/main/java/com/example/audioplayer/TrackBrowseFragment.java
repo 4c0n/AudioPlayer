@@ -9,6 +9,7 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -107,6 +108,24 @@ public final class TrackBrowseFragment extends BrowseFragment {
                 getDefaultSelectionArgs(),
                 MediaStore.Audio.Playlists.Members.getContentUri("external", playlistId),
                 MediaStore.Audio.Playlists.Members.PLAY_ORDER
+        );
+    }
+
+    public static TrackBrowseFragment newFolderBasedInstance(String path) {
+        String selection = getDefaultSelection();
+        selection += " AND " + MediaStore.Audio.Media.DATA + " LIKE ?";
+
+        Log.d("4c0n", " AND " + MediaStore.Audio.Media.DATA + " LIKE '" + path + "/%'");
+
+        // TODO: exclude paths with the separator: "/" in them, as these are sub folders
+        ArrayList<String> selectionArgs = getDefaultSelectionArgs();
+        selectionArgs.add(path + "/%");
+
+        return newInstance(
+                selection,
+                selectionArgs,
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                MediaStore.Audio.Media.TITLE_KEY
         );
     }
 

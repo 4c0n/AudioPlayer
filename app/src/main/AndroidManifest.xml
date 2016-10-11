@@ -23,6 +23,7 @@
         <activity android:name=".AlbumDetailsActivity" />
         <activity android:name=".GenreDetailsActivity" />
         <activity android:name=".PlaylistDetailsActivity" />
+        <activity android:name=".FolderDetailsActivity" />
     </application>
 
 </manifest>
