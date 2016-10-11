@@ -223,7 +223,7 @@ public class ArtistDetailsActivity extends AppCompatActivity {
 
             private static final String[] PARENT_ITEMS = {ALBUMS, TRACKS};
 
-            private Cursor[] mCursors = {null, null};
+            private Cursor[] mCursors = new Cursor[2];
             private LayoutInflater mInflater;
             private Resources mResources;
             private ContentResolver mContentResolver;
@@ -310,7 +310,11 @@ public class ArtistDetailsActivity extends AppCompatActivity {
             public View getGroupView(int groupPosition, boolean isExpanded, View convertView,
                                      ViewGroup parent) {
                 if (convertView == null) {
-                    convertView = mInflater.inflate(R.layout.artist_details_group_view, parent, false);
+                    convertView = mInflater.inflate(
+                            R.layout.artist_details_group_view,
+                            parent,
+                            false
+                    );
                 }
 
                 TextView textView = (TextView) convertView;
@@ -333,7 +337,9 @@ public class ArtistDetailsActivity extends AppCompatActivity {
                 }
                 ImageView image = (ImageView) convertView.findViewById(R.id.browse_list_image);
                 TextView topText = (TextView) convertView.findViewById(R.id.browse_list_top_text);
-                TextView bottomText = (TextView) convertView.findViewById(R.id.browse_list_bottom_text);
+                TextView bottomText = (TextView) convertView.findViewById(
+                        R.id.browse_list_bottom_text
+                );
 
                 if (groupPosition == 0) {
                     // Albums
@@ -368,45 +374,17 @@ public class ArtistDetailsActivity extends AppCompatActivity {
                     );
                 } else {
                     // Tracks
-
-                    // TODO: this code is similar to that in TrackBrowseListAdapter, refactoring is in order
-                    int albumId = cursor.getInt(
+                    long albumId = cursor.getLong(
                             cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID)
                     );
 
-                    // TODO: use cursor loader or other means of threading
-                    Cursor albumCursor = mContentResolver.query(
-                            MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
-                            new String[] {MediaStore.Audio.Albums.ALBUM_ART},
-                            "_id=" + albumId,
-                            null,
-                            null
+                    AlbumArtImageViewInitializer initializer = new AlbumArtImageViewInitializer(
+                            mResources,
+                            image,
+                            mContentResolver,
+                            albumId
                     );
-
-                    image.setImageURI(null);
-                    image.setImageDrawable(null);
-                    if (albumCursor != null) {
-                        if (albumCursor.getCount() > 0) {
-                            albumCursor.moveToFirst();
-
-                            String albumArtStr = albumCursor.getString(
-                                    albumCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)
-                            );
-
-                            if (albumArtStr != null) {
-                                image.setImageURI(Uri.fromFile(new File(albumArtStr)));
-                            } else {
-                                image.setImageDrawable(
-                                        ResourcesCompat.getDrawable(
-                                                mResources,
-                                                R.drawable.ic_music_note_black_24dp,
-                                                null
-                                        )
-                                );
-                            }
-                        }
-                        albumCursor.close();
-                    }
+                    initializer.initialize();
 
                     String title = cursor.getString(
                             cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)
