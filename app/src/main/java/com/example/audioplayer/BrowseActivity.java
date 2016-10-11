@@ -190,12 +190,12 @@ public class BrowseActivity extends AppCompatActivity implements
         return fragment;
     }
 
-    private void initFolderBrowseFragment() {
+    private void initFolderBrowseFragment(int position) {
         SimpleAsyncQueryHandler queryHandler = new SimpleAsyncQueryHandler(getContentResolver());
         queryHandler.registerOnQueryCompleteListener(this);
         queryHandler.startQuery(
                 QUERY_MEDIA,
-                null,
+                position,
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 new String[] {MediaStore.Audio.Media.DATA},
                 MediaStore.Audio.Media.IS_MUSIC + "=1",
@@ -259,11 +259,9 @@ public class BrowseActivity extends AppCompatActivity implements
             } else if (text.equals(getString(R.string.browse_type_genres))) {
                 newFragment = initGenreBrowseFragment();
             } else if (text.equals(getString(R.string.browse_type_folders))) {
-                initFolderBrowseFragment();
+                initFolderBrowseFragment(position);
                 // Returning because the query results on which the adapter is based will be
                 // processed asynchronously.
-                // TODO: pass position as cookie and set init to true in callback
-                mSpinnerPosition = position;
                 mInit = true;
                 return;
             } else {
@@ -319,6 +317,8 @@ public class BrowseActivity extends AppCompatActivity implements
             FolderBrowseFragment fragment = new FolderBrowseFragment();
             fragment.setRetainInstance(true);
             fragment.setListAdapter(adapter);
+
+            mSpinnerPosition = (int) cookie;
 
             getSupportFragmentManager()
                     .beginTransaction()
