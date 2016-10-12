@@ -113,17 +113,15 @@ public final class TrackBrowseFragment extends BrowseFragment {
 
     public static TrackBrowseFragment newFolderBasedInstance(String path) {
         String selection = getDefaultSelection();
-        selection += " AND " + MediaStore.Audio.Media.DATA + " LIKE ?";
-
-        Log.d("4c0n", " AND " + MediaStore.Audio.Media.DATA + " LIKE '" + path + "/%'");
-
-        // TODO: exclude paths with the separator: "/" in them, as these are sub folders
-        ArrayList<String> selectionArgs = getDefaultSelectionArgs();
-        selectionArgs.add(path + "/%");
+        // TODO: do this in a less hacky way
+        selection += " AND " + MediaStore.Audio.Media.DATA + " LIKE '" + path + "/%' AND " +
+                MediaStore.Audio.Media.DATA + " NOT IN (SELECT " + MediaStore.Audio.Media.DATA +
+                " FROM audio WHERE substr(" + MediaStore.Audio.Media.DATA + "," +
+                (path.length() + 2) + ") GLOB '*[/]*')";
 
         return newInstance(
                 selection,
-                selectionArgs,
+                getDefaultSelectionArgs(),
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 MediaStore.Audio.Media.TITLE_KEY
         );
