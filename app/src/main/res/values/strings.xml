@@ -10,7 +10,6 @@
         Visual identifier for the track, this will usually be album art
     </string>
     <string name="menu_sort">Sort</string>
-    <!-- TODO: add folder browsing -->
     <string name="browse_type_tracks">Tracks</string>
     <string name="browse_type_artists">Artists</string>
     <string name="browse_type_albums">Albums</string>
