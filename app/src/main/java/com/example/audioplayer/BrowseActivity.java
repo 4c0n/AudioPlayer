@@ -812,6 +812,20 @@ public class BrowseActivity extends AppCompatActivity implements
         }
 
         @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+
+            MediaFolderArrayAdapter adapter = (MediaFolderArrayAdapter) getListAdapter();
+            MediaFolder folder = adapter.getItem(position);
+
+            Intent intent = new Intent();
+            intent.setClass(getActivity(), FolderDetailsActivity.class);
+            intent.putExtra(FolderDetailsActivity.INTENT_EXTRA_FOLDER_PATH, folder.path);
+            intent.putExtra(FolderDetailsActivity.INTENT_EXTRA_FOLDER_NAME, folder.name);
+            startActivity(intent);
+        }
+
+        @Override
         public void sort(boolean ascending) {
             mSortedAscending = ascending;
             MediaFolderArrayAdapter adapter = (MediaFolderArrayAdapter) getListAdapter();
