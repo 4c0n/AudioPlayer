@@ -1,23 +1,17 @@
 package com.example.audioplayer;
 
 import android.content.ContentResolver;
-import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
-import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.ImageView;
-import android.widget.TextView;
+import android.widget.ListView;
 
-import java.io.File;
 import java.util.ArrayList;
 
 public final class TrackBrowseFragment extends BrowseFragment {
@@ -125,6 +119,30 @@ public final class TrackBrowseFragment extends BrowseFragment {
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 MediaStore.Audio.Media.TITLE_KEY
         );
+    }
+
+    @Override
+    public void onListItemClick(ListView l, View v, int position, long id) {
+        super.onListItemClick(l, v, position, id);
+
+        Cursor cursor = (Cursor) getListAdapter().getItem(position);
+
+        Intent intent = new Intent();
+        intent.setClass(getActivity(), TrackDetailsActivity.class);
+        intent.putExtra(TrackDetailsActivity.INTENT_EXTRA_TRACK_ID, id);
+        intent.putExtra(
+                TrackDetailsActivity.INTENT_EXTRA_TRACK_TITLE,
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
+        );
+        intent.putExtra(
+                TrackDetailsActivity.INTENT_EXTRA_TRACK_ARTIST,
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
+        );
+        intent.putExtra(
+                TrackDetailsActivity.INTENT_EXTRA_TRACK_ALBUM_ID,
+                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
+        );
+        startActivity(intent);
     }
 
     static final class ViewBinder implements SimpleCursorAdapter.ViewBinder {
