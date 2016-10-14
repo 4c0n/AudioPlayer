@@ -1,6 +1,9 @@
 package com.example.audioplayer;
 
+import android.content.ContentUris;
 import android.database.Cursor;
+import android.media.AudioManager;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -17,15 +20,48 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.MediaController;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
 
-public class TrackDetailsActivity extends AppCompatActivity {
+
+public class TrackDetailsActivity extends AppCompatActivity implements
+        MediaPlayer.OnPreparedListener, MediaController.MediaPlayerControl {
+
     public static final String INTENT_EXTRA_TRACK_ID = "trackId";
     public static final String INTENT_EXTRA_TRACK_TITLE = "trackTitle";
     public static final String INTENT_EXTRA_TRACK_ARTIST = "trackArtist";
     public static final String INTENT_EXTRA_TRACK_ALBUM_ID = "trackAlbumId";
+
+    // TODO: Move to Service
+    private MediaPlayer mediaPlayer;
+
+    // TODO: replace MediaController with custom widget
+    private MediaController mediaController;
+
+    private void initMediaPlayer() {
+        mediaController = new MediaController(this);
+
+        Uri uri = ContentUris.withAppendedId(
+                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                getIntent().getLongExtra(INTENT_EXTRA_TRACK_ID, -1)
+        );
+
+        mediaPlayer = new MediaPlayer();
+        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+        mediaPlayer.setOnPreparedListener(this);
+        try {
+            mediaPlayer.setDataSource(getApplicationContext(), uri);
+            mediaPlayer.prepareAsync();
+        } catch (IOException ioe) {
+            Toast.makeText(this, "Unable to play!", Toast.LENGTH_LONG).show();
+            Log.e("TrackDetailsActivity", ioe.getMessage());
+        }
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -37,6 +73,8 @@ public class TrackDetailsActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.track_details_activity_toolbar);
         setSupportActionBar(toolbar);
 
+        initMediaPlayer();
+
         if (savedInstanceState != null) {
             return;
         }
@@ -47,8 +85,26 @@ public class TrackDetailsActivity extends AppCompatActivity {
 
         getSupportFragmentManager()
                 .beginTransaction()
-                .add(R.id.track_details_fragment_container, fragment)
+                .replace(R.id.track_details_fragment_container, fragment)
                 .commit();
+    }
+
+    @Override
+    protected void onPause() {
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+        }
+
+        super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        if (mediaPlayer != null) {
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+        super.onStop();
     }
 
     @Override
@@ -60,6 +116,87 @@ public class TrackDetailsActivity extends AppCompatActivity {
         bottomText.setText(getIntent().getStringExtra(INTENT_EXTRA_TRACK_ARTIST));
 
         return true;
+    }
+
+    @Override
+    public void onPrepared(MediaPlayer mp) {
+        mediaController.setMediaPlayer(this);
+
+        View view = findViewById(R.id.track_details_activity_layout);
+
+        Log.d("4c0n", view == null ? "null" : view.toString());
+
+        mediaController.setAnchorView(view);
+        mediaController.setEnabled(true);
+        mediaController.show(0);
+        start();
+    }
+
+    @Override
+    public void start() {
+        mediaPlayer.start();
+    }
+
+    @Override
+    public void pause() {
+        mediaPlayer.pause();
+    }
+
+    @Override
+    public int getDuration() {
+        if (mediaPlayer != null) {
+            return mediaPlayer.getDuration();
+        }
+
+        return 0;
+    }
+
+    @Override
+    public int getCurrentPosition() {
+        if (mediaPlayer != null) {
+            return mediaPlayer.getCurrentPosition();
+        }
+
+        return 0;
+    }
+
+    @Override
+    public void seekTo(int pos) {
+        mediaPlayer.seekTo(pos);
+    }
+
+    @Override
+    public boolean isPlaying() {
+        if (mediaPlayer != null) {
+            return mediaPlayer.isPlaying();
+        }
+
+        return false;
+    }
+
+    @Override
+    public int getBufferPercentage() {
+        return 100;
+    }
+
+    @Override
+    public boolean canPause() {
+        return true;
+    }
+
+    @Override
+    public boolean canSeekBackward() {
+        return false;
+    }
+
+    @Override
+    public boolean canSeekForward() {
+        return false;
+    }
+
+    @Override
+    public int getAudioSessionId() {
+        return mediaPlayer.getAudioSessionId();
     }
 
     public static final class TrackDetailsFragment extends Fragment implements
@@ -114,8 +251,8 @@ public class TrackDetailsActivity extends AppCompatActivity {
                             data.getColumnIndex(MediaStore.Audio.AlbumColumns.ALBUM_ART)
                     );
 
-                    SquareImageView image =
-                            (SquareImageView) getActivity().findViewById(R.id.track_details_image);
+                    ImageView image =
+                            (ImageView) getActivity().findViewById(R.id.track_details_image);
 
                     if (albumArt != null) {
                         image.setImageURI(Uri.fromFile(new File(albumArt)));
