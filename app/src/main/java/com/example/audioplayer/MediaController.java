@@ -1,7 +1,6 @@
 package com.example.audioplayer;
 
 import android.content.Context;
-import android.support.v4.content.res.ResourcesCompat;
 import android.util.AttributeSet;
 import android.view.View;
 import android.widget.FrameLayout;
@@ -62,13 +61,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         public void onClick(View v) {
             switch (repeatState) {
                 case REPEAT_OFF:
-                    repeat.setImageDrawable(
-                            ResourcesCompat.getDrawable(
-                                    getResources(),
-                                    R.drawable.ic_repeat_one_black_24dp,
-                                    null
-                            )
-                    );
+                    repeat.setImageResource(R.drawable.ic_repeat_one_black_24dp);
                     repeat.setAlpha(1.0F);
 
                     mediaPlayer.repeatOne();
@@ -77,13 +70,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
                     break;
 
                 case REPEAT_ONE:
-                    repeat.setImageDrawable(
-                            ResourcesCompat.getDrawable(
-                                    getResources(),
-                                    R.drawable.ic_repeat_black_24dp,
-                                    null
-                            )
-                    );
+                    repeat.setImageResource(R.drawable.ic_repeat_black_24dp);
                     repeat.setAlpha(0.5F);
 
                     mediaPlayer.repeatOff();
@@ -190,6 +177,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
         draggingSeekBar = true;
+        removeCallbacks(progressUpdater);
     }
 
     @Override
