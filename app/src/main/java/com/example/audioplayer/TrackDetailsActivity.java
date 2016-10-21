@@ -147,6 +147,16 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         mediaPlayer.pause();
     }
 
+    @Override
+    public void repeatOne() {
+        mediaPlayer.setLooping(true);
+    }
+
+    @Override
+    public void repeatOff() {
+        mediaPlayer.setLooping(false);
+    }
+
     public static final class TrackDetailsFragment extends Fragment implements
             LoaderManager.LoaderCallbacks<Cursor> {
 

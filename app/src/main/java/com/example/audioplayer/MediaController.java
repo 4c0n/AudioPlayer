@@ -1,6 +1,7 @@
 package com.example.audioplayer;
 
 import android.content.Context;
+import android.support.v4.content.res.ResourcesCompat;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.View;
@@ -11,6 +12,10 @@ import android.widget.TextView;
 
 
 public class MediaController extends FrameLayout {
+    private static final String REPEAT_OFF = "repeatNone";
+    private static final String REPEAT_ONE = "repeatOne";
+    private static final String REPEAT_ALL = "repeatAll";
+
     private TextView timeElapsed;
     private SeekBar seekBar;
     private TextView timeLength;
@@ -21,6 +26,7 @@ public class MediaController extends FrameLayout {
     private ImageButton next;
     private ImageButton shuffle;
     private MediaPlayer mediaPlayer;
+    private String repeatState = REPEAT_OFF;
 
     private Runnable progressUpdater = new Runnable() {
         @Override
@@ -47,6 +53,42 @@ public class MediaController extends FrameLayout {
         public void onClick(View v) {
             mediaPlayer.pause();
             updatePausePlayButton();
+        }
+    };
+
+    private OnClickListener onRepeatClicked = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            switch (repeatState) {
+                case REPEAT_OFF:
+                    repeat.setImageDrawable(
+                            ResourcesCompat.getDrawable(
+                                    getResources(),
+                                    R.drawable.ic_repeat_one_black_24dp,
+                                    null
+                            )
+                    );
+                    repeat.setAlpha(1.0F);
+
+                    mediaPlayer.repeatOne();
+
+                    repeatState = REPEAT_ONE;
+                    break;
+
+                case REPEAT_ONE:
+                    repeat.setImageDrawable(
+                            ResourcesCompat.getDrawable(
+                                    getResources(),
+                                    R.drawable.ic_repeat_black_24dp,
+                                    null
+                            )
+                    );
+                    repeat.setAlpha(0.5F);
+
+                    mediaPlayer.repeatOff();
+
+                    repeatState = REPEAT_OFF;
+            }
         }
     };
 
@@ -77,7 +119,7 @@ public class MediaController extends FrameLayout {
         timeLength = (TextView) layout.findViewById(R.id.media_controller_time_length);
 
         repeat = (ImageButton) layout.findViewById(R.id.media_controller_repeat);
-        repeat.setAlpha(0.5F);
+        repeat.setOnClickListener(onRepeatClicked);
 
         previous = (ImageButton) layout.findViewById(R.id.media_controller_previous);
 
@@ -88,6 +130,7 @@ public class MediaController extends FrameLayout {
         pause.setOnClickListener(onPauseClicked);
 
         next = (ImageButton) layout.findViewById(R.id.media_controller_next);
+
         shuffle = (ImageButton) layout.findViewById(R.id.media_controller_shuffle);
     }
 
@@ -137,5 +180,7 @@ public class MediaController extends FrameLayout {
         boolean isPlaying();
         void play();
         void pause();
+        void repeatOne();
+        void repeatOff();
     }
 }

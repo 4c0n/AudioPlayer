@@ -49,6 +49,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_gravity="center_vertical"
+            android:alpha="0.5"
             android:background="#c0c0c0"
             android:src="@drawable/ic_repeat_black_24dp"/>
 
@@ -92,6 +93,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_gravity="center_vertical"
+            android:alpha="0.5"
             android:background="#c0c0c0"
             android:src="@drawable/ic_shuffle_black_24dp"/>
 
