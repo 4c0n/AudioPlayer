@@ -21,7 +21,6 @@ import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
-import android.widget.MediaController;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -30,7 +29,7 @@ import java.io.IOException;
 
 
 public class TrackDetailsActivity extends AppCompatActivity implements
-        MediaPlayer.OnPreparedListener, MediaController.MediaPlayerControl {
+        MediaPlayer.OnPreparedListener, MediaController.MediaPlayer {
 
     public static final String INTENT_EXTRA_TRACK_ID = "trackId";
     public static final String INTENT_EXTRA_TRACK_TITLE = "trackTitle";
@@ -39,12 +38,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     // TODO: Move to Service
     private MediaPlayer mediaPlayer;
-
-    // TODO: replace MediaController with custom widget
     private MediaController mediaController;
 
     private void initMediaPlayer() {
-        mediaController = new MediaController(this);
+        mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
         Uri uri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
@@ -120,83 +117,34 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
+        mp.start();
+
         mediaController.setMediaPlayer(this);
-
-        View view = findViewById(R.id.track_details_activity_layout);
-
-        Log.d("4c0n", view == null ? "null" : view.toString());
-
-        mediaController.setAnchorView(view);
-        mediaController.setEnabled(true);
-        mediaController.show(0);
-        start();
     }
 
     @Override
-    public void start() {
+    public int getCurrentPosition() {
+        return mediaPlayer.getCurrentPosition();
+    }
+
+    @Override
+    public int getDuration() {
+        return mediaPlayer.getDuration();
+    }
+
+    @Override
+    public boolean isPlaying() {
+        return mediaPlayer.isPlaying();
+    }
+
+    @Override
+    public void play() {
         mediaPlayer.start();
     }
 
     @Override
     public void pause() {
         mediaPlayer.pause();
-    }
-
-    @Override
-    public int getDuration() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getDuration();
-        }
-
-        return 0;
-    }
-
-    @Override
-    public int getCurrentPosition() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getCurrentPosition();
-        }
-
-        return 0;
-    }
-
-    @Override
-    public void seekTo(int pos) {
-        mediaPlayer.seekTo(pos);
-    }
-
-    @Override
-    public boolean isPlaying() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.isPlaying();
-        }
-
-        return false;
-    }
-
-    @Override
-    public int getBufferPercentage() {
-        return 100;
-    }
-
-    @Override
-    public boolean canPause() {
-        return true;
-    }
-
-    @Override
-    public boolean canSeekBackward() {
-        return false;
-    }
-
-    @Override
-    public boolean canSeekForward() {
-        return false;
-    }
-
-    @Override
-    public int getAudioSessionId() {
-        return mediaPlayer.getAudioSessionId();
     }
 
     public static final class TrackDetailsFragment extends Fragment implements
@@ -257,6 +205,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                     if (albumArt != null) {
                         image.setImageURI(Uri.fromFile(new File(albumArt)));
                     } else {
+                        // TODO: Use larger drawable
                         image.setImageDrawable(
                                 ResourcesCompat.getDrawable(
                                         getResources(),
