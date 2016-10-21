@@ -157,6 +157,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         mediaPlayer.setLooping(false);
     }
 
+    @Override
+    public void seekTo(int milliseconds) {
+        mediaPlayer.seekTo(milliseconds);
+    }
+
     public static final class TrackDetailsFragment extends Fragment implements
             LoaderManager.LoaderCallbacks<Cursor> {
 

@@ -11,7 +11,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 
-public class MediaController extends FrameLayout {
+public class MediaController extends FrameLayout implements SeekBar.OnSeekBarChangeListener {
     private static final String REPEAT_OFF = "repeatNone";
     private static final String REPEAT_ONE = "repeatOne";
     private static final String REPEAT_ALL = "repeatAll";
@@ -27,12 +27,14 @@ public class MediaController extends FrameLayout {
     private ImageButton shuffle;
     private MediaPlayer mediaPlayer;
     private String repeatState = REPEAT_OFF;
+    private boolean draggingSeekBar = false;
+    private int seekToMilliseconds;
 
     private Runnable progressUpdater = new Runnable() {
         @Override
         public void run() {
             int currentPosition = setProgress();
-            if (mediaPlayer.isPlaying()) {
+            if (mediaPlayer.isPlaying() && !draggingSeekBar) {
                 // use currentPosition to determine offset, because postDelayed only queues
                 postDelayed(progressUpdater, 1000 - (currentPosition % 1000));
             }
@@ -114,6 +116,7 @@ public class MediaController extends FrameLayout {
         timeElapsed = (TextView) layout.findViewById(R.id.media_controller_time_elapsed);
 
         seekBar = (SeekBar) layout.findViewById(R.id.media_controller_seek_bar);
+        seekBar.setOnSeekBarChangeListener(this);
         seekBar.setMax(1000);
 
         timeLength = (TextView) layout.findViewById(R.id.media_controller_time_length);
@@ -174,6 +177,34 @@ public class MediaController extends FrameLayout {
         updatePausePlayButton();
     }
 
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        Log.d("4c0n", "onProgressChanged: fromUser: " + fromUser + " progress: " + progress);
+
+        if (fromUser) {
+            // convert progress to time string
+            int duration = mediaPlayer.getDuration();
+            if (duration > 0) {
+                seekToMilliseconds = duration / 1000 * progress;
+                timeElapsed.setText(new TimeStringFormatter(seekToMilliseconds).format());
+            }
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+        Log.d("4c0n", "onStartTrackingTouch");
+        draggingSeekBar = true;
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+        Log.d("4c0n", "onStopTrackingTouch");
+        draggingSeekBar = false;
+        mediaPlayer.seekTo(seekToMilliseconds);
+        post(progressUpdater);
+    }
+
     interface MediaPlayer {
         int getCurrentPosition();
         int getDuration();
@@ -182,5 +213,6 @@ public class MediaController extends FrameLayout {
         void pause();
         void repeatOne();
         void repeatOff();
+        void seekTo(int milliseconds);
     }
 }
