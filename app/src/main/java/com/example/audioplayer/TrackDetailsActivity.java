@@ -64,7 +64,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.d("4c0n", "onCreate");
         setContentView(R.layout.activity_track_details);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.track_details_activity_toolbar);
@@ -190,7 +189,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         @Override
         public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            Log.d("4c0n", "ALBUM ID: " + getArguments().getLong(ARGUMENT_ALBUM_ID));
             switch (id) {
                 case IMAGE_LOADER:
                     return new CursorLoader(
