@@ -3,7 +3,6 @@ package com.example.audioplayer;
 import android.content.Context;
 import android.support.v4.content.res.ResourcesCompat;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
@@ -155,7 +154,6 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
     }
 
     private void updatePausePlayButton() {
-        Log.d("4c0n", "updatePausePlayButton " + mediaPlayer.isPlaying());
         if (mediaPlayer.isPlaying()) {
             if (pause.getVisibility() == GONE) {
                 play.setVisibility(GONE);
@@ -179,8 +177,6 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        Log.d("4c0n", "onProgressChanged: fromUser: " + fromUser + " progress: " + progress);
-
         if (fromUser) {
             // convert progress to time string
             int duration = mediaPlayer.getDuration();
@@ -193,13 +189,11 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-        Log.d("4c0n", "onStartTrackingTouch");
         draggingSeekBar = true;
     }
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        Log.d("4c0n", "onStopTrackingTouch");
         draggingSeekBar = false;
         mediaPlayer.seekTo(seekToMilliseconds);
         post(progressUpdater);
