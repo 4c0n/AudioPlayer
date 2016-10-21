@@ -16,8 +16,7 @@
             android:id="@+id/media_controller_time_elapsed"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="00:00" />
+            android:layout_gravity="center_vertical" />
 
         <SeekBar
             android:id="@+id/media_controller_seek_bar"
@@ -29,8 +28,7 @@
             android:id="@+id/media_controller_time_length"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="00:00" />
+            android:layout_gravity="center_vertical" />
 
     </LinearLayout>
 
@@ -45,6 +43,7 @@
 
         <ImageButton
             android:id="@+id/media_controller_repeat"
+            android:contentDescription="@string/repeat"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -55,6 +54,7 @@
 
         <ImageButton
             android:id="@+id/media_controller_previous"
+            android:contentDescription="@string/previous"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -63,6 +63,7 @@
 
         <ImageButton
             android:id="@+id/media_controller_play"
+            android:contentDescription="@string/play"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -72,6 +73,7 @@
 
         <ImageButton
             android:id="@+id/media_controller_pause"
+            android:contentDescription="@string/pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -81,6 +83,7 @@
 
         <ImageButton
             android:id="@+id/media_controller_next"
+            android:contentDescription="@string/next"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
@@ -89,6 +92,7 @@
 
         <ImageButton
             android:id="@+id/media_controller_shuffle"
+            android:contentDescription="@string/shuffle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_weight="1"
