@@ -13,7 +13,9 @@
         android:gravity="right"
         android:paddingTop="10dp">
 
-        <ImageButton android:id="@+id/sort_menu_button"
+        <ImageButton
+            android:id="@+id/sort_menu_button"
+            android:contentDescription="@string/menu_sort"
             android:layout_width="30dp"
             android:layout_height="30dp"
             android:background="@drawable/ic_sort_by_alpha_black_24dp" />

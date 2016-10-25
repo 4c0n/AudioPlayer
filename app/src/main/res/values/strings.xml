@@ -35,4 +35,10 @@
     <string name="artist_info">%1$s, %2$s</string>
     <string name="album_info">%1$s, %2$s</string>
     <string name="delete">Delete</string>
+    <string name="repeat">Repeat</string>
+    <string name="previous">Previous</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="next">Next</string>
+    <string name="shuffle">Shuffle</string>
 </resources>
