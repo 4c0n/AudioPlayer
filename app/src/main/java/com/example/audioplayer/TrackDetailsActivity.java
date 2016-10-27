@@ -9,18 +9,20 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
-import android.support.v4.content.res.ResourcesCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
+import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -29,23 +31,37 @@ import java.io.IOException;
 
 
 public class TrackDetailsActivity extends AppCompatActivity implements
-        MediaPlayer.OnPreparedListener, MediaController.MediaPlayer {
+        MediaPlayer.OnPreparedListener,
+        MediaController.MediaPlayer,
+        LoaderManager.LoaderCallbacks<Cursor> {
 
-    public static final String INTENT_EXTRA_TRACK_ID = "trackId";
-    public static final String INTENT_EXTRA_TRACK_TITLE = "trackTitle";
-    public static final String INTENT_EXTRA_TRACK_ARTIST = "trackArtist";
-    public static final String INTENT_EXTRA_TRACK_ALBUM_ID = "trackAlbumId";
+    public static final String INTENT_EXTRA_QUERY_PARAMS = "queryParams";
+    public static final String INTENT_EXTRA_CURSOR_POSITION = "cursorPosition";
 
+    private static final int LOADER_ID = 0;
+
+    private Cursor cursor;
     // TODO: Move to Service
     private MediaPlayer mediaPlayer;
     private MediaController mediaController;
 
-    private void initMediaPlayer() {
+    private void initTrackDetailsFragment(long albumId) {
+        TrackDetailsFragment trackDetailsFragment = TrackDetailsFragment.newInstance(
+                albumId
+        );
+
+        getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.track_details_fragment_container, trackDetailsFragment)
+                .commitAllowingStateLoss();
+    }
+
+    private void initMediaPlayer(long trackId) {
         mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
         Uri uri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                getIntent().getLongExtra(INTENT_EXTRA_TRACK_ID, -1)
+                trackId
         );
 
         mediaPlayer = new MediaPlayer();
@@ -60,6 +76,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         }
     }
 
+    private void initMenuText(String title, String artist) {
+        TextView topText = (TextView) findViewById(R.id.menu_top_text);
+        topText.setText(title);
+
+        TextView bottomText = (TextView) findViewById(R.id.menu_bottom_text);
+        bottomText.setText(artist);
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,20 +93,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.track_details_activity_toolbar);
         setSupportActionBar(toolbar);
 
-        initMediaPlayer();
-
-        if (savedInstanceState != null) {
+        /*if (savedInstanceState != null) {
             return;
-        }
+        }*/
 
-        TrackDetailsFragment fragment = TrackDetailsFragment.newInstance(
-                getIntent().getLongExtra(INTENT_EXTRA_TRACK_ALBUM_ID, -1)
-        );
-
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.track_details_fragment_container, fragment)
-                .commit();
+        getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
     }
 
     @Override
@@ -104,17 +119,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        TextView topText = (TextView) findViewById(R.id.menu_top_text);
-        topText.setText(getIntent().getStringExtra(INTENT_EXTRA_TRACK_TITLE));
-
-        TextView bottomText = (TextView) findViewById(R.id.menu_bottom_text);
-        bottomText.setText(getIntent().getStringExtra(INTENT_EXTRA_TRACK_ARTIST));
-
-        return true;
-    }
-
-    @Override
     public void onPrepared(MediaPlayer mp) {
         mp.start();
 
@@ -123,17 +127,29 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     @Override
     public int getCurrentPosition() {
-        return mediaPlayer.getCurrentPosition();
+        if (mediaPlayer != null) {
+            return mediaPlayer.getCurrentPosition();
+        }
+
+        return 0;
     }
 
     @Override
     public int getDuration() {
-        return mediaPlayer.getDuration();
+        if (mediaPlayer != null) {
+            return mediaPlayer.getDuration();
+        }
+
+        return 0;
     }
 
     @Override
     public boolean isPlaying() {
-        return mediaPlayer.isPlaying();
+        if (mediaPlayer != null) {
+            return mediaPlayer.isPlaying();
+        }
+
+        return false;
     }
 
     @Override
@@ -161,6 +177,54 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         mediaPlayer.seekTo(milliseconds);
     }
 
+    @Override
+    public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        switch (id) {
+            case LOADER_ID:
+                QueryParams params = getIntent().getParcelableExtra(INTENT_EXTRA_QUERY_PARAMS);
+                return new CursorLoader(
+                        this,
+                        params.getContentUri(),
+                        params.getProjection(),
+                        params.getSelection(),
+                        params.getSelectionArgs(),
+                        params.getSortOrder()
+                );
+            default:
+                return null;
+        }
+    }
+
+    @Override
+    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        cursor = data;
+        cursor.moveToPosition(getIntent().getIntExtra(INTENT_EXTRA_CURSOR_POSITION, -1));
+
+        initTrackDetailsFragment(
+                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
+        );
+
+        initMediaPlayer(
+                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
+        );
+
+        initMenuText(
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
+        );
+
+        Fragment frag =
+                getSupportFragmentManager().findFragmentById(R.id.track_details_browse_container);
+        if (frag == null) {
+            // TODO: make new browse fragment based cursor
+        }
+    }
+
+    @Override
+    public void onLoaderReset(Loader<Cursor> loader) {
+        // TODO: Handle onLoaderReset event
+    }
+
     public static final class TrackDetailsFragment extends Fragment implements
             LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -181,6 +245,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         @Override
         public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                                  @Nullable Bundle savedInstanceState) {
+
+            Log.d("4c0n", "TrackDetailsFragment onCreateView");
 
             getLoaderManager().restartLoader(IMAGE_LOADER, null, this);
 
@@ -218,14 +284,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                     if (albumArt != null) {
                         image.setImageURI(Uri.fromFile(new File(albumArt)));
                     } else {
-                        // TODO: Use larger drawable
-                        image.setImageDrawable(
-                                ResourcesCompat.getDrawable(
-                                        getResources(),
-                                        R.drawable.ic_music_note_black_24dp,
-                                        null
-                                )
-                        );
+                        image.setImageResource(R.drawable.ic_music_note_black_192px);
                     }
                 }
             }
@@ -233,6 +292,30 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
+        }
+    }
+
+    public static final class TrackBrowseFragment extends ListFragment implements
+            View.OnClickListener {
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                                 Bundle savedInstanceState) {
+            View view = inflater.inflate(R.layout.fragment_browse, container, false);
+            ImageButton sortButton = (ImageButton) view.findViewById(R.id.sort_menu_button);
+            sortButton.setOnClickListener(this);
+
+            return view;
+        }
+
+        @Override
+        public void onListItemClick(ListView l, View v, int position, long id) {
+            super.onListItemClick(l, v, position, id);
+        }
+
+        @Override
+        public void onClick(View v) {
+
         }
     }
 }

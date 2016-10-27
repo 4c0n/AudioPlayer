@@ -125,23 +125,20 @@ public final class TrackBrowseFragment extends BrowseFragment {
     public void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
 
-        Cursor cursor = (Cursor) getListAdapter().getItem(position);
+        Bundle arguments = getArguments();
+        QueryParams params = new QueryParams(
+                (Uri) arguments.getParcelable(ARGUMENT_CONTENT_URI),
+                arguments.getStringArray(ARGUMENT_COLUMNS),
+                arguments.getString(ARGUMENT_SELECTION),
+                arguments.getStringArray(ARGUMENT_SELECTION_ARGS),
+                arguments.getString(ARGUMENT_SORT_COLUMN)
+        );
 
         Intent intent = new Intent();
         intent.setClass(getActivity(), TrackDetailsActivity.class);
-        intent.putExtra(TrackDetailsActivity.INTENT_EXTRA_TRACK_ID, id);
-        intent.putExtra(
-                TrackDetailsActivity.INTENT_EXTRA_TRACK_TITLE,
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
-        );
-        intent.putExtra(
-                TrackDetailsActivity.INTENT_EXTRA_TRACK_ARTIST,
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
-        );
-        intent.putExtra(
-                TrackDetailsActivity.INTENT_EXTRA_TRACK_ALBUM_ID,
-                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
-        );
+        intent.putExtra(TrackDetailsActivity.INTENT_EXTRA_QUERY_PARAMS, params);
+        intent.putExtra(TrackDetailsActivity.INTENT_EXTRA_CURSOR_POSITION, position);
+
         startActivity(intent);
     }
 
