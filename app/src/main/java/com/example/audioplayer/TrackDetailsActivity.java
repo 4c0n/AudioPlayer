@@ -1,6 +1,7 @@
 package com.example.audioplayer;
 
 import android.content.ContentUris;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -9,11 +10,11 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -82,6 +83,45 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         TextView bottomText = (TextView) findViewById(R.id.menu_bottom_text);
         bottomText.setText(artist);
+    }
+
+    private void initTrackBrowseFragment() {
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+
+            Log.d("4c0n", "LANDSCAPE");
+
+            com.example.audioplayer.TrackBrowseFragment.ViewBinder viewBinder =
+                    new com.example.audioplayer.TrackBrowseFragment.ViewBinder(
+                            getResources(),
+                            getContentResolver()
+                    );
+
+            SimpleCursorAdapter cursorAdapter = new SimpleCursorAdapter(
+                    this,
+                    R.layout.browse_list_item,
+                    cursor,
+                    new String[] {
+                            MediaStore.Audio.Media.TITLE,
+                            MediaStore.Audio.Media.ARTIST,
+                            MediaStore.Audio.Media.ALBUM_ID
+                    },
+                    new int[] {
+                            R.id.browse_list_top_text,
+                            R.id.browse_list_bottom_text,
+                            R.id.browse_list_image
+                    },
+                    SimpleCursorAdapter.FLAG_REGISTER_CONTENT_OBSERVER
+            );
+            cursorAdapter.setViewBinder(viewBinder);
+
+            TrackBrowseFragment fragment = new TrackBrowseFragment();
+            fragment.setListAdapter(cursorAdapter);
+
+            getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.track_details_browse_container, fragment)
+                    .commitAllowingStateLoss();
+        }
     }
 
     @Override
@@ -213,11 +253,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
         );
 
-        Fragment frag =
-                getSupportFragmentManager().findFragmentById(R.id.track_details_browse_container);
-        if (frag == null) {
-            // TODO: make new browse fragment based cursor
-        }
+        initTrackBrowseFragment();
     }
 
     @Override
@@ -306,6 +342,17 @@ public class TrackDetailsActivity extends AppCompatActivity implements
             sortButton.setOnClickListener(this);
 
             return view;
+        }
+
+        @Override
+        public void onViewCreated(View view, Bundle savedInstanceState) {
+            super.onViewCreated(view, savedInstanceState);
+
+            SimpleCursorAdapter adapter = (SimpleCursorAdapter) getListAdapter();
+            if (adapter != null) {
+                Cursor cursor = adapter.getCursor();
+                setSelection(cursor.getPosition());
+            }
         }
 
         @Override
