@@ -27,6 +27,7 @@ import android.widget.TextView;
 
 import java.io.File;
 
+// TODO: Implement OnClick for Tracks in the list
 public class ArtistDetailsActivity extends AppCompatActivity {
     public static final String INTENT_EXTRA_ARTIST_ID = "artistId";
     public static final String INTENT_EXTRA_ARTIST_NAME = "artistName";
