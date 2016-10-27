@@ -63,6 +63,7 @@
         </LinearLayout>
     </LinearLayout>
 
+    <!-- TODO: Move to details fragment! -->
     <com.example.audioplayer.MediaController
         android:id="@+id/track_details_media_controller"
         android:layout_width="match_parent"

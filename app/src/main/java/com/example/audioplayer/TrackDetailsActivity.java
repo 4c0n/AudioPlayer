@@ -57,6 +57,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                 .commitAllowingStateLoss();
     }
 
+    // TODO: Fix playing playlists
     private void initMediaPlayer(long trackId) {
         mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
@@ -185,11 +186,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     @Override
     public boolean isPlaying() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.isPlaying();
-        }
-
-        return false;
+        return mediaPlayer != null && mediaPlayer.isPlaying();
     }
 
     @Override
@@ -253,6 +250,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
         );
 
+        // TODO: handle in onConfigurationChanged
         initTrackBrowseFragment();
     }
 
