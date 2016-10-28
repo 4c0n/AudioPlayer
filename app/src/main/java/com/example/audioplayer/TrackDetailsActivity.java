@@ -10,7 +10,6 @@ import android.os.Bundle;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -21,9 +20,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -34,14 +31,17 @@ import java.io.IOException;
 public class TrackDetailsActivity extends AppCompatActivity implements
         MediaPlayer.OnPreparedListener,
         MediaController.MediaPlayer,
-        LoaderManager.LoaderCallbacks<Cursor> {
+        LoaderManager.LoaderCallbacks<Cursor>,
+        TrackDetailsBrowseFragment.OnTrackSelectedListener {
 
     public static final String INTENT_EXTRA_QUERY_PARAMS = "queryParams";
     public static final String INTENT_EXTRA_CURSOR_POSITION = "cursorPosition";
 
     private static final int LOADER_ID = 0;
+    private static final String SAVE_POSITION = "savePosition";
 
     private Cursor cursor;
+    private int position = -1;
     // TODO: Move to Service
     private MediaPlayer mediaPlayer;
     private MediaController mediaController;
@@ -115,7 +115,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
             );
             cursorAdapter.setViewBinder(viewBinder);
 
-            TrackBrowseFragment fragment = new TrackBrowseFragment();
+            TrackDetailsBrowseFragment fragment = new TrackDetailsBrowseFragment();
             fragment.setListAdapter(cursorAdapter);
 
             getSupportFragmentManager()
@@ -123,6 +123,26 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                     .replace(R.id.track_details_browse_container, fragment)
                     .commitAllowingStateLoss();
         }
+    }
+
+    private void init() {
+        cursor.moveToPosition(position);
+
+        initTrackDetailsFragment(
+                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
+        );
+
+        initMediaPlayer(
+                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
+        );
+
+        initMenuText(
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
+        );
+
+        // TODO: handle in onConfigurationChanged
+        initTrackBrowseFragment();
     }
 
     @Override
@@ -134,9 +154,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.track_details_activity_toolbar);
         setSupportActionBar(toolbar);
 
-        /*if (savedInstanceState != null) {
-            return;
-        }*/
+        if (savedInstanceState != null) {
+            position = savedInstanceState.getInt(SAVE_POSITION);
+        }
 
         getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
     }
@@ -157,6 +177,13 @@ public class TrackDetailsActivity extends AppCompatActivity implements
             mediaPlayer = null;
         }
         super.onStop();
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putInt(SAVE_POSITION, position);
     }
 
     @Override
@@ -235,28 +262,24 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     @Override
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
         cursor = data;
-        cursor.moveToPosition(getIntent().getIntExtra(INTENT_EXTRA_CURSOR_POSITION, -1));
-
-        initTrackDetailsFragment(
-                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
-        );
-
-        initMediaPlayer(
-                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
-        );
-
-        initMenuText(
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
-        );
-
-        // TODO: handle in onConfigurationChanged
-        initTrackBrowseFragment();
+        if (position == -1) {
+            position = getIntent().getIntExtra(INTENT_EXTRA_CURSOR_POSITION, -1);
+        }
+        init();
     }
 
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         // TODO: Handle onLoaderReset event
+    }
+
+    @Override
+    public void onTrackSelected(int position) {
+        mediaPlayer.stop();
+        mediaPlayer.release();
+        mediaPlayer = null;
+        this.position = position;
+        init();
     }
 
     public static final class TrackDetailsFragment extends Fragment implements
@@ -326,41 +349,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         @Override
         public void onLoaderReset(Loader<Cursor> loader) {
-        }
-    }
-
-    public static final class TrackBrowseFragment extends ListFragment implements
-            View.OnClickListener {
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View view = inflater.inflate(R.layout.fragment_browse, container, false);
-            ImageButton sortButton = (ImageButton) view.findViewById(R.id.sort_menu_button);
-            sortButton.setOnClickListener(this);
-
-            return view;
-        }
-
-        @Override
-        public void onViewCreated(View view, Bundle savedInstanceState) {
-            super.onViewCreated(view, savedInstanceState);
-
-            SimpleCursorAdapter adapter = (SimpleCursorAdapter) getListAdapter();
-            if (adapter != null) {
-                Cursor cursor = adapter.getCursor();
-                setSelection(cursor.getPosition());
-            }
-        }
-
-        @Override
-        public void onListItemClick(ListView l, View v, int position, long id) {
-            super.onListItemClick(l, v, position, id);
-        }
-
-        @Override
-        public void onClick(View v) {
-
         }
     }
 }
