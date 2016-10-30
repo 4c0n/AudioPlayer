@@ -31,6 +31,8 @@ public class AudioPlayerService extends Service implements
     private final IBinder binder = new AudioPlayerBinder();
 
     private void showNotification() {
+        // TODO: add PendingIntent
+
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                 .setContentTitle("AudioPlayer")
                 .setContentText("player service")
@@ -50,10 +52,16 @@ public class AudioPlayerService extends Service implements
         showNotification();
     }
 
-    @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
-        Log.d("4c0n", "onBind AudioPlayerService");
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.d("4c0n", "onStartCommand");
+
+        if (mediaPlayer != null) {
+            mediaPlayer.stop();
+            mediaPlayer.release();
+            mediaPlayer = null;
+        }
+
         Uri uri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
                 intent.getLongExtra(INTENT_EXTRA_AUDIO_ID, -1)
@@ -67,6 +75,14 @@ public class AudioPlayerService extends Service implements
         }
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.prepareAsync();
+
+        return super.onStartCommand(intent, flags, startId);
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        Log.d("4c0n", "onBind AudioPlayerService");
 
         return binder;
     }

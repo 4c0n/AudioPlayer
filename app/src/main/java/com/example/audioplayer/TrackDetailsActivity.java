@@ -46,6 +46,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d("4c0n", "onServiceConnected");
             playerService = ((AudioPlayerService.AudioPlayerBinder) service).getService();
 
             mediaController.setMediaPlayer(playerService);
@@ -70,13 +71,19 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     // TODO: Fix playing playlists
     private void initMediaPlayer(long trackId) {
+        Log.d("4c0n", "TrackDetailsActivity initMediaPlayer");
         mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
         Intent intent = new Intent();
-        intent.setClass(this, AudioPlayerService.class);
+        intent.setClass(getApplicationContext(), AudioPlayerService.class);
         intent.setAction(AudioPlayerService.INTENT_ACTION_START_PLAYING);
         intent.putExtra(AudioPlayerService.INTENT_EXTRA_AUDIO_ID, trackId);
-        bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+
+
+        startService(intent);
+        boolean bound = bindService(intent, serviceConnection, BIND_AUTO_CREATE);
+
+        Log.d("4c0n", "service bound: " + bound);
     }
 
     private void initMenuText(String title, String artist) {
