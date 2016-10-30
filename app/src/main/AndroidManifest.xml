@@ -25,6 +25,7 @@
         <activity android:name=".PlaylistDetailsActivity" />
         <activity android:name=".FolderDetailsActivity" />
         <activity android:name=".TrackDetailsActivity" />
+        <service android:name=".AudioPlayerService" />
     </application>
 
 </manifest>
