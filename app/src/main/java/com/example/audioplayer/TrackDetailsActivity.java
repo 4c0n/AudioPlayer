@@ -1,12 +1,13 @@
 package com.example.audioplayer;
 
-import android.content.ContentUris;
+import android.content.ComponentName;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.media.AudioManager;
-import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -22,15 +23,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.File;
-import java.io.IOException;
-
 
 public class TrackDetailsActivity extends AppCompatActivity implements
-        MediaPlayer.OnPreparedListener,
-        MediaController.MediaPlayer,
         LoaderManager.LoaderCallbacks<Cursor>,
         TrackDetailsBrowseFragment.OnTrackSelectedListener {
 
@@ -43,8 +39,23 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private Cursor cursor;
     private int position = -1;
     // TODO: Move to Service
-    private MediaPlayer mediaPlayer;
     private MediaController mediaController;
+
+    private AudioPlayerService playerService;
+
+    private ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            playerService = ((AudioPlayerService.AudioPlayerBinder) service).getService();
+
+            mediaController.setMediaPlayer(playerService);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            playerService = null;
+        }
+    };
 
     private void initTrackDetailsFragment(long albumId) {
         TrackDetailsFragment trackDetailsFragment = TrackDetailsFragment.newInstance(
@@ -61,21 +72,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private void initMediaPlayer(long trackId) {
         mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
-        Uri uri = ContentUris.withAppendedId(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                trackId
-        );
-
-        mediaPlayer = new MediaPlayer();
-        mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
-        mediaPlayer.setOnPreparedListener(this);
-        try {
-            mediaPlayer.setDataSource(getApplicationContext(), uri);
-            mediaPlayer.prepareAsync();
-        } catch (IOException ioe) {
-            Toast.makeText(this, "Unable to play!", Toast.LENGTH_LONG).show();
-            Log.e("TrackDetailsActivity", ioe.getMessage());
-        }
+        Intent intent = new Intent();
+        intent.setClass(this, AudioPlayerService.class);
+        intent.setAction(AudioPlayerService.INTENT_ACTION_START_PLAYING);
+        intent.putExtra(AudioPlayerService.INTENT_EXTRA_AUDIO_ID, trackId);
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE);
     }
 
     private void initMenuText(String title, String artist) {
@@ -162,83 +163,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     }
 
     @Override
-    protected void onPause() {
-        if (mediaPlayer != null) {
-            mediaPlayer.stop();
-        }
-
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        if (mediaPlayer != null) {
-            mediaPlayer.release();
-            mediaPlayer = null;
-        }
-        super.onStop();
-    }
-
-    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
 
         outState.putInt(SAVE_POSITION, position);
-    }
-
-    @Override
-    public void onPrepared(MediaPlayer mp) {
-        mp.start();
-
-        mediaController.setMediaPlayer(this);
-    }
-
-    @Override
-    public int getCurrentPosition() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getCurrentPosition();
-        }
-
-        return 0;
-    }
-
-    @Override
-    public int getDuration() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getDuration();
-        }
-
-        return 0;
-    }
-
-    @Override
-    public boolean isPlaying() {
-        return mediaPlayer != null && mediaPlayer.isPlaying();
-    }
-
-    @Override
-    public void play() {
-        mediaPlayer.start();
-    }
-
-    @Override
-    public void pause() {
-        mediaPlayer.pause();
-    }
-
-    @Override
-    public void repeatOne() {
-        mediaPlayer.setLooping(true);
-    }
-
-    @Override
-    public void repeatOff() {
-        mediaPlayer.setLooping(false);
-    }
-
-    @Override
-    public void seekTo(int milliseconds) {
-        mediaPlayer.seekTo(milliseconds);
     }
 
     @Override
@@ -275,9 +203,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     @Override
     public void onTrackSelected(int position) {
-        mediaPlayer.stop();
-        mediaPlayer.release();
-        mediaPlayer = null;
         this.position = position;
         init();
     }
