@@ -11,7 +11,8 @@ import android.widget.TextView;
 
 public class MediaController extends FrameLayout implements
         SeekBar.OnSeekBarChangeListener,
-        OnPlayerStartedListener {
+        OnPlayerStartedListener,
+        OnPlayerStoppedListener {
 
     private static final String REPEAT_OFF = "repeatNone";
     private static final String REPEAT_ONE = "repeatOne";
@@ -46,8 +47,6 @@ public class MediaController extends FrameLayout implements
         @Override
         public void onClick(View v) {
             mediaPlayer.play();
-            post(progressUpdater);
-            updatePausePlayButton();
         }
     };
 
@@ -132,6 +131,7 @@ public class MediaController extends FrameLayout implements
         String timeElapsed = new TimeStringFormatter(currentPosition).format();
         this.timeElapsed.setText(timeElapsed);
 
+        // TODO: Duration does not need to be updated all the time
         int duration = mediaPlayer.getDuration();
         String timeLength = new TimeStringFormatter(duration).format();
         this.timeLength.setText(timeLength);
@@ -191,6 +191,15 @@ public class MediaController extends FrameLayout implements
         // start progress update cycle
         post(progressUpdater);
         updatePausePlayButton();
+    }
+
+    @Override
+    public void onPlayerStopped() {
+        removeCallbacks(progressUpdater);
+        updatePausePlayButton();
+        seekBar.setProgress(0);
+        String timeElapsed = new TimeStringFormatter(0).format();
+        this.timeElapsed.setText(timeElapsed);
     }
 
     interface MediaPlayer {

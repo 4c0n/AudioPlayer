@@ -70,6 +70,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
             mediaController.setMediaPlayer(playerService);
             playerService.setOnPlayerStartedListener(mediaController);
+            playerService.setOnPlayerStoppedListener(mediaController);
             playerService.setOnTrackChangedListener(onTrackChangedListener);
         }
 

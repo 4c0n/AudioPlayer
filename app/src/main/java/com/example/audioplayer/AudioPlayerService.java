@@ -35,6 +35,7 @@ public class AudioPlayerService extends Service implements
     private MediaPlayer mediaPlayer;
     private MediaPlayer nextMediaPlayer;
     private OnPlayerStartedListener onPlayerStartedListener;
+    private OnPlayerStoppedListener onPlayerStoppedListener;
     private Cursor cursor;
     private OnTrackChangedListener onTrackChangedListener;
     private int currentTrackCursorPosition;
@@ -159,7 +160,7 @@ public class AudioPlayerService extends Service implements
             startPlaying();
             onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
         } else {
-            // TODO: notify MediaController about player stop
+            onPlayerStoppedListener.onPlayerStopped();
         }
     }
 
@@ -186,7 +187,12 @@ public class AudioPlayerService extends Service implements
 
     @Override
     public void play() {
-        mediaPlayer.start();
+        if (mediaPlayer != null) {
+            mediaPlayer.start();
+        } else {
+            cursor.moveToPosition(currentTrackCursorPosition);
+            initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
+        }
     }
 
     @Override
@@ -206,11 +212,17 @@ public class AudioPlayerService extends Service implements
 
     @Override
     public void seekTo(int milliseconds) {
-        mediaPlayer.seekTo(milliseconds);
+        if (mediaPlayer != null) {
+            mediaPlayer.seekTo(milliseconds);
+        }
     }
 
     public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
         onPlayerStartedListener = listener;
+    }
+
+    public void setOnPlayerStoppedListener(OnPlayerStoppedListener listener) {
+        onPlayerStoppedListener = listener;
     }
 
     public void setOnTrackChangedListener(OnTrackChangedListener listener) {
