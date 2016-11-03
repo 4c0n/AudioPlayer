@@ -38,9 +38,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private Cursor cursor;
     private int position = -1;
     private QueryParams queryParams;
-    // TODO: Move to Service
     private MediaController mediaController;
-
     private AudioPlayerService playerService;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
@@ -203,6 +201,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     @Override
     public void onTrackSelected(int position) {
         this.position = position;
+        // TODO: Refactor
         init();
     }
 
