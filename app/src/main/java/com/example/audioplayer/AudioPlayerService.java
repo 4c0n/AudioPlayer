@@ -17,14 +17,15 @@ import android.util.Log;
 
 import java.io.IOException;
 
-
+// TODO: implement shuffle
+// TODO: implement repeat all
+// TODO: implement next and previous
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaController.MediaPlayer {
 
     public static final String INTENT_ACTION_START_PLAYING = "startPlaying";
 
-    // TODO: replace with QueryParams and cursor position
     public static final String INTENT_EXTRA_QUERY_PARAMS = "queryParams";
     public static final String INTENT_EXTRA_CURSOR_POSITION = "cursorPosition";
 
@@ -36,15 +37,15 @@ public class AudioPlayerService extends Service implements
 
     private final IBinder binder = new AudioPlayerBinder();
 
-    private void showNotification() {
+    private void showNotification(String artist, String title) {
         // TODO: add PendingIntent
         /* TODO: add locks screen notification:
             https://developer.android.com/guide/topics/ui/notifiers/notifications.html#controllingMedia
          */
 
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
-                .setContentTitle("AudioPlayer")
-                .setContentText("player service")
+                .setContentTitle(title)
+                .setContentText(artist)
                 .setSmallIcon(R.drawable.ic_music_note_white_24dp)
                 .build();
 
@@ -88,12 +89,6 @@ public class AudioPlayerService extends Service implements
     }
 
     @Override
-    public void onCreate() {
-        super.onCreate();
-        showNotification();
-    }
-
-    @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getAction().equals(INTENT_ACTION_START_PLAYING)) {
             initCursor(
@@ -118,6 +113,11 @@ public class AudioPlayerService extends Service implements
     public void onPrepared(MediaPlayer mp) {
         mp.start();
         onPlayerStartedListener.onPlayerStarted();
+
+        showNotification(
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
+        );
     }
 
     @Override
