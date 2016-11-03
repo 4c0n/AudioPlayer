@@ -4,6 +4,7 @@ import android.app.Notification;
 import android.app.Service;
 import android.content.ContentUris;
 import android.content.Intent;
+import android.database.Cursor;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -24,12 +25,14 @@ public class AudioPlayerService extends Service implements
     public static final String INTENT_ACTION_START_PLAYING = "startPlaying";
 
     // TODO: replace with QueryParams and cursor position
-    public static final String INTENT_EXTRA_AUDIO_ID = "audioId";
+    public static final String INTENT_EXTRA_QUERY_PARAMS = "queryParams";
+    public static final String INTENT_EXTRA_CURSOR_POSITION = "cursorPosition";
 
     private static final int NOTIFICATION_ID = 32789;
 
     private MediaPlayer mediaPlayer;
     private OnPlayerStartedListener onPlayerStartedListener;
+    private Cursor cursor;
 
     private final IBinder binder = new AudioPlayerBinder();
 
@@ -49,24 +52,30 @@ public class AudioPlayerService extends Service implements
         startForeground(NOTIFICATION_ID, notification);
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        showNotification();
+    private void initCursor(QueryParams queryParams, int position) {
+        if (cursor != null) {
+            cursor.close();
+        }
+
+        cursor = getContentResolver().query(
+                queryParams.getContentUri(),
+                queryParams.getProjection(),
+                queryParams.getSelection(),
+                queryParams.getSelectionArgs(),
+                queryParams.getSortOrder()
+        );
+
+        cursor.moveToPosition(position);
     }
 
-    @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
+    private void initMediaPlayer(long trackId) {
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
         }
 
-        Uri uri = ContentUris.withAppendedId(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
-                intent.getLongExtra(INTENT_EXTRA_AUDIO_ID, -1)
-        );
+        Uri uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, trackId);
         mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
@@ -76,6 +85,25 @@ public class AudioPlayerService extends Service implements
         }
         mediaPlayer.setOnPreparedListener(this);
         mediaPlayer.prepareAsync();
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        showNotification();
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent.getAction().equals(INTENT_ACTION_START_PLAYING)) {
+            initCursor(
+                    (QueryParams) intent.getParcelableExtra(INTENT_EXTRA_QUERY_PARAMS),
+                    intent.getIntExtra(INTENT_EXTRA_CURSOR_POSITION, -1)
+            );
+            initMediaPlayer(
+                    cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
+            );
+        }
 
         return super.onStartCommand(intent, flags, startId);
     }

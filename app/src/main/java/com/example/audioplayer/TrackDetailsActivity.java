@@ -17,7 +17,6 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +37,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     private Cursor cursor;
     private int position = -1;
+    private QueryParams queryParams;
     // TODO: Move to Service
     private MediaController mediaController;
 
@@ -46,7 +46,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d("4c0n", "onServiceConnected");
             playerService = ((AudioPlayerService.AudioPlayerBinder) service).getService();
 
             mediaController.setMediaPlayer(playerService);
@@ -71,20 +70,17 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     }
 
     // TODO: Fix playing playlists
-    private void initMediaPlayer(long trackId) {
-        Log.d("4c0n", "TrackDetailsActivity initMediaPlayer");
+    private void initMediaPlayer() {
         mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
         Intent intent = new Intent();
         intent.setClass(getApplicationContext(), AudioPlayerService.class);
         intent.setAction(AudioPlayerService.INTENT_ACTION_START_PLAYING);
-        intent.putExtra(AudioPlayerService.INTENT_EXTRA_AUDIO_ID, trackId);
-
+        intent.putExtra(AudioPlayerService.INTENT_EXTRA_QUERY_PARAMS, queryParams);
+        intent.putExtra(AudioPlayerService.INTENT_EXTRA_CURSOR_POSITION, position);
 
         startService(intent);
-        boolean bound = bindService(intent, serviceConnection, BIND_AUTO_CREATE);
-
-        Log.d("4c0n", "service bound: " + bound);
+        bindService(intent, serviceConnection, BIND_AUTO_CREATE);
     }
 
     private void initMenuText(String title, String artist) {
@@ -97,9 +93,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     private void initTrackBrowseFragment() {
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-
-            Log.d("4c0n", "LANDSCAPE");
-
             com.example.audioplayer.TrackBrowseFragment.ViewBinder viewBinder =
                     new com.example.audioplayer.TrackBrowseFragment.ViewBinder(
                             getResources(),
@@ -141,9 +134,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                 cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
         );
 
-        initMediaPlayer(
-                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
-        );
+        initMediaPlayer();
 
         initMenuText(
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
@@ -181,14 +172,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         switch (id) {
             case LOADER_ID:
-                QueryParams params = getIntent().getParcelableExtra(INTENT_EXTRA_QUERY_PARAMS);
+                queryParams = getIntent().getParcelableExtra(INTENT_EXTRA_QUERY_PARAMS);
                 return new CursorLoader(
                         this,
-                        params.getContentUri(),
-                        params.getProjection(),
-                        params.getSelection(),
-                        params.getSelectionArgs(),
-                        params.getSortOrder()
+                        queryParams.getContentUri(),
+                        queryParams.getProjection(),
+                        queryParams.getSelection(),
+                        queryParams.getSelectionArgs(),
+                        queryParams.getSortOrder()
                 );
             default:
                 return null;
@@ -215,6 +206,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         init();
     }
 
+    @Override
+    protected void onDestroy() {
+        unbindService(serviceConnection);
+        super.onDestroy();
+    }
+
     public static final class TrackDetailsFragment extends Fragment implements
             LoaderManager.LoaderCallbacks<Cursor> {
 
@@ -235,8 +232,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         @Override
         public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
                                  @Nullable Bundle savedInstanceState) {
-
-            Log.d("4c0n", "TrackDetailsFragment onCreateView");
 
             getLoaderManager().restartLoader(IMAGE_LOADER, null, this);
 
