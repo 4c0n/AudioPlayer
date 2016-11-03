@@ -50,6 +50,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
             playerService = ((AudioPlayerService.AudioPlayerBinder) service).getService();
 
             mediaController.setMediaPlayer(playerService);
+            playerService.setOnPlayerStartedListener(mediaController);
         }
 
         @Override

@@ -22,16 +22,22 @@ public class AudioPlayerService extends Service implements
         MediaController.MediaPlayer {
 
     public static final String INTENT_ACTION_START_PLAYING = "startPlaying";
+
+    // TODO: replace with QueryParams and cursor position
     public static final String INTENT_EXTRA_AUDIO_ID = "audioId";
 
     private static final int NOTIFICATION_ID = 32789;
 
     private MediaPlayer mediaPlayer;
+    private OnPlayerStartedListener onPlayerStartedListener;
 
     private final IBinder binder = new AudioPlayerBinder();
 
     private void showNotification() {
         // TODO: add PendingIntent
+        /* TODO: add locks screen notification:
+            https://developer.android.com/guide/topics/ui/notifiers/notifications.html#controllingMedia
+         */
 
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                 .setContentTitle("AudioPlayer")
@@ -46,16 +52,11 @@ public class AudioPlayerService extends Service implements
     @Override
     public void onCreate() {
         super.onCreate();
-
-        Log.d("4c0n", "onCreate AudioPlayerService");
-
         showNotification();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d("4c0n", "onStartCommand");
-
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
@@ -82,20 +83,19 @@ public class AudioPlayerService extends Service implements
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d("4c0n", "onBind AudioPlayerService");
-
         return binder;
     }
 
     @Override
     public void onPrepared(MediaPlayer mp) {
         mp.start();
+        onPlayerStartedListener.onPlayerStarted();
     }
 
     @Override
     public int getCurrentPosition() {
         if (mediaPlayer != null) {
-            mediaPlayer.getCurrentPosition();
+            return mediaPlayer.getCurrentPosition();
         }
         return 0;
     }
@@ -103,7 +103,7 @@ public class AudioPlayerService extends Service implements
     @Override
     public int getDuration() {
         if (mediaPlayer != null) {
-            mediaPlayer.getDuration();
+            return mediaPlayer.getDuration();
         }
         return 0;
     }
@@ -136,6 +136,10 @@ public class AudioPlayerService extends Service implements
     @Override
     public void seekTo(int milliseconds) {
         mediaPlayer.seekTo(milliseconds);
+    }
+
+    public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
+        onPlayerStartedListener = listener;
     }
 
     public class AudioPlayerBinder extends Binder {

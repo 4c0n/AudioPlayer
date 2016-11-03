@@ -9,7 +9,10 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 
-public class MediaController extends FrameLayout implements SeekBar.OnSeekBarChangeListener {
+public class MediaController extends FrameLayout implements
+        SeekBar.OnSeekBarChangeListener,
+        OnPlayerStartedListener {
+
     private static final String REPEAT_OFF = "repeatNone";
     private static final String REPEAT_ONE = "repeatOne";
     private static final String REPEAT_ALL = "repeatAll";
@@ -156,10 +159,6 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
 
     public void setMediaPlayer(MediaPlayer mediaPlayer) {
         this.mediaPlayer = mediaPlayer;
-
-        // start progress update cycle
-        post(progressUpdater);
-        updatePausePlayButton();
     }
 
     @Override
@@ -185,6 +184,13 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         draggingSeekBar = false;
         mediaPlayer.seekTo(seekToMilliseconds);
         post(progressUpdater);
+    }
+
+    @Override
+    public void onPlayerStarted() {
+        // start progress update cycle
+        post(progressUpdater);
+        updatePausePlayButton();
     }
 
     interface MediaPlayer {
