@@ -22,6 +22,7 @@ import java.io.IOException;
 // TODO: implement next and previous
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
+        MediaPlayer.OnCompletionListener,
         MediaController.MediaPlayer {
 
     public static final String INTENT_ACTION_START_PLAYING = "startPlaying";
@@ -32,8 +33,11 @@ public class AudioPlayerService extends Service implements
     private static final int NOTIFICATION_ID = 32789;
 
     private MediaPlayer mediaPlayer;
+    private MediaPlayer nextMediaPlayer;
     private OnPlayerStartedListener onPlayerStartedListener;
     private Cursor cursor;
+    private OnTrackChangedListener onTrackChangedListener;
+    private int currentTrackCursorPosition;
 
     private final IBinder binder = new AudioPlayerBinder();
 
@@ -69,15 +73,24 @@ public class AudioPlayerService extends Service implements
         cursor.moveToPosition(position);
     }
 
-    private void initMediaPlayer(long trackId) {
+    private void freeMediaPlayer() {
         if (mediaPlayer != null) {
             mediaPlayer.stop();
             mediaPlayer.release();
             mediaPlayer = null;
         }
+    }
 
+    private void initMediaPlayer(long trackId) {
+        freeMediaPlayer();
+
+        mediaPlayer = getMediaPlayer(trackId);
+    }
+
+    private MediaPlayer getMediaPlayer(long trackId) {
         Uri uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, trackId);
-        mediaPlayer = new MediaPlayer();
+
+        MediaPlayer mediaPlayer = new MediaPlayer();
         mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
         try {
             mediaPlayer.setDataSource(getApplicationContext(), uri);
@@ -85,7 +98,27 @@ public class AudioPlayerService extends Service implements
             Log.e("AudioPlayerService", ioe.getMessage());
         }
         mediaPlayer.setOnPreparedListener(this);
+        mediaPlayer.setOnCompletionListener(this);
         mediaPlayer.prepareAsync();
+
+        return mediaPlayer;
+    }
+
+    private void startPlaying() {
+        currentTrackCursorPosition = cursor.getPosition();
+        mediaPlayer.start();
+        onPlayerStartedListener.onPlayerStarted();
+
+        showNotification(
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
+        );
+
+        if (cursor.moveToNext()) {
+            nextMediaPlayer = getMediaPlayer(
+                    cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
+            );
+        }
     }
 
     @Override
@@ -111,13 +144,23 @@ public class AudioPlayerService extends Service implements
 
     @Override
     public void onPrepared(MediaPlayer mp) {
-        mp.start();
-        onPlayerStartedListener.onPlayerStarted();
+        if (mp == mediaPlayer) {
+            startPlaying();
+        }
+    }
 
-        showNotification(
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
-        );
+    @Override
+    public void onCompletion(MediaPlayer mp) {
+        freeMediaPlayer();
+
+        if (nextMediaPlayer != null) {
+            mediaPlayer = nextMediaPlayer;
+            nextMediaPlayer = null;
+            startPlaying();
+            onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
+        } else {
+            // TODO: notify MediaController about player stop
+        }
     }
 
     @Override
@@ -170,9 +213,17 @@ public class AudioPlayerService extends Service implements
         onPlayerStartedListener = listener;
     }
 
+    public void setOnTrackChangedListener(OnTrackChangedListener listener) {
+        onTrackChangedListener = listener;
+    }
+
     public class AudioPlayerBinder extends Binder {
         AudioPlayerService getService() {
             return AudioPlayerService.this;
         }
+    }
+
+    interface OnTrackChangedListener {
+        void onTrackChanged(int position);
     }
 }

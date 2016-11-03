@@ -41,6 +41,28 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private MediaController mediaController;
     private AudioPlayerService playerService;
 
+    private AudioPlayerService.OnTrackChangedListener onTrackChangedListener =
+            new AudioPlayerService.OnTrackChangedListener() {
+        @Override
+        public void onTrackChanged(int pos) {
+            position = pos;
+
+            cursor.moveToPosition(position);
+
+            initTrackDetailsFragment(
+                    cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
+            );
+
+            initMenuText(
+                    cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                    cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
+            );
+
+            // TODO: Refactor (we don't want a new fragment)
+            initTrackBrowseFragment();
+        }
+    };
+
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -48,6 +70,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
             mediaController.setMediaPlayer(playerService);
             playerService.setOnPlayerStartedListener(mediaController);
+            playerService.setOnTrackChangedListener(onTrackChangedListener);
         }
 
         @Override
