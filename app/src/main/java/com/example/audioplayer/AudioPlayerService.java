@@ -39,6 +39,7 @@ public class AudioPlayerService extends Service implements
     private Cursor cursor;
     private OnTrackChangedListener onTrackChangedListener;
     private int currentTrackCursorPosition;
+    private boolean repeatAll = false;
 
     private final IBinder binder = new AudioPlayerBinder();
 
@@ -114,6 +115,10 @@ public class AudioPlayerService extends Service implements
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
         );
+
+        if (cursor.getCount() == currentTrackCursorPosition + 1 && repeatAll) {
+            cursor.moveToPosition(-1);
+        }
 
         if (cursor.moveToNext()) {
             nextMediaPlayer = getMediaPlayer(
@@ -202,12 +207,26 @@ public class AudioPlayerService extends Service implements
 
     @Override
     public void repeatOne() {
+        // TODO: save repeat state and re-apply, when new track is selected
         mediaPlayer.setLooping(true);
     }
 
     @Override
     public void repeatOff() {
         mediaPlayer.setLooping(false);
+    }
+
+    @Override
+    public void repeatAll() {
+        mediaPlayer.setLooping(false);
+        repeatAll = true;
+
+        if (cursor.getCount() == currentTrackCursorPosition + 1) {
+            cursor.moveToFirst();
+            nextMediaPlayer = getMediaPlayer(
+                    cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
+            );
+        }
     }
 
     @Override

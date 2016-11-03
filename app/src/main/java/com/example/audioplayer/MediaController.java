@@ -73,6 +73,13 @@ public class MediaController extends FrameLayout implements
 
                 case REPEAT_ONE:
                     repeat.setImageResource(R.drawable.ic_repeat_black_24dp);
+
+                    mediaPlayer.repeatAll();
+
+                    repeatState = REPEAT_ALL;
+                    break;
+
+                case REPEAT_ALL:
                     repeat.setAlpha(0.5F);
 
                     mediaPlayer.repeatOff();
@@ -210,6 +217,7 @@ public class MediaController extends FrameLayout implements
         void pause();
         void repeatOne();
         void repeatOff();
+        void repeatAll();
         void seekTo(int milliseconds);
     }
 }
