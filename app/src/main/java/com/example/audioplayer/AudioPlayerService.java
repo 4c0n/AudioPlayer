@@ -84,6 +84,10 @@ public class AudioPlayerService extends Service implements
 
     private void initMediaPlayer(long trackId) {
         freeMediaPlayer();
+        if (nextMediaPlayer != null) {
+            nextMediaPlayer.release();
+            nextMediaPlayer = null;
+        }
 
         mediaPlayer = getMediaPlayer(trackId);
     }
@@ -115,14 +119,17 @@ public class AudioPlayerService extends Service implements
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
         );
 
-        if (cursor.getCount() == currentTrackCursorPosition + 1 && repeatAll) {
+        boolean lastTrack = cursor.getCount() == currentTrackCursorPosition + 1;
+        if (lastTrack && repeatAll) {
             cursor.moveToPosition(-1);
         }
 
-        if (cursor.moveToNext()) {
-            nextMediaPlayer = getMediaPlayer(
-                    cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
-            );
+        if (nextMediaPlayer == null && !lastTrack) {
+            if (cursor.moveToNext()) {
+                nextMediaPlayer = getMediaPlayer(
+                        cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
+                );
+            }
         }
     }
 

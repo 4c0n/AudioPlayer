@@ -46,9 +46,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements
             new AudioPlayerService.OnTrackChangedListener() {
         @Override
         public void onTrackChanged(int pos) {
+
+            Log.d("4c0n", "onTrackChanged: pos: " + pos);
+
             position = pos;
 
             cursor.moveToPosition(position);
+
+            Log.d("4c0n", "onTrackChanged: cursor: " + cursor.getPosition());
 
             initTrackDetailsFragment(
                     cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
@@ -193,7 +198,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         setContentView(R.layout.activity_track_details);
 
-        Log.d("4c0n", "TrackDetailsActivity onConfigurationChanged");
+        cursor.moveToPosition(position);
+        Log.d("4c0n", "TrackDetailsActivity onConfigurationChanged: pos: " + position + " cursor: " + cursor.getPosition());
 
         mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
