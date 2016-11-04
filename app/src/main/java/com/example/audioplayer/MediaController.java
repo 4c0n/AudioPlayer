@@ -9,7 +9,11 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 
-public class MediaController extends FrameLayout implements SeekBar.OnSeekBarChangeListener {
+public class MediaController extends FrameLayout implements
+        SeekBar.OnSeekBarChangeListener,
+        OnPlayerStartedListener,
+        OnPlayerStoppedListener {
+
     private static final String REPEAT_OFF = "repeatNone";
     private static final String REPEAT_ONE = "repeatOne";
     private static final String REPEAT_ALL = "repeatAll";
@@ -43,8 +47,6 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         @Override
         public void onClick(View v) {
             mediaPlayer.play();
-            post(progressUpdater);
-            updatePausePlayButton();
         }
     };
 
@@ -71,6 +73,13 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
 
                 case REPEAT_ONE:
                     repeat.setImageResource(R.drawable.ic_repeat_black_24dp);
+
+                    mediaPlayer.repeatAll();
+
+                    repeatState = REPEAT_ALL;
+                    break;
+
+                case REPEAT_ALL:
                     repeat.setAlpha(0.5F);
 
                     mediaPlayer.repeatOff();
@@ -129,6 +138,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         String timeElapsed = new TimeStringFormatter(currentPosition).format();
         this.timeElapsed.setText(timeElapsed);
 
+        // TODO: Duration does not need to be updated all the time
         int duration = mediaPlayer.getDuration();
         String timeLength = new TimeStringFormatter(duration).format();
         this.timeLength.setText(timeLength);
@@ -156,10 +166,6 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
 
     public void setMediaPlayer(MediaPlayer mediaPlayer) {
         this.mediaPlayer = mediaPlayer;
-
-        // start progress update cycle
-        post(progressUpdater);
-        updatePausePlayButton();
     }
 
     @Override
@@ -187,6 +193,22 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         post(progressUpdater);
     }
 
+    @Override
+    public void onPlayerStarted() {
+        // start progress update cycle
+        post(progressUpdater);
+        updatePausePlayButton();
+    }
+
+    @Override
+    public void onPlayerStopped() {
+        removeCallbacks(progressUpdater);
+        updatePausePlayButton();
+        seekBar.setProgress(0);
+        String timeElapsed = new TimeStringFormatter(0).format();
+        this.timeElapsed.setText(timeElapsed);
+    }
+
     interface MediaPlayer {
         int getCurrentPosition();
         int getDuration();
@@ -195,6 +217,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         void pause();
         void repeatOne();
         void repeatOff();
+        void repeatAll();
         void seekTo(int milliseconds);
     }
 }
