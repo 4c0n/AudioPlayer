@@ -27,7 +27,8 @@
         <activity android:name=".GenreDetailsActivity" />
         <activity android:name=".PlaylistDetailsActivity" />
         <activity android:name=".FolderDetailsActivity" />
-        <activity android:name=".TrackDetailsActivity" />
+        <activity android:name=".TrackDetailsActivity"
+            android:configChanges="orientation|screenSize" />
         <service android:name=".AudioPlayerService" />
     </application>
 

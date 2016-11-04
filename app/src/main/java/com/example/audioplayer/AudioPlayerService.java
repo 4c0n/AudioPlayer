@@ -18,7 +18,6 @@ import android.util.Log;
 import java.io.IOException;
 
 // TODO: implement shuffle
-// TODO: implement repeat all
 // TODO: implement next and previous
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
@@ -193,7 +192,7 @@ public class AudioPlayerService extends Service implements
     @Override
     public void play() {
         if (mediaPlayer != null) {
-            mediaPlayer.start();
+            startPlaying();
         } else {
             cursor.moveToPosition(currentTrackCursorPosition);
             initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));

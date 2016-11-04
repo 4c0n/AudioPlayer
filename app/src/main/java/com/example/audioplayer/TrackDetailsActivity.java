@@ -17,6 +17,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -93,8 +94,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     // TODO: Fix playing playlists
     private void initMediaPlayer() {
-        mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
-
         Intent intent = new Intent();
         intent.setClass(getApplicationContext(), AudioPlayerService.class);
         intent.setAction(AudioPlayerService.INTENT_ACTION_START_PLAYING);
@@ -115,6 +114,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     private void initTrackBrowseFragment() {
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            // TODO: Place view binder in its own file
             com.example.audioplayer.TrackBrowseFragment.ViewBinder viewBinder =
                     new com.example.audioplayer.TrackBrowseFragment.ViewBinder(
                             getResources(),
@@ -156,6 +156,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                 cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
         );
 
+        mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
+
         initMediaPlayer();
 
         initMenuText(
@@ -171,6 +173,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        Log.d("4c0n", "TrackDetailsActivity onCreate");
+
         setContentView(R.layout.activity_track_details);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.track_details_activity_toolbar);
@@ -181,6 +185,37 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         }
 
         getSupportLoaderManager().restartLoader(LOADER_ID, null, this);
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+
+        setContentView(R.layout.activity_track_details);
+
+        Log.d("4c0n", "TrackDetailsActivity onConfigurationChanged");
+
+        mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
+
+        initTrackDetailsFragment(
+                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
+        );
+
+        initTrackBrowseFragment();
+
+        initMenuText(
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
+        );
+
+        Log.d("4c0n", playerService.toString());
+        mediaController.setMediaPlayer(playerService);
+        playerService.setOnPlayerStartedListener(mediaController);
+        playerService.setOnPlayerStoppedListener(mediaController);
+        //playerService.setOnTrackChangedListener(onTrackChangedListener);
+        // TODO: replace with something like updateStatus()
+        mediaController.onPlayerStarted();
+        Log.d("4c0n", mediaController.toString());
     }
 
     @Override
