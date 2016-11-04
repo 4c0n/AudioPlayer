@@ -17,7 +17,6 @@ import android.support.v4.content.Loader;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -46,14 +45,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements
             new AudioPlayerService.OnTrackChangedListener() {
         @Override
         public void onTrackChanged(int pos) {
-
-            Log.d("4c0n", "onTrackChanged: pos: " + pos);
-
             position = pos;
 
             cursor.moveToPosition(position);
-
-            Log.d("4c0n", "onTrackChanged: cursor: " + cursor.getPosition());
 
             initTrackDetailsFragment(
                     cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
@@ -178,8 +172,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        Log.d("4c0n", "TrackDetailsActivity onCreate");
-
         setContentView(R.layout.activity_track_details);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.track_details_activity_toolbar);
@@ -199,7 +191,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_track_details);
 
         cursor.moveToPosition(position);
-        Log.d("4c0n", "TrackDetailsActivity onConfigurationChanged: pos: " + position + " cursor: " + cursor.getPosition());
 
         mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
@@ -214,14 +205,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
         );
 
-        Log.d("4c0n", playerService.toString());
         mediaController.setMediaPlayer(playerService);
         playerService.setOnPlayerStartedListener(mediaController);
         playerService.setOnPlayerStoppedListener(mediaController);
-        //playerService.setOnTrackChangedListener(onTrackChangedListener);
         // TODO: replace with something like updateStatus()
         mediaController.onPlayerStarted();
-        Log.d("4c0n", mediaController.toString());
     }
 
     @Override
