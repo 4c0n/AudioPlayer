@@ -16,6 +16,7 @@ import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import java.io.IOException;
+import java.util.Random;
 
 // TODO: implement shuffle
 public class AudioPlayerService extends Service implements
@@ -37,8 +38,9 @@ public class AudioPlayerService extends Service implements
     private Cursor cursor;
     private OnTrackChangedListener onTrackChangedListener;
     private int currentTrackCursorPosition;
-
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
+    private boolean shuffle = false;
+    private Random random = new Random();
 
     private final IBinder binder = new AudioPlayerBinder();
 
@@ -123,19 +125,30 @@ public class AudioPlayerService extends Service implements
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
         );
 
-        boolean lastTrack = cursor.getCount() == currentTrackCursorPosition + 1;
-        if (lastTrack && repeatState == RepeatState.REPEAT_ALL) {
-            cursor.moveToPosition(-1);
-            lastTrack = false;
-        }
+        if (shuffle) {
+            shuffleCursor();
+            nextMediaPlayer = getMediaPlayer(
+                    cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
+            );
+        } else {
+            boolean lastTrack = cursor.getCount() == currentTrackCursorPosition + 1;
+            if (lastTrack && repeatState == RepeatState.REPEAT_ALL) {
+                cursor.moveToPosition(-1);
+                lastTrack = false;
+            }
 
-        if (nextMediaPlayer == null && !lastTrack) {
-            if (cursor.moveToNext()) {
-                nextMediaPlayer = getMediaPlayer(
-                        cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
-                );
+            if (nextMediaPlayer == null && !lastTrack) {
+                if (cursor.moveToNext()) {
+                    nextMediaPlayer = getMediaPlayer(
+                            cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
+                    );
+                }
             }
         }
+    }
+
+    private void shuffleCursor() {
+        cursor.moveToPosition(random.nextInt(cursor.getCount() - 1));
     }
 
     @Override
@@ -265,6 +278,7 @@ public class AudioPlayerService extends Service implements
 
     public void previous() {
         freeMediaPlayer();
+
         if (nextMediaPlayer != null) {
             nextMediaPlayer.release();
             nextMediaPlayer = null;
@@ -282,6 +296,19 @@ public class AudioPlayerService extends Service implements
         initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
     }
 
+    public void shuffle(boolean on) {
+        shuffle = on;
+
+        shuffleCursor();
+        if (nextMediaPlayer != null) {
+            nextMediaPlayer.release();
+            nextMediaPlayer = null;
+        }
+        nextMediaPlayer = getMediaPlayer(
+                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
+        );
+    }
+
     public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
         onPlayerStartedListener = listener;
     }
@@ -296,6 +323,10 @@ public class AudioPlayerService extends Service implements
 
     public RepeatState getRepeatState() {
         return repeatState;
+    }
+
+    public boolean getShuffleState() {
+        return shuffle;
     }
 
     public class AudioPlayerBinder extends Binder {
