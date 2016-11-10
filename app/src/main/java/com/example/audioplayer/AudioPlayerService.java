@@ -38,7 +38,8 @@ public class AudioPlayerService extends Service implements
     private Cursor cursor;
     private OnTrackChangedListener onTrackChangedListener;
     private int currentTrackCursorPosition;
-    private boolean repeatAll = false;
+
+    private RepeatState repeatState = RepeatState.REPEAT_OFF;
 
     private final IBinder binder = new AudioPlayerBinder();
 
@@ -112,6 +113,9 @@ public class AudioPlayerService extends Service implements
     private void startPlaying() {
         currentTrackCursorPosition = cursor.getPosition();
         mediaPlayer.start();
+        if (repeatState == RepeatState.REPEAT_ONE) {
+            mediaPlayer.setLooping(true);
+        }
         onPlayerStartedListener.onPlayerStarted();
 
         showNotification(
@@ -120,8 +124,9 @@ public class AudioPlayerService extends Service implements
         );
 
         boolean lastTrack = cursor.getCount() == currentTrackCursorPosition + 1;
-        if (lastTrack && repeatAll) {
+        if (lastTrack && repeatState == RepeatState.REPEAT_ALL) {
             cursor.moveToPosition(-1);
+            lastTrack = false;
         }
 
         if (nextMediaPlayer == null && !lastTrack) {
@@ -213,19 +218,20 @@ public class AudioPlayerService extends Service implements
 
     @Override
     public void repeatOne() {
-        // TODO: save repeat state and re-apply, when new track is selected
         mediaPlayer.setLooping(true);
+        repeatState = RepeatState.REPEAT_ONE;
     }
 
     @Override
     public void repeatOff() {
         mediaPlayer.setLooping(false);
+        repeatState = RepeatState.REPEAT_OFF;
     }
 
     @Override
     public void repeatAll() {
         mediaPlayer.setLooping(false);
-        repeatAll = true;
+        repeatState = RepeatState.REPEAT_ALL;
 
         if (cursor.getCount() == currentTrackCursorPosition + 1) {
             cursor.moveToFirst();
@@ -252,6 +258,10 @@ public class AudioPlayerService extends Service implements
 
     public void setOnTrackChangedListener(OnTrackChangedListener listener) {
         onTrackChangedListener = listener;
+    }
+
+    public RepeatState getRepeatState() {
+        return repeatState;
     }
 
     public class AudioPlayerBinder extends Binder {

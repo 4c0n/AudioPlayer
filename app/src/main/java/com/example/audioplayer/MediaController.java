@@ -14,10 +14,6 @@ public class MediaController extends FrameLayout implements
         OnPlayerStartedListener,
         OnPlayerStoppedListener {
 
-    private static final String REPEAT_OFF = "repeatNone";
-    private static final String REPEAT_ONE = "repeatOne";
-    private static final String REPEAT_ALL = "repeatAll";
-
     private TextView timeElapsed;
     private SeekBar seekBar;
     private TextView timeLength;
@@ -28,7 +24,7 @@ public class MediaController extends FrameLayout implements
     private ImageButton next;
     private ImageButton shuffle;
     private MediaPlayer mediaPlayer;
-    private String repeatState = REPEAT_OFF;
+    private RepeatState repeatState = RepeatState.REPEAT_OFF;
     private boolean draggingSeekBar = false;
     private int seekToMilliseconds;
 
@@ -68,7 +64,7 @@ public class MediaController extends FrameLayout implements
 
                     mediaPlayer.repeatOne();
 
-                    repeatState = REPEAT_ONE;
+                    repeatState = RepeatState.REPEAT_ONE;
                     break;
 
                 case REPEAT_ONE:
@@ -76,7 +72,7 @@ public class MediaController extends FrameLayout implements
 
                     mediaPlayer.repeatAll();
 
-                    repeatState = REPEAT_ALL;
+                    repeatState = RepeatState.REPEAT_ALL;
                     break;
 
                 case REPEAT_ALL:
@@ -84,7 +80,7 @@ public class MediaController extends FrameLayout implements
 
                     mediaPlayer.repeatOff();
 
-                    repeatState = REPEAT_OFF;
+                    repeatState = RepeatState.REPEAT_OFF;
             }
         }
     };
@@ -166,6 +162,33 @@ public class MediaController extends FrameLayout implements
 
     public void setMediaPlayer(MediaPlayer mediaPlayer) {
         this.mediaPlayer = mediaPlayer;
+    }
+
+    public void setRepeatState(RepeatState repeatState) {
+        switch (repeatState) {
+            case REPEAT_OFF:
+                repeat.setImageResource(R.drawable.ic_repeat_black_24dp);
+                repeat.setAlpha(0.5F);
+                this.repeatState = repeatState;
+                break;
+
+            case REPEAT_ONE:
+                repeat.setImageResource(R.drawable.ic_repeat_one_black_24dp);
+                repeat.setAlpha(1.0F);
+                this.repeatState = repeatState;
+                break;
+
+            case REPEAT_ALL:
+                repeat.setImageResource(R.drawable.ic_repeat_black_24dp);
+                repeat.setAlpha(1.0F);
+                this.repeatState = repeatState;
+                break;
+
+            default:
+                throw new IllegalArgumentException(
+                        "State: " + repeatState + " is not a valid state"
+                );
+        }
     }
 
     @Override

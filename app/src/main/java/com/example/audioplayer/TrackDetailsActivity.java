@@ -210,6 +210,8 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         playerService.setOnPlayerStoppedListener(mediaController);
         // TODO: replace with something like updateStatus()
         mediaController.onPlayerStarted();
+
+        mediaController.setRepeatState(playerService.getRepeatState());
     }
 
     @Override
