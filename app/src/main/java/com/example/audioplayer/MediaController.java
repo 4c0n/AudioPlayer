@@ -18,10 +18,8 @@ public class MediaController extends FrameLayout implements
     private SeekBar seekBar;
     private TextView timeLength;
     private ImageButton repeat;
-    private ImageButton previous;
     private ImageButton play;
     private ImageButton pause;
-    private ImageButton next;
     private ImageButton shuffle;
     private MediaPlayer mediaPlayer;
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
@@ -85,6 +83,20 @@ public class MediaController extends FrameLayout implements
         }
     };
 
+    private OnClickListener onNextClicked = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mediaPlayer.next();
+        }
+    };
+
+    private OnClickListener onPreviousClicked = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mediaPlayer.previous();
+        }
+    };
+
     public MediaController(Context context) {
         super(context);
         initView();
@@ -115,7 +127,8 @@ public class MediaController extends FrameLayout implements
         repeat = (ImageButton) layout.findViewById(R.id.media_controller_repeat);
         repeat.setOnClickListener(onRepeatClicked);
 
-        previous = (ImageButton) layout.findViewById(R.id.media_controller_previous);
+        ImageButton previous = (ImageButton) layout.findViewById(R.id.media_controller_previous);
+        previous.setOnClickListener(onPreviousClicked);
 
         play = (ImageButton) layout.findViewById(R.id.media_controller_play);
         play.setOnClickListener(onPlayClicked);
@@ -123,7 +136,8 @@ public class MediaController extends FrameLayout implements
         pause = (ImageButton) layout.findViewById(R.id.media_controller_pause);
         pause.setOnClickListener(onPauseClicked);
 
-        next = (ImageButton) layout.findViewById(R.id.media_controller_next);
+        ImageButton next = (ImageButton) layout.findViewById(R.id.media_controller_next);
+        next.setOnClickListener(onNextClicked);
 
         shuffle = (ImageButton) layout.findViewById(R.id.media_controller_shuffle);
     }
@@ -242,5 +256,7 @@ public class MediaController extends FrameLayout implements
         void repeatOff();
         void repeatAll();
         void seekTo(int milliseconds);
+        void next();
+        void previous();
     }
 }

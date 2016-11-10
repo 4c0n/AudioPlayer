@@ -18,7 +18,6 @@ import android.util.Log;
 import java.io.IOException;
 
 // TODO: implement shuffle
-// TODO: implement next and previous
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
@@ -113,6 +112,7 @@ public class AudioPlayerService extends Service implements
     private void startPlaying() {
         currentTrackCursorPosition = cursor.getPosition();
         mediaPlayer.start();
+        onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
         if (repeatState == RepeatState.REPEAT_ONE) {
             mediaPlayer.setLooping(true);
         }
@@ -174,7 +174,6 @@ public class AudioPlayerService extends Service implements
             mediaPlayer = nextMediaPlayer;
             nextMediaPlayer = null;
             startPlaying();
-            onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
         } else {
             onPlayerStoppedListener.onPlayerStopped();
         }
@@ -246,6 +245,41 @@ public class AudioPlayerService extends Service implements
         if (mediaPlayer != null) {
             mediaPlayer.seekTo(milliseconds);
         }
+    }
+
+    public void next() {
+        freeMediaPlayer();
+
+        if (nextMediaPlayer != null) {
+            mediaPlayer = nextMediaPlayer;
+            nextMediaPlayer = null;
+            startPlaying();
+        } else {
+            // When we are at the last track rewind cursor and play the first track
+            if (currentTrackCursorPosition == cursor.getCount() - 1) {
+                cursor.moveToFirst();
+                initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
+            }
+        }
+    }
+
+    public void previous() {
+        freeMediaPlayer();
+        if (nextMediaPlayer != null) {
+            nextMediaPlayer.release();
+            nextMediaPlayer = null;
+
+            cursor.moveToPrevious();
+            cursor.moveToPrevious();
+        } else {
+            cursor.moveToPrevious();
+        }
+
+        if (cursor.getPosition() < 0) {
+            cursor.moveToLast();
+        }
+
+        initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
     }
 
     public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
