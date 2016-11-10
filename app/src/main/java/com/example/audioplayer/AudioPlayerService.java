@@ -18,7 +18,7 @@ import android.util.Log;
 import java.io.IOException;
 import java.util.Random;
 
-// TODO: implement shuffle
+
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
