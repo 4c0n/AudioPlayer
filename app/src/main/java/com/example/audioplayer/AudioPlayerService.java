@@ -113,6 +113,7 @@ public class AudioPlayerService extends Service implements
     private void startPlaying() {
         currentTrackCursorPosition = cursor.getPosition();
         mediaPlayer.start();
+        onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
         if (repeatState == RepeatState.REPEAT_ONE) {
             mediaPlayer.setLooping(true);
         }
@@ -174,7 +175,6 @@ public class AudioPlayerService extends Service implements
             mediaPlayer = nextMediaPlayer;
             nextMediaPlayer = null;
             startPlaying();
-            onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
         } else {
             onPlayerStoppedListener.onPlayerStopped();
         }
@@ -255,7 +255,12 @@ public class AudioPlayerService extends Service implements
             mediaPlayer = nextMediaPlayer;
             nextMediaPlayer = null;
             startPlaying();
-            onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
+        } else {
+            // When we are at the last track rewind cursor and play the first track
+            if (currentTrackCursorPosition == cursor.getCount() - 1) {
+                cursor.moveToFirst();
+                initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
+            }
         }
     }
 
