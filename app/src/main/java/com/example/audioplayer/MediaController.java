@@ -25,6 +25,7 @@ public class MediaController extends FrameLayout implements
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
     private boolean draggingSeekBar = false;
     private int seekToMilliseconds;
+    private boolean shuffleState = false;
 
     private Runnable progressUpdater = new Runnable() {
         @Override
@@ -97,6 +98,14 @@ public class MediaController extends FrameLayout implements
         }
     };
 
+    private OnClickListener onShuffleClicked = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            setShuffle(!shuffleState);
+            mediaPlayer.shuffle(shuffleState);
+        }
+    };
+
     public MediaController(Context context) {
         super(context);
         initView();
@@ -140,6 +149,7 @@ public class MediaController extends FrameLayout implements
         next.setOnClickListener(onNextClicked);
 
         shuffle = (ImageButton) layout.findViewById(R.id.media_controller_shuffle);
+        shuffle.setOnClickListener(onShuffleClicked);
     }
 
     private int setProgress() {
@@ -205,6 +215,16 @@ public class MediaController extends FrameLayout implements
         }
     }
 
+    public void setShuffle(boolean on) {
+        if (on) {
+            shuffle.setAlpha(1.0F);
+        } else {
+            shuffle.setAlpha(0.5F);
+        }
+
+        shuffleState = on;
+    }
+
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (fromUser) {
@@ -258,5 +278,6 @@ public class MediaController extends FrameLayout implements
         void seekTo(int milliseconds);
         void next();
         void previous();
+        void shuffle(boolean on);
     }
 }

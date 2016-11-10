@@ -25,6 +25,7 @@ import android.widget.TextView;
 
 import java.io.File;
 
+
 public class TrackDetailsActivity extends AppCompatActivity implements
         LoaderManager.LoaderCallbacks<Cursor>,
         TrackDetailsBrowseFragment.OnTrackSelectedListener {
@@ -164,7 +165,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
         );
 
-        // TODO: handle in onConfigurationChanged
         initTrackBrowseFragment();
     }
 
@@ -212,6 +212,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         mediaController.onPlayerStarted();
 
         mediaController.setRepeatState(playerService.getRepeatState());
+        mediaController.setShuffle(playerService.getShuffleState());
     }
 
     @Override
