@@ -85,6 +85,13 @@ public class MediaController extends FrameLayout implements
         }
     };
 
+    private OnClickListener onNextClicked = new OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            mediaPlayer.next();
+        }
+    };
+
     public MediaController(Context context) {
         super(context);
         initView();
@@ -124,6 +131,7 @@ public class MediaController extends FrameLayout implements
         pause.setOnClickListener(onPauseClicked);
 
         next = (ImageButton) layout.findViewById(R.id.media_controller_next);
+        next.setOnClickListener(onNextClicked);
 
         shuffle = (ImageButton) layout.findViewById(R.id.media_controller_shuffle);
     }
@@ -242,5 +250,6 @@ public class MediaController extends FrameLayout implements
         void repeatOff();
         void repeatAll();
         void seekTo(int milliseconds);
+        void next();
     }
 }

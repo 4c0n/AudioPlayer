@@ -248,6 +248,17 @@ public class AudioPlayerService extends Service implements
         }
     }
 
+    public void next() {
+        freeMediaPlayer();
+
+        if (nextMediaPlayer != null) {
+            mediaPlayer = nextMediaPlayer;
+            nextMediaPlayer = null;
+            startPlaying();
+            onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
+        }
+    }
+
     public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
         onPlayerStartedListener = listener;
     }
