@@ -18,7 +18,6 @@ import android.util.Log;
 import java.io.IOException;
 
 // TODO: implement shuffle
-// TODO: implement next and previous
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
@@ -262,6 +261,25 @@ public class AudioPlayerService extends Service implements
                 initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
             }
         }
+    }
+
+    public void previous() {
+        freeMediaPlayer();
+        if (nextMediaPlayer != null) {
+            nextMediaPlayer.release();
+            nextMediaPlayer = null;
+
+            cursor.moveToPrevious();
+            cursor.moveToPrevious();
+        } else {
+            cursor.moveToPrevious();
+        }
+
+        if (cursor.getPosition() < 0) {
+            cursor.moveToLast();
+        }
+
+        initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
     }
 
     public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
