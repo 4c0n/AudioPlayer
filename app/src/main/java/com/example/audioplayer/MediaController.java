@@ -164,7 +164,8 @@ public class MediaController extends FrameLayout implements
         this.timeLength.setText(timeLength);
 
         if (duration > 0) {
-            seekBar.setProgress(1000 * currentPosition / duration);
+            long progress = 1000L * currentPosition / duration;
+            seekBar.setProgress((int) progress);
         }
 
         return currentPosition;
