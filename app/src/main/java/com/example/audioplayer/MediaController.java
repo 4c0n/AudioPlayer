@@ -94,6 +94,7 @@ public class MediaController extends FrameLayout implements
     private OnClickListener onPreviousClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
+            removeCallbacks(progressUpdater);
             mediaPlayer.previous();
         }
     };
