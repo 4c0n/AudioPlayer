@@ -114,11 +114,15 @@ public class AudioPlayerService extends Service implements
     private void startPlaying() {
         currentTrackCursorPosition = cursor.getPosition();
         mediaPlayer.start();
-        onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
+        if (onTrackChangedListener != null) {
+            onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
+        }
         if (repeatState == RepeatState.REPEAT_ONE) {
             mediaPlayer.setLooping(true);
         }
-        onPlayerStartedListener.onPlayerStarted();
+        if (onPlayerStartedListener != null) {
+            onPlayerStartedListener.onPlayerStarted();
+        }
 
         showNotification(
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
@@ -151,6 +155,12 @@ public class AudioPlayerService extends Service implements
         cursor.moveToPosition(random.nextInt(cursor.getCount() - 1));
     }
 
+    /*
+    TODO: It might better to start the actual playing by having to call a method after binding.
+            That way all listeners should be set and everything should be more reliable.
+            There can be a race condition between onPrepared and onBind, if onBind wins the race all
+            is well, otherwise the UI will be missing out on receiving some important events.
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getAction().equals(INTENT_ACTION_START_PLAYING)) {

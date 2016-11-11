@@ -94,6 +94,7 @@ public class MediaController extends FrameLayout implements
     private OnClickListener onPreviousClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
+            removeCallbacks(progressUpdater);
             mediaPlayer.previous();
         }
     };
@@ -164,7 +165,8 @@ public class MediaController extends FrameLayout implements
         this.timeLength.setText(timeLength);
 
         if (duration > 0) {
-            seekBar.setProgress(1000 * currentPosition / duration);
+            long progress = 1000L * currentPosition / duration;
+            seekBar.setProgress((int) progress);
         }
 
         return currentPosition;
