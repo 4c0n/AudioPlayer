@@ -129,6 +129,14 @@ public class AudioPlayerService extends Service implements
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
         );
 
+        prepareNextMediaPlayer();
+    }
+
+    private void shuffleCursor() {
+        cursor.moveToPosition(random.nextInt(cursor.getCount() - 1));
+    }
+
+    private void prepareNextMediaPlayer() {
         if (shuffle) {
             shuffleCursor();
             nextMediaPlayer = getMediaPlayer(
@@ -149,10 +157,6 @@ public class AudioPlayerService extends Service implements
                 }
             }
         }
-    }
-
-    private void shuffleCursor() {
-        cursor.moveToPosition(random.nextInt(cursor.getCount() - 1));
     }
 
     /*
@@ -309,14 +313,16 @@ public class AudioPlayerService extends Service implements
     public void shuffle(boolean on) {
         shuffle = on;
 
-        shuffleCursor();
         if (nextMediaPlayer != null) {
             nextMediaPlayer.release();
             nextMediaPlayer = null;
         }
-        nextMediaPlayer = getMediaPlayer(
-                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
-        );
+
+        if (!shuffle) {
+            cursor.moveToPosition(currentTrackCursorPosition);
+        }
+
+        prepareNextMediaPlayer();
     }
 
     public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
