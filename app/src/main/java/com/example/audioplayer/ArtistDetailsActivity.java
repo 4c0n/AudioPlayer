@@ -27,7 +27,6 @@ import android.widget.TextView;
 
 import java.io.File;
 
-// TODO: Implement OnClick for Tracks in the list
 public class ArtistDetailsActivity extends AppCompatActivity {
     public static final String INTENT_EXTRA_ARTIST_ID = "artistId";
     public static final String INTENT_EXTRA_ARTIST_NAME = "artistName";
@@ -140,7 +139,36 @@ public class ArtistDetailsActivity extends AppCompatActivity {
                         startActivity(intent);
 
                         return true;
+                    } else if (adapter.getGroup(groupPosition) ==
+                            ArtistDetailsExpandableListAdapter.TRACKS) {
+
+                        String artistId = getArguments().getString(ARGUMENT_ARTIST_ID);
+                        QueryParams params = new QueryParams(
+                                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
+                                new String[] {
+                                        MediaStore.Audio.Media._ID,
+                                        MediaStore.Audio.Media.TITLE,
+                                        MediaStore.Audio.Media.ARTIST,
+                                        MediaStore.Audio.Media.ALBUM_ID
+                                },
+                                MediaStore.Audio.Media.IS_MUSIC + "=? AND " +
+                                        MediaStore.Audio.Media.ARTIST_ID + "=?",
+                                new String[] {"1", artistId},
+                                MediaStore.Audio.Media.TITLE_KEY + " ASC"
+                        );
+
+                        Intent intent = new Intent();
+                        intent.setClass(getActivity(), TrackDetailsActivity.class);
+                        intent.putExtra(TrackDetailsActivity.INTENT_EXTRA_QUERY_PARAMS, params);
+                        intent.putExtra(
+                                TrackDetailsActivity.INTENT_EXTRA_CURSOR_POSITION,
+                                childPosition
+                        );
+                        startActivity(intent);
+
+                        return true;
                     }
+
                     return false;
                 }
             });
