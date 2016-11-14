@@ -50,6 +50,24 @@ public class AudioPlayerService extends Service implements
 
     private void showNotification(String artist, String title) {
         // TODO: add PendingIntents
+        Cursor albumCursor = getContentResolver().query(
+                MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+                new String[] {MediaStore.Audio.Albums.ALBUM_ART},
+                MediaStore.Audio.Albums._ID + "=?",
+                new String[] {
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
+                },
+                null
+        );
+
+        String albumArtPath = null;
+        if (albumCursor != null) {
+            albumCursor.moveToFirst();
+            albumArtPath = albumCursor.getString(
+                    albumCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)
+            );
+            albumCursor.close();
+        }
 
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
@@ -72,17 +90,21 @@ public class AudioPlayerService extends Service implements
                         .setShowActionsInCompactView(1)
                         .setMediaSession(mediaSession.getSessionToken())
                 )
+                .setShowWhen(false)
+                .setWhen(0)
                 .setContentTitle(title)
                 .setContentText(artist)
                 .setSmallIcon(R.drawable.ic_music_note_white_24dp)
                 .setLargeIcon(
-                        // TODO: Use album art if available
-                        BitmapFactory.decodeResource(
+                        albumArtPath != null
+                        ? BitmapFactory.decodeFile(albumArtPath)
+                        : BitmapFactory.decodeResource(
                                 getResources(),
                                 R.drawable.ic_music_note_black_24dp
                         )
                 )
                 .build();
+
 
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
         startForeground(NOTIFICATION_ID, notification);
@@ -204,6 +226,7 @@ public class AudioPlayerService extends Service implements
                     cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
             );
             mediaSession = new MediaSessionCompat(getApplicationContext(), "mediaSession");
+            mediaSession.setActive(true);
         } else {
             MediaButtonReceiver.handleIntent(mediaSession, intent);
         }
@@ -215,6 +238,20 @@ public class AudioPlayerService extends Service implements
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
+    }
+
+    @Override
+    public void onDestroy() {
+        if (mediaSession != null) {
+            mediaSession.release();
+        }
+        freeMediaPlayer();
+        if (nextMediaPlayer != null) {
+            nextMediaPlayer.release();
+            nextMediaPlayer = null;
+        }
+
+        super.onDestroy();
     }
 
     @Override
@@ -271,6 +308,7 @@ public class AudioPlayerService extends Service implements
     @Override
     public void pause() {
         mediaPlayer.pause();
+        // TODO: Update notification replacing pause button with play button
     }
 
     @Override
