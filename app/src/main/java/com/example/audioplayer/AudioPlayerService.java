@@ -89,6 +89,8 @@ public class AudioPlayerService extends Service implements
                 .setStyle(new NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(1)
                         .setMediaSession(mediaSession.getSessionToken())
+                        // TODO: set cancel button intent
+                        .setShowCancelButton(true)
                 )
                 .setShowWhen(false)
                 .setWhen(0)
@@ -103,10 +105,9 @@ public class AudioPlayerService extends Service implements
                                 R.drawable.ic_music_note_black_24dp
                         )
                 )
+                .setOngoing(true)
                 .build();
 
-
-        notification.flags |= Notification.FLAG_ONGOING_EVENT;
         startForeground(NOTIFICATION_ID, notification);
     }
 
