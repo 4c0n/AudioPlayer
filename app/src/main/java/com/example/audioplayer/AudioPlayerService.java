@@ -5,6 +5,7 @@ import android.app.Service;
 import android.content.ContentUris;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -12,6 +13,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.media.session.MediaButtonReceiver;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
@@ -41,19 +44,44 @@ public class AudioPlayerService extends Service implements
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
     private boolean shuffle = false;
     private Random random = new Random();
+    private MediaSessionCompat mediaSession;
 
     private final IBinder binder = new AudioPlayerBinder();
 
     private void showNotification(String artist, String title) {
-        // TODO: add PendingIntent
-        /* TODO: add locks screen notification:
-            https://developer.android.com/guide/topics/ui/notifiers/notifications.html#controllingMedia
-         */
+        // TODO: add PendingIntents
 
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
+                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .addAction(
+                        R.drawable.ic_skip_previous_black_24dp,
+                        getString(R.string.previous),
+                        null
+                )
+                .addAction(
+                        R.drawable.ic_pause_black_24dp,
+                        getString(R.string.pause),
+                        null
+                )
+                .addAction(
+                        R.drawable.ic_skip_next_black_24dp,
+                        getString(R.string.next),
+                        null
+                )
+                .setStyle(new NotificationCompat.MediaStyle()
+                        .setShowActionsInCompactView(1)
+                        .setMediaSession(mediaSession.getSessionToken())
+                )
                 .setContentTitle(title)
                 .setContentText(artist)
                 .setSmallIcon(R.drawable.ic_music_note_white_24dp)
+                .setLargeIcon(
+                        // TODO: Use album art if available
+                        BitmapFactory.decodeResource(
+                                getResources(),
+                                R.drawable.ic_music_note_black_24dp
+                        )
+                )
                 .build();
 
         notification.flags |= Notification.FLAG_ONGOING_EVENT;
@@ -175,6 +203,9 @@ public class AudioPlayerService extends Service implements
             initMediaPlayer(
                     cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
             );
+            mediaSession = new MediaSessionCompat(getApplicationContext(), "mediaSession");
+        } else {
+            MediaButtonReceiver.handleIntent(mediaSession, intent);
         }
 
         return super.onStartCommand(intent, flags, startId);
