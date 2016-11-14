@@ -50,6 +50,8 @@ public class AudioPlayerService extends Service implements
 
     private void showNotification(String artist, String title) {
         // TODO: add PendingIntents
+
+        // TODO: do async query
         Cursor albumCursor = getContentResolver().query(
                 MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
                 new String[] {MediaStore.Audio.Albums.ALBUM_ART},
@@ -69,6 +71,7 @@ public class AudioPlayerService extends Service implements
             albumCursor.close();
         }
 
+        // TODO: Replace buttons with white smaller versions
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(
@@ -102,7 +105,8 @@ public class AudioPlayerService extends Service implements
                         ? BitmapFactory.decodeFile(albumArtPath)
                         : BitmapFactory.decodeResource(
                                 getResources(),
-                                R.drawable.ic_music_note_black_24dp
+                                // TODO: Use bigger icon
+                                R.drawable.ic_music_note_white_24dp
                         )
                 )
                 .setOngoing(true)
