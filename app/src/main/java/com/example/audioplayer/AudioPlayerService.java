@@ -3,6 +3,7 @@ package com.example.audioplayer;
 import android.app.Notification;
 import android.app.Service;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
@@ -13,8 +14,10 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
@@ -25,7 +28,8 @@ import java.util.Random;
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
-        MediaController.MediaPlayer {
+        MediaController.MediaPlayer,
+        AudioManager.OnAudioFocusChangeListener {
 
     public static final String INTENT_ACTION_START_PLAYING = "startPlaying";
 
@@ -128,7 +132,11 @@ public class AudioPlayerService extends Service implements
                 queryParams.getSortOrder()
         );
 
-        cursor.moveToPosition(position);
+        if (cursor != null) {
+            cursor.moveToPosition(position);
+        } else {
+            Log.e("4c0n", "Failed to init cursor!");
+        }
     }
 
     private void freeMediaPlayer() {
@@ -184,6 +192,26 @@ public class AudioPlayerService extends Service implements
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
         );
 
+        mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
+                .setState(PlaybackStateCompat.STATE_PLAYING, 0, 1.0f)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE).build());
+
+        mediaSession.setMetadata(
+                new MediaMetadataCompat.Builder()
+                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "Artist")
+                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Title")
+                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Album")
+                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, 10000)
+                        .putBitmap(
+                                MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
+                                BitmapFactory.decodeResource(
+                                        getResources(),
+                                        R.drawable.ic_music_note_black_96px
+                                )
+                        )
+                        .build()
+        );
+
         prepareNextMediaPlayer();
     }
 
@@ -214,12 +242,36 @@ public class AudioPlayerService extends Service implements
         }
     }
 
-    /*
-    TODO: It might better to start the actual playing by having to call a method after binding.
-            That way all listeners should be set and everything should be more reliable.
-            There can be a race condition between onPrepared and onBind, if onBind wins the race all
-            is well, otherwise the UI will be missing out on receiving some important events.
-     */
+    private void initMediaSession() {
+        mediaSession = new MediaSessionCompat(this, "AudioPlayerService");
+        mediaSession.setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
+                        | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+        );
+
+        requestAudioFocus();
+
+        mediaSession.setActive(true);
+    }
+
+    private void requestAudioFocus() {
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int result = audioManager.requestAudioFocus(
+                this,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+        );
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+            Log.e("4c0n", "Failed to get audio focus!");
+        }
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        initMediaSession();
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent.getAction().equals(INTENT_ACTION_START_PLAYING)) {
@@ -230,8 +282,9 @@ public class AudioPlayerService extends Service implements
             initMediaPlayer(
                     cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
             );
-            mediaSession = new MediaSessionCompat(getApplicationContext(), "mediaSession");
-            mediaSession.setActive(true);
+
+            Log.d("4c0n", "media session active? " + mediaSession.isActive());
+            Log.d("4c0n", mediaSession.getRemoteControlClient() == null ? "Remote controle client: NULL" : "Remote control client: " + mediaSession.getRemoteControlClient().toString());
         } else {
             MediaButtonReceiver.handleIntent(mediaSession, intent);
         }
@@ -247,16 +300,16 @@ public class AudioPlayerService extends Service implements
 
     @Override
     public void onDestroy() {
-        if (mediaSession != null) {
-            mediaSession.release();
-        }
+        super.onDestroy();
+
+        mediaSession.release();
+
         freeMediaPlayer();
+
         if (nextMediaPlayer != null) {
             nextMediaPlayer.release();
             nextMediaPlayer = null;
         }
-
-        super.onDestroy();
     }
 
     @Override
@@ -417,6 +470,12 @@ public class AudioPlayerService extends Service implements
 
     public boolean getShuffleState() {
         return shuffle;
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        Log.d("4c0n", "onAudioFocusChange");
+        // TODO: handle change in audio focus
     }
 
     public class AudioPlayerBinder extends Binder {
