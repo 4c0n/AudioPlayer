@@ -76,7 +76,7 @@ public class AudioPlayerService extends Service implements
                         null
                 )
                 .setStyle(new NotificationCompat.MediaStyle()
-                        .setShowActionsInCompactView(1)
+                        .setShowActionsInCompactView(0, 1, 2)
                         .setMediaSession(mediaSession.getSessionToken())
                         // TODO: set cancel button intent
                         .setShowCancelButton(true)
@@ -364,6 +364,7 @@ public class AudioPlayerService extends Service implements
             if (paused) {
                 mediaPlayer.start();
                 paused = false;
+                onPlayerStartedListener.onPlayerStarted();
             } else {
                 startPlaying();
             }
