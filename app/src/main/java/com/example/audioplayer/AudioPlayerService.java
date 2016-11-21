@@ -6,6 +6,7 @@ import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
@@ -49,31 +50,12 @@ public class AudioPlayerService extends Service implements
     private boolean shuffle = false;
     private Random random = new Random();
     private MediaSessionCompat mediaSession;
+    private boolean paused = false;
 
     private final IBinder binder = new AudioPlayerBinder();
 
-    private void showNotification(String artist, String title) {
+    private void showNotification(String artist, String title, Bitmap albumArt) {
         // TODO: add PendingIntents
-
-        // TODO: do async query
-        Cursor albumCursor = getContentResolver().query(
-                MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
-                new String[] {MediaStore.Audio.Albums.ALBUM_ART},
-                MediaStore.Audio.Albums._ID + "=?",
-                new String[] {
-                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
-                },
-                null
-        );
-
-        String albumArtPath = null;
-        if (albumCursor != null) {
-            albumCursor.moveToFirst();
-            albumArtPath = albumCursor.getString(
-                    albumCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)
-            );
-            albumCursor.close();
-        }
 
         // TODO: Replace buttons with white smaller versions
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
@@ -104,15 +86,7 @@ public class AudioPlayerService extends Service implements
                 .setContentTitle(title)
                 .setContentText(artist)
                 .setSmallIcon(R.drawable.ic_music_note_white_24dp)
-                .setLargeIcon(
-                        albumArtPath != null
-                        ? BitmapFactory.decodeFile(albumArtPath)
-                        : BitmapFactory.decodeResource(
-                                getResources(),
-                                // TODO: Use bigger icon
-                                R.drawable.ic_music_note_white_24dp
-                        )
-                )
+                .setLargeIcon(albumArt)
                 .setOngoing(true)
                 .build();
 
@@ -176,41 +150,28 @@ public class AudioPlayerService extends Service implements
 
     private void startPlaying() {
         currentTrackCursorPosition = cursor.getPosition();
+
         mediaPlayer.start();
+
         if (onTrackChangedListener != null) {
             onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
         }
+
         if (repeatState == RepeatState.REPEAT_ONE) {
             mediaPlayer.setLooping(true);
         }
+
         if (onPlayerStartedListener != null) {
             onPlayerStartedListener.onPlayerStarted();
         }
 
-        showNotification(
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
-        );
+        String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+        String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+        Bitmap albumArt = getAlbumArt();
 
-        mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
-                .setState(PlaybackStateCompat.STATE_PLAYING, 0, 1.0f)
-                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE).build());
+        showNotification(artist, title, albumArt);
 
-        mediaSession.setMetadata(
-                new MediaMetadataCompat.Builder()
-                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, "Artist")
-                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, "Title")
-                        .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Album")
-                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, 10000)
-                        .putBitmap(
-                                MediaMetadataCompat.METADATA_KEY_ALBUM_ART,
-                                BitmapFactory.decodeResource(
-                                        getResources(),
-                                        R.drawable.ic_music_note_black_96px
-                                )
-                        )
-                        .build()
-        );
+        updateMediaSession(artist, title, albumArt);
 
         prepareNextMediaPlayer();
     }
@@ -264,6 +225,50 @@ public class AudioPlayerService extends Service implements
         if (result == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
             Log.e("4c0n", "Failed to get audio focus!");
         }
+    }
+
+    private Bitmap getAlbumArt() {
+        // TODO: do async query?
+        Cursor albumCursor = getContentResolver().query(
+                MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+                new String[] {MediaStore.Audio.Albums.ALBUM_ART},
+                MediaStore.Audio.Albums._ID + "=?",
+                new String[] {
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
+                },
+                null
+        );
+
+        String albumArtPath = null;
+        if (albumCursor != null) {
+            albumCursor.moveToFirst();
+            albumArtPath = albumCursor.getString(
+                    albumCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)
+            );
+            albumCursor.close();
+        }
+
+        if (albumArtPath != null) {
+            return BitmapFactory.decodeFile(albumArtPath);
+        }
+
+        return BitmapFactory.decodeResource(getResources(), R.drawable.ic_music_note_black_96px);
+    }
+
+    private void updateMediaSession(String artist, String title, Bitmap albumArt) {
+        mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
+                .setState(PlaybackStateCompat.STATE_PLAYING, 0, 1.0f)
+                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE).build());
+
+        mediaSession.setMetadata(
+                new MediaMetadataCompat.Builder()
+                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+                        //.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Album")
+                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, getDuration())
+                        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
+                        .build()
+        );
     }
 
     @Override
@@ -356,7 +361,12 @@ public class AudioPlayerService extends Service implements
     @Override
     public void play() {
         if (mediaPlayer != null) {
-            startPlaying();
+            if (paused) {
+                mediaPlayer.start();
+                paused = false;
+            } else {
+                startPlaying();
+            }
         } else {
             cursor.moveToPosition(currentTrackCursorPosition);
             initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
@@ -366,6 +376,7 @@ public class AudioPlayerService extends Service implements
     @Override
     public void pause() {
         mediaPlayer.pause();
+        paused = true;
         // TODO: Update notification replacing pause button with play button
     }
 

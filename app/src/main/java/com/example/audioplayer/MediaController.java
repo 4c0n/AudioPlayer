@@ -8,7 +8,7 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-
+// TODO: Link to MediaSession
 public class MediaController extends FrameLayout implements
         SeekBar.OnSeekBarChangeListener,
         OnPlayerStartedListener,
