@@ -67,21 +67,29 @@ public class AudioPlayerService extends Service implements
         @Override
         public void onPlay() {
             Log.d("4c0n", "onPlay");
+            play();
         }
 
         @Override
         public void onPause() {
             Log.d("4c0n", "onPause");
+            if (paused) {
+                play();
+            } else {
+                pause();
+            }
         }
 
         @Override
         public void onSkipToNext() {
             Log.d("4c0n", "onSkipToNext");
+            next();
         }
 
         @Override
         public void onSkipToPrevious() {
             Log.d("4c0n", "onSkipToPrevious");
+            previous();
         }
 
         @Override
