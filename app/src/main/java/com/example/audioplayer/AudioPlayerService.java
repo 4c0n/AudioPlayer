@@ -18,9 +18,11 @@ import android.support.annotation.Nullable;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaButtonReceiver;
 import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.MediaSessionCompat.Callback;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import java.io.IOException;
 import java.util.Random;
@@ -54,26 +56,72 @@ public class AudioPlayerService extends Service implements
 
     private final IBinder binder = new AudioPlayerBinder();
 
-    private void showNotification(String artist, String title, Bitmap albumArt) {
-        // TODO: add PendingIntents
+    private Callback mediaSessionCallback = new Callback() {
+        @Override
+        public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
+            Log.d("4c0n", "onMediaButtonEvent");
+            Log.d("4c0n", mediaButtonEvent.toString());
+            return super.onMediaButtonEvent(mediaButtonEvent);
+        }
 
+        @Override
+        public void onPlay() {
+            Log.d("4c0n", "onPlay");
+        }
+
+        @Override
+        public void onPause() {
+            Log.d("4c0n", "onPause");
+        }
+
+        @Override
+        public void onSkipToNext() {
+            Log.d("4c0n", "onSkipToNext");
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            Log.d("4c0n", "onSkipToPrevious");
+        }
+
+        @Override
+        public void onSeekTo(long pos) {
+            Log.d("4c0n", "onSeekTo");
+        }
+
+        @Override
+        public void onStop() {
+            Log.d("4c0n", "onStop");
+        }
+    };
+
+    private void showNotification(String artist, String title, Bitmap albumArt) {
         // TODO: Replace buttons with white smaller versions
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(
                         R.drawable.ic_skip_previous_black_24dp,
                         getString(R.string.previous),
-                        null
+                        MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                this,
+                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                        )
                 )
                 .addAction(
                         R.drawable.ic_pause_black_24dp,
                         getString(R.string.pause),
-                        null
+                        MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                this,
+                                PlaybackStateCompat.ACTION_PAUSE
+                        )
                 )
                 .addAction(
                         R.drawable.ic_skip_next_black_24dp,
                         getString(R.string.next),
-                        null
+                        MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                this,
+                                PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                        )
                 )
                 .setStyle(new NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(0, 1, 2)
@@ -212,6 +260,7 @@ public class AudioPlayerService extends Service implements
 
         requestAudioFocus();
 
+        mediaSession.setCallback(mediaSessionCallback);
         mediaSession.setActive(true);
     }
 
@@ -258,7 +307,12 @@ public class AudioPlayerService extends Service implements
     private void updateMediaSession(String artist, String title, Bitmap albumArt) {
         mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
                 .setState(PlaybackStateCompat.STATE_PLAYING, 0, 1.0f)
-                .setActions(PlaybackStateCompat.ACTION_PLAY_PAUSE).build());
+                .setActions(
+                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                        | PlaybackStateCompat.ACTION_PLAY
+                        | PlaybackStateCompat.ACTION_PAUSE
+                        | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                ).build());
 
         mediaSession.setMetadata(
                 new MediaMetadataCompat.Builder()
@@ -279,6 +333,8 @@ public class AudioPlayerService extends Service implements
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        Log.d("4c0n", "onStartCommand");
         if (intent.getAction().equals(INTENT_ACTION_START_PLAYING)) {
             initCursor(
                     (QueryParams) intent.getParcelableExtra(INTENT_EXTRA_QUERY_PARAMS),
@@ -287,11 +343,9 @@ public class AudioPlayerService extends Service implements
             initMediaPlayer(
                     cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
             );
-
-            Log.d("4c0n", "media session active? " + mediaSession.isActive());
-            Log.d("4c0n", mediaSession.getRemoteControlClient() == null ? "Remote controle client: NULL" : "Remote control client: " + mediaSession.getRemoteControlClient().toString());
         } else {
-            MediaButtonReceiver.handleIntent(mediaSession, intent);
+            KeyEvent ke = MediaButtonReceiver.handleIntent(mediaSession, intent);
+            Log.d("4c0n", ke.toString());
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -413,6 +467,7 @@ public class AudioPlayerService extends Service implements
         }
     }
 
+    @Override
     public void next() {
         freeMediaPlayer();
 
@@ -429,6 +484,7 @@ public class AudioPlayerService extends Service implements
         }
     }
 
+    @Override
     public void previous() {
         freeMediaPlayer();
 
@@ -449,6 +505,7 @@ public class AudioPlayerService extends Service implements
         initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
     }
 
+    @Override
     public void shuffle(boolean on) {
         shuffle = on;
 
@@ -462,6 +519,12 @@ public class AudioPlayerService extends Service implements
         }
 
         prepareNextMediaPlayer();
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        Log.d("4c0n", "onAudioFocusChange");
+        // TODO: handle change in audio focus
     }
 
     public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
@@ -484,10 +547,8 @@ public class AudioPlayerService extends Service implements
         return shuffle;
     }
 
-    @Override
-    public void onAudioFocusChange(int focusChange) {
-        Log.d("4c0n", "onAudioFocusChange");
-        // TODO: handle change in audio focus
+    public MediaSessionCompat.Token getMediaSessionToken() {
+        return mediaSession.getSessionToken();
     }
 
     public class AudioPlayerBinder extends Binder {
