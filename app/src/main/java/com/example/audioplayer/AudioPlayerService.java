@@ -104,11 +104,10 @@ public class AudioPlayerService extends Service implements
     };
 
     private void showNotification(String artist, String title, Bitmap albumArt) {
-        // TODO: Replace buttons with white smaller versions
         Notification notification = new NotificationCompat.Builder(getApplicationContext())
                 .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(
-                        R.drawable.ic_skip_previous_black_24dp,
+                        R.drawable.ic_skip_previous_white_24dp,
                         getString(R.string.previous),
                         MediaButtonReceiver.buildMediaButtonPendingIntent(
                                 this,
@@ -116,7 +115,7 @@ public class AudioPlayerService extends Service implements
                         )
                 )
                 .addAction(
-                        R.drawable.ic_pause_black_24dp,
+                        R.drawable.ic_pause_white_24dp,
                         getString(R.string.pause),
                         MediaButtonReceiver.buildMediaButtonPendingIntent(
                                 this,
@@ -124,7 +123,7 @@ public class AudioPlayerService extends Service implements
                         )
                 )
                 .addAction(
-                        R.drawable.ic_skip_next_black_24dp,
+                        R.drawable.ic_skip_next_white_24dp,
                         getString(R.string.next),
                         MediaButtonReceiver.buildMediaButtonPendingIntent(
                                 this,
