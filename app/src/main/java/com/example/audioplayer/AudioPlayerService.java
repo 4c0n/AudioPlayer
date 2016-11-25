@@ -340,7 +340,13 @@ public class AudioPlayerService extends Service implements
 
     private void updateMediaSession(String artist, String title, Bitmap albumArt) {
         mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
-                .setState(PlaybackStateCompat.STATE_PLAYING, 0, 1.0f)
+                .setState(
+                        paused
+                                ? PlaybackStateCompat.STATE_PAUSED
+                                : PlaybackStateCompat.STATE_PLAYING,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                        paused ? 0 : 1
+                )
                 .setActions(
                         PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
                         | PlaybackStateCompat.ACTION_PLAY
@@ -358,6 +364,23 @@ public class AudioPlayerService extends Service implements
                         .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
                         .build()
         );
+    }
+
+    private void updateNotificationAndMediaSession() {
+        int pos = cursor.getPosition();
+
+        cursor.moveToPosition(currentTrackCursorPosition);
+        String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+        String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+        Bitmap albumArt = getAlbumArt();
+
+        // Update notification
+        showNotification(artist, title, albumArt);
+
+        // Update media session
+        updateMediaSession(artist, title, albumArt);
+
+        cursor.moveToPosition(pos);
     }
 
     @Override
@@ -453,6 +476,9 @@ public class AudioPlayerService extends Service implements
             if (paused) {
                 mediaPlayer.start();
                 paused = false;
+
+                updateNotificationAndMediaSession();
+
                 onPlayerStartedListener.onPlayerStarted();
             } else {
                 startPlaying();
@@ -468,14 +494,7 @@ public class AudioPlayerService extends Service implements
         mediaPlayer.pause();
         paused = true;
 
-        // Update notification replacing pause button with play button
-        cursor.moveToPosition(currentTrackCursorPosition);
-        showNotification(
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
-                getAlbumArt()
-        );
-        // TODO: update media session
+        updateNotificationAndMediaSession();
     }
 
     @Override
