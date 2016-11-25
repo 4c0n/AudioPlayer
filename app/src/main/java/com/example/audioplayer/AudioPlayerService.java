@@ -100,6 +100,16 @@ public class AudioPlayerService extends Service implements
         @Override
         public void onStop() {
             Log.d("4c0n", "onStop");
+
+            // Stop playing
+            if (mediaPlayer != null) {
+                freeMediaPlayer();
+            }
+
+            // Remove notification
+            stopForeground(true);
+
+            // TODO: Update media session (or drop audio focus?)
         }
     };
 
@@ -133,7 +143,12 @@ public class AudioPlayerService extends Service implements
                 .setStyle(new NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(0, 1, 2)
                         .setMediaSession(mediaSession.getSessionToken())
-                        // TODO: set cancel button intent
+                        .setCancelButtonIntent(
+                                MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                        this,
+                                        PlaybackStateCompat.ACTION_STOP
+                                )
+                        )
                         .setShowCancelButton(true)
                 )
                 .setShowWhen(false)
@@ -319,6 +334,7 @@ public class AudioPlayerService extends Service implements
                         | PlaybackStateCompat.ACTION_PLAY
                         | PlaybackStateCompat.ACTION_PAUSE
                         | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                        | PlaybackStateCompat.ACTION_STOP
                 ).build());
 
         mediaSession.setMetadata(
@@ -440,6 +456,7 @@ public class AudioPlayerService extends Service implements
         mediaPlayer.pause();
         paused = true;
         // TODO: Update notification replacing pause button with play button
+        // TODO: update media session
     }
 
     @Override
