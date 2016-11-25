@@ -114,8 +114,8 @@ public class AudioPlayerService extends Service implements
     };
 
     private void showNotification(String artist, String title, Bitmap albumArt) {
-        Notification notification = new NotificationCompat.Builder(getApplicationContext())
-                .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(
                         R.drawable.ic_skip_previous_white_24dp,
                         getString(R.string.previous),
@@ -123,23 +123,36 @@ public class AudioPlayerService extends Service implements
                                 this,
                                 PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
                         )
+                );
+
+        if (paused) {
+            builder.addAction(
+                    R.drawable.ic_play_arrow_white_24dp,
+                    getString(R.string.play),
+                    MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            this,
+                            PlaybackStateCompat.ACTION_PLAY
+                    )
+            );
+        } else {
+            builder.addAction(
+                    R.drawable.ic_pause_white_24dp,
+                    getString(R.string.pause),
+                    MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            this,
+                            PlaybackStateCompat.ACTION_PAUSE
+                    )
+            );
+        }
+
+        builder.addAction(
+                R.drawable.ic_skip_next_white_24dp,
+                getString(R.string.next),
+                MediaButtonReceiver.buildMediaButtonPendingIntent(
+                        this,
+                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT
                 )
-                .addAction(
-                        R.drawable.ic_pause_white_24dp,
-                        getString(R.string.pause),
-                        MediaButtonReceiver.buildMediaButtonPendingIntent(
-                                this,
-                                PlaybackStateCompat.ACTION_PAUSE
-                        )
-                )
-                .addAction(
-                        R.drawable.ic_skip_next_white_24dp,
-                        getString(R.string.next),
-                        MediaButtonReceiver.buildMediaButtonPendingIntent(
-                                this,
-                                PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                        )
-                )
+        )
                 .setStyle(new NotificationCompat.MediaStyle()
                         .setShowActionsInCompactView(0, 1, 2)
                         .setMediaSession(mediaSession.getSessionToken())
@@ -157,10 +170,9 @@ public class AudioPlayerService extends Service implements
                 .setContentText(artist)
                 .setSmallIcon(R.drawable.ic_music_note_white_24dp)
                 .setLargeIcon(albumArt)
-                .setOngoing(true)
-                .build();
+                .setOngoing(true);
 
-        startForeground(NOTIFICATION_ID, notification);
+        startForeground(NOTIFICATION_ID, builder.build());
     }
 
     private void initCursor(QueryParams queryParams, int position) {
@@ -455,7 +467,14 @@ public class AudioPlayerService extends Service implements
     public void pause() {
         mediaPlayer.pause();
         paused = true;
-        // TODO: Update notification replacing pause button with play button
+
+        // Update notification replacing pause button with play button
+        cursor.moveToPosition(currentTrackCursorPosition);
+        showNotification(
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
+                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                getAlbumArt()
+        );
         // TODO: update media session
     }
 
