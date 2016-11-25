@@ -1,6 +1,5 @@
 package com.example.audioplayer;
 
-import android.app.Notification;
 import android.app.Service;
 import android.content.ContentUris;
 import android.content.Context;
