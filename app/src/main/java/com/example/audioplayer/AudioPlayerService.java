@@ -45,7 +45,6 @@ public class AudioPlayerService extends Service implements
     private OnPlayerStartedListener onPlayerStartedListener;
     private OnPlayerStoppedListener onPlayerStoppedListener;
     private Cursor cursor;
-    private OnTrackChangedListener onTrackChangedListener;
     private int currentTrackCursorPosition;
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
     private boolean shuffle = false;
@@ -233,10 +232,6 @@ public class AudioPlayerService extends Service implements
         currentTrackCursorPosition = cursor.getPosition();
 
         mediaPlayer.start();
-
-        if (onTrackChangedListener != null) {
-            onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
-        }
 
         if (repeatState == RepeatState.REPEAT_ONE) {
             mediaPlayer.setLooping(true);
@@ -596,10 +591,6 @@ public class AudioPlayerService extends Service implements
         onPlayerStoppedListener = listener;
     }
 
-    public void setOnTrackChangedListener(OnTrackChangedListener listener) {
-        onTrackChangedListener = listener;
-    }
-
     public RepeatState getRepeatState() {
         return repeatState;
     }
@@ -616,9 +607,5 @@ public class AudioPlayerService extends Service implements
         AudioPlayerService getService() {
             return AudioPlayerService.this;
         }
-    }
-
-    interface OnTrackChangedListener {
-        void onTrackChanged(int position);
     }
 }

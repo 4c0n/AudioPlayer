@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.media.session.MediaSessionManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -18,7 +17,6 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
-import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
@@ -49,28 +47,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private MediaController mediaController;
     private AudioPlayerService playerService;
 
-    private AudioPlayerService.OnTrackChangedListener onTrackChangedListener =
-            new AudioPlayerService.OnTrackChangedListener() {
-        @Override
-        public void onTrackChanged(int pos) {
-            position = pos;
-
-            cursor.moveToPosition(position);
-
-            initTrackDetailsFragment(
-                    cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
-            );
-
-            initMenuText(
-                    cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
-                    cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
-            );
-
-            // TODO: Refactor (we don't want a new fragment)
-            initTrackBrowseFragment();
-        }
-    };
-
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -89,7 +65,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
             mediaController.setMediaPlayer(playerService);
             playerService.setOnPlayerStartedListener(mediaController);
             playerService.setOnPlayerStoppedListener(mediaController);
-            playerService.setOnTrackChangedListener(onTrackChangedListener);
         }
 
         @Override
@@ -109,7 +84,12 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
             Log.d("4c0n", "TrackDetailsActivity: onMetadataChanged");
-            // TODO: update menu text
+
+            setMenuText(
+                    metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE),
+                    metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
+            );
+
             // TODO: update track details fragment
         }
     };
@@ -137,7 +117,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         bindService(intent, serviceConnection, BIND_AUTO_CREATE);
     }
 
-    private void initMenuText(String title, String artist) {
+    private void setMenuText(String title, String artist) {
         TextView topText = (TextView) findViewById(R.id.menu_top_text);
         topText.setText(title);
 
@@ -193,11 +173,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         initMediaPlayer();
 
-        initMenuText(
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
-        );
-
         initTrackBrowseFragment();
     }
 
@@ -219,6 +194,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
     @Override
     public void onConfigurationChanged(Configuration newConfig) {
+        Log.d("4c0n", "onConfigurationChanged");
         super.onConfigurationChanged(newConfig);
 
         setContentView(R.layout.activity_track_details);
@@ -233,7 +209,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         initTrackBrowseFragment();
 
-        initMenuText(
+        setMenuText(
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
                 cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
         );
