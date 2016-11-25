@@ -1,10 +1,12 @@
 package com.example.audioplayer;
 
-import android.app.Notification;
 import android.app.Service;
 import android.content.ContentUris;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
@@ -12,8 +14,14 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaButtonReceiver;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.MediaSessionCompat.Callback;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v7.app.NotificationCompat;
 import android.util.Log;
+import android.view.KeyEvent;
 
 import java.io.IOException;
 import java.util.Random;
@@ -22,7 +30,8 @@ import java.util.Random;
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
-        MediaController.MediaPlayer {
+        MediaController.MediaPlayer,
+        AudioManager.OnAudioFocusChangeListener {
 
     public static final String INTENT_ACTION_START_PLAYING = "startPlaying";
 
@@ -41,23 +50,128 @@ public class AudioPlayerService extends Service implements
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
     private boolean shuffle = false;
     private Random random = new Random();
+    private MediaSessionCompat mediaSession;
+    private boolean paused = false;
 
     private final IBinder binder = new AudioPlayerBinder();
 
-    private void showNotification(String artist, String title) {
-        // TODO: add PendingIntent
-        /* TODO: add locks screen notification:
-            https://developer.android.com/guide/topics/ui/notifiers/notifications.html#controllingMedia
-         */
+    private Callback mediaSessionCallback = new Callback() {
+        @Override
+        public boolean onMediaButtonEvent(Intent mediaButtonEvent) {
+            Log.d("4c0n", "onMediaButtonEvent");
+            Log.d("4c0n", mediaButtonEvent.toString());
+            return super.onMediaButtonEvent(mediaButtonEvent);
+        }
 
-        Notification notification = new NotificationCompat.Builder(getApplicationContext())
+        @Override
+        public void onPlay() {
+            Log.d("4c0n", "onPlay");
+            play();
+        }
+
+        @Override
+        public void onPause() {
+            Log.d("4c0n", "onPause");
+            if (paused) {
+                play();
+            } else {
+                pause();
+            }
+        }
+
+        @Override
+        public void onSkipToNext() {
+            Log.d("4c0n", "onSkipToNext");
+            next();
+        }
+
+        @Override
+        public void onSkipToPrevious() {
+            Log.d("4c0n", "onSkipToPrevious");
+            previous();
+        }
+
+        @Override
+        public void onSeekTo(long pos) {
+            Log.d("4c0n", "onSeekTo");
+        }
+
+        @Override
+        public void onStop() {
+            Log.d("4c0n", "onStop");
+
+            // Stop playing
+            if (mediaPlayer != null) {
+                freeMediaPlayer();
+            }
+
+            // Remove notification
+            stopForeground(true);
+
+            // TODO: Update media session (or drop audio focus?)
+        }
+    };
+
+    private void showNotification(String artist, String title, Bitmap albumArt) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
+                .addAction(
+                        R.drawable.ic_skip_previous_white_24dp,
+                        getString(R.string.previous),
+                        MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                this,
+                                PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                        )
+                );
+
+        if (paused) {
+            builder.addAction(
+                    R.drawable.ic_play_arrow_white_24dp,
+                    getString(R.string.play),
+                    MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            this,
+                            PlaybackStateCompat.ACTION_PLAY
+                    )
+            );
+        } else {
+            builder.addAction(
+                    R.drawable.ic_pause_white_24dp,
+                    getString(R.string.pause),
+                    MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            this,
+                            PlaybackStateCompat.ACTION_PAUSE
+                    )
+            );
+        }
+
+        builder.addAction(
+                R.drawable.ic_skip_next_white_24dp,
+                getString(R.string.next),
+                MediaButtonReceiver.buildMediaButtonPendingIntent(
+                        this,
+                        PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                )
+        )
+                .setStyle(new NotificationCompat.MediaStyle()
+                        .setShowActionsInCompactView(0, 1, 2)
+                        .setMediaSession(mediaSession.getSessionToken())
+                        .setCancelButtonIntent(
+                                MediaButtonReceiver.buildMediaButtonPendingIntent(
+                                        this,
+                                        PlaybackStateCompat.ACTION_STOP
+                                )
+                        )
+                        .setShowCancelButton(true)
+                )
+                .setShowWhen(false)
+                .setWhen(0)
                 .setContentTitle(title)
                 .setContentText(artist)
                 .setSmallIcon(R.drawable.ic_music_note_white_24dp)
-                .build();
+                .setLargeIcon(albumArt)
+                .setOngoing(true);
 
-        notification.flags |= Notification.FLAG_ONGOING_EVENT;
-        startForeground(NOTIFICATION_ID, notification);
+        startForeground(NOTIFICATION_ID, builder.build());
     }
 
     private void initCursor(QueryParams queryParams, int position) {
@@ -73,7 +187,11 @@ public class AudioPlayerService extends Service implements
                 queryParams.getSortOrder()
         );
 
-        cursor.moveToPosition(position);
+        if (cursor != null) {
+            cursor.moveToPosition(position);
+        } else {
+            Log.e("4c0n", "Failed to init cursor!");
+        }
     }
 
     private void freeMediaPlayer() {
@@ -113,21 +231,28 @@ public class AudioPlayerService extends Service implements
 
     private void startPlaying() {
         currentTrackCursorPosition = cursor.getPosition();
+
         mediaPlayer.start();
+
         if (onTrackChangedListener != null) {
             onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
         }
+
         if (repeatState == RepeatState.REPEAT_ONE) {
             mediaPlayer.setLooping(true);
         }
+
         if (onPlayerStartedListener != null) {
             onPlayerStartedListener.onPlayerStarted();
         }
 
-        showNotification(
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)),
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE))
-        );
+        String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+        String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+        Bitmap albumArt = getAlbumArt();
+
+        showNotification(artist, title, albumArt);
+
+        updateMediaSession(artist, title, albumArt);
 
         prepareNextMediaPlayer();
     }
@@ -159,14 +284,114 @@ public class AudioPlayerService extends Service implements
         }
     }
 
-    /*
-    TODO: It might better to start the actual playing by having to call a method after binding.
-            That way all listeners should be set and everything should be more reliable.
-            There can be a race condition between onPrepared and onBind, if onBind wins the race all
-            is well, otherwise the UI will be missing out on receiving some important events.
-     */
+    private void initMediaSession() {
+        mediaSession = new MediaSessionCompat(this, "AudioPlayerService");
+        mediaSession.setFlags(
+                MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
+                        | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS
+        );
+
+        requestAudioFocus();
+
+        mediaSession.setCallback(mediaSessionCallback);
+        mediaSession.setActive(true);
+    }
+
+    private void requestAudioFocus() {
+        AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        int result = audioManager.requestAudioFocus(
+                this,
+                AudioManager.STREAM_MUSIC,
+                AudioManager.AUDIOFOCUS_GAIN
+        );
+        if (result == AudioManager.AUDIOFOCUS_REQUEST_FAILED) {
+            Log.e("4c0n", "Failed to get audio focus!");
+        }
+    }
+
+    private Bitmap getAlbumArt() {
+        // TODO: do async query?
+        Cursor albumCursor = getContentResolver().query(
+                MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
+                new String[] {MediaStore.Audio.Albums.ALBUM_ART},
+                MediaStore.Audio.Albums._ID + "=?",
+                new String[] {
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
+                },
+                null
+        );
+
+        String albumArtPath = null;
+        if (albumCursor != null) {
+            albumCursor.moveToFirst();
+            albumArtPath = albumCursor.getString(
+                    albumCursor.getColumnIndex(MediaStore.Audio.Albums.ALBUM_ART)
+            );
+            albumCursor.close();
+        }
+
+        if (albumArtPath != null) {
+            return BitmapFactory.decodeFile(albumArtPath);
+        }
+
+        return BitmapFactory.decodeResource(getResources(), R.drawable.ic_music_note_black_96px);
+    }
+
+    private void updateMediaSession(String artist, String title, Bitmap albumArt) {
+        mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
+                .setState(
+                        paused
+                                ? PlaybackStateCompat.STATE_PAUSED
+                                : PlaybackStateCompat.STATE_PLAYING,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                        paused ? 0 : 1
+                )
+                .setActions(
+                        PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
+                        | PlaybackStateCompat.ACTION_PLAY
+                        | PlaybackStateCompat.ACTION_PAUSE
+                        | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                        | PlaybackStateCompat.ACTION_STOP
+                ).build());
+
+        mediaSession.setMetadata(
+                new MediaMetadataCompat.Builder()
+                        .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
+                        .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
+                        //.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Album")
+                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, getDuration())
+                        .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
+                        .build()
+        );
+    }
+
+    private void updateNotificationAndMediaSession() {
+        int pos = cursor.getPosition();
+
+        cursor.moveToPosition(currentTrackCursorPosition);
+        String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+        String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+        Bitmap albumArt = getAlbumArt();
+
+        // Update notification
+        showNotification(artist, title, albumArt);
+
+        // Update media session
+        updateMediaSession(artist, title, albumArt);
+
+        cursor.moveToPosition(pos);
+    }
+
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        initMediaSession();
+    }
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+
+        Log.d("4c0n", "onStartCommand");
         if (intent.getAction().equals(INTENT_ACTION_START_PLAYING)) {
             initCursor(
                     (QueryParams) intent.getParcelableExtra(INTENT_EXTRA_QUERY_PARAMS),
@@ -175,6 +400,9 @@ public class AudioPlayerService extends Service implements
             initMediaPlayer(
                     cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID))
             );
+        } else {
+            KeyEvent ke = MediaButtonReceiver.handleIntent(mediaSession, intent);
+            Log.d("4c0n", ke.toString());
         }
 
         return super.onStartCommand(intent, flags, startId);
@@ -184,6 +412,20 @@ public class AudioPlayerService extends Service implements
     @Override
     public IBinder onBind(Intent intent) {
         return binder;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        mediaSession.release();
+
+        freeMediaPlayer();
+
+        if (nextMediaPlayer != null) {
+            nextMediaPlayer.release();
+            nextMediaPlayer = null;
+        }
     }
 
     @Override
@@ -230,7 +472,16 @@ public class AudioPlayerService extends Service implements
     @Override
     public void play() {
         if (mediaPlayer != null) {
-            startPlaying();
+            if (paused) {
+                mediaPlayer.start();
+                paused = false;
+
+                updateNotificationAndMediaSession();
+
+                onPlayerStartedListener.onPlayerStarted();
+            } else {
+                startPlaying();
+            }
         } else {
             cursor.moveToPosition(currentTrackCursorPosition);
             initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
@@ -240,6 +491,9 @@ public class AudioPlayerService extends Service implements
     @Override
     public void pause() {
         mediaPlayer.pause();
+        paused = true;
+
+        updateNotificationAndMediaSession();
     }
 
     @Override
@@ -274,6 +528,7 @@ public class AudioPlayerService extends Service implements
         }
     }
 
+    @Override
     public void next() {
         freeMediaPlayer();
 
@@ -290,6 +545,7 @@ public class AudioPlayerService extends Service implements
         }
     }
 
+    @Override
     public void previous() {
         freeMediaPlayer();
 
@@ -310,6 +566,7 @@ public class AudioPlayerService extends Service implements
         initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
     }
 
+    @Override
     public void shuffle(boolean on) {
         shuffle = on;
 
@@ -323,6 +580,12 @@ public class AudioPlayerService extends Service implements
         }
 
         prepareNextMediaPlayer();
+    }
+
+    @Override
+    public void onAudioFocusChange(int focusChange) {
+        Log.d("4c0n", "onAudioFocusChange");
+        // TODO: handle change in audio focus
     }
 
     public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
@@ -343,6 +606,10 @@ public class AudioPlayerService extends Service implements
 
     public boolean getShuffleState() {
         return shuffle;
+    }
+
+    public MediaSessionCompat.Token getMediaSessionToken() {
+        return mediaSession.getSessionToken();
     }
 
     public class AudioPlayerBinder extends Binder {
