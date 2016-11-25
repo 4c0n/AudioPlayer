@@ -5,18 +5,25 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.media.session.MediaSessionManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -68,7 +75,17 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             playerService = ((AudioPlayerService.AudioPlayerBinder) service).getService();
+            try {
+                MediaControllerCompat mediaController = new MediaControllerCompat(
+                        getParent(),
+                        playerService.getMediaSessionToken()
+                );
+                mediaController.registerCallback(mediaControllerCallback);
+            } catch (RemoteException re) {
+                Log.e("4c0n", re.getMessage());
+            }
 
+            // TODO: clean up when done:
             mediaController.setMediaPlayer(playerService);
             playerService.setOnPlayerStartedListener(mediaController);
             playerService.setOnPlayerStoppedListener(mediaController);
@@ -78,6 +95,22 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         @Override
         public void onServiceDisconnected(ComponentName name) {
             playerService = null;
+        }
+    };
+
+    private MediaControllerCompat.Callback mediaControllerCallback =
+            new MediaControllerCompat.Callback() {
+
+        @Override
+        public void onPlaybackStateChanged(PlaybackStateCompat state) {
+            Log.d("4c0n", "TrackDetailsActivity: onPlaybackStateChanged");
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadataCompat metadata) {
+            Log.d("4c0n", "TrackDetailsActivity: onMetadataChanged");
+            // TODO: update menu text
+            // TODO: update track details fragment
         }
     };
 
