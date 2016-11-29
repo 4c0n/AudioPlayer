@@ -16,6 +16,7 @@ import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
@@ -49,11 +50,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         public void onServiceConnected(ComponentName name, IBinder service) {
             playerService = ((AudioPlayerService.AudioPlayerBinder) service).getService();
             try {
-                MediaControllerCompat mediaController = new MediaControllerCompat(
+                MediaSessionCompat.Token token = playerService.getMediaSessionToken();
+                MediaControllerCompat mediaControllerCompat = new MediaControllerCompat(
                         getParent(),
-                        playerService.getMediaSessionToken()
+                        token
                 );
-                mediaController.registerCallback(mediaControllerCallback);
+                mediaControllerCompat.registerCallback(mediaControllerCallback);
+                mediaControllerCompat.getTransportControls();
+                mediaController.registerWithMediaSession(token);
             } catch (RemoteException re) {
                 Log.e("4c0n", re.getMessage());
             }

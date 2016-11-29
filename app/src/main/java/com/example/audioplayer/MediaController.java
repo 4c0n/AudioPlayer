@@ -1,14 +1,19 @@
 package com.example.audioplayer;
 
 import android.content.Context;
+import android.os.RemoteException;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-// TODO: Link to MediaSession
 public class MediaController extends FrameLayout implements
         SeekBar.OnSeekBarChangeListener,
         OnPlayerStartedListener,
@@ -26,6 +31,7 @@ public class MediaController extends FrameLayout implements
     private boolean draggingSeekBar = false;
     private int seekToMilliseconds;
     private boolean shuffleState = false;
+    private MediaControllerCompat.TransportControls transportControls;
 
     private Runnable progressUpdater = new Runnable() {
         @Override
@@ -41,14 +47,14 @@ public class MediaController extends FrameLayout implements
     private OnClickListener onPlayClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            mediaPlayer.play();
+            transportControls.play();
         }
     };
 
     private OnClickListener onPauseClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            mediaPlayer.pause();
+            transportControls.pause();
             updatePausePlayButton();
         }
     };
@@ -87,7 +93,7 @@ public class MediaController extends FrameLayout implements
     private OnClickListener onNextClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            mediaPlayer.next();
+            transportControls.skipToNext();
         }
     };
 
@@ -95,7 +101,7 @@ public class MediaController extends FrameLayout implements
         @Override
         public void onClick(View v) {
             removeCallbacks(progressUpdater);
-            mediaPlayer.previous();
+            transportControls.skipToPrevious();
         }
     };
 
@@ -104,6 +110,19 @@ public class MediaController extends FrameLayout implements
         public void onClick(View v) {
             setShuffle(!shuffleState);
             mediaPlayer.shuffle(shuffleState);
+        }
+    };
+
+    private MediaControllerCompat.Callback mediaControllerCallback =
+            new MediaControllerCompat.Callback() {
+        @Override
+        public void onPlaybackStateChanged(PlaybackStateCompat state) {
+            Log.d("4c0n", "onPlaybackStateChanged");
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadataCompat metadata) {
+            Log.d("4c0n", "onMetadataChanged");
         }
     };
 
@@ -186,6 +205,17 @@ public class MediaController extends FrameLayout implements
         }
     }
 
+    public void registerWithMediaSession(MediaSessionCompat.Token token) throws
+            RemoteException {
+
+        MediaControllerCompat mediaController = new MediaControllerCompat(
+                getContext(),
+                token
+        );
+        mediaController.registerCallback(mediaControllerCallback);
+        transportControls = mediaController.getTransportControls();
+    }
+
     public void setMediaPlayer(MediaPlayer mediaPlayer) {
         this.mediaPlayer = mediaPlayer;
     }
@@ -248,7 +278,7 @@ public class MediaController extends FrameLayout implements
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
         draggingSeekBar = false;
-        mediaPlayer.seekTo(seekToMilliseconds);
+        transportControls.seekTo(seekToMilliseconds);
         post(progressUpdater);
     }
 
@@ -272,14 +302,9 @@ public class MediaController extends FrameLayout implements
         int getCurrentPosition();
         int getDuration();
         boolean isPlaying();
-        void play();
-        void pause();
         void repeatOne();
         void repeatOff();
         void repeatAll();
-        void seekTo(int milliseconds);
-        void next();
-        void previous();
         void shuffle(boolean on);
     }
 }

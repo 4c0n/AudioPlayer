@@ -93,6 +93,7 @@ public class AudioPlayerService extends Service implements
         @Override
         public void onSeekTo(long pos) {
             Log.d("4c0n", "onSeekTo");
+            seekTo((int) pos);
         }
 
         @Override
@@ -464,8 +465,7 @@ public class AudioPlayerService extends Service implements
         return mediaPlayer != null && mediaPlayer.isPlaying();
     }
 
-    @Override
-    public void play() {
+    private void play() {
         if (mediaPlayer != null) {
             if (paused) {
                 mediaPlayer.start();
@@ -483,8 +483,7 @@ public class AudioPlayerService extends Service implements
         }
     }
 
-    @Override
-    public void pause() {
+    private void pause() {
         mediaPlayer.pause();
         paused = true;
 
@@ -516,15 +515,13 @@ public class AudioPlayerService extends Service implements
         }
     }
 
-    @Override
-    public void seekTo(int milliseconds) {
+    private void seekTo(int milliseconds) {
         if (mediaPlayer != null) {
             mediaPlayer.seekTo(milliseconds);
         }
     }
 
-    @Override
-    public void next() {
+    private void next() {
         freeMediaPlayer();
 
         if (nextMediaPlayer != null) {
@@ -540,8 +537,7 @@ public class AudioPlayerService extends Service implements
         }
     }
 
-    @Override
-    public void previous() {
+    private void previous() {
         freeMediaPlayer();
 
         if (nextMediaPlayer != null) {
