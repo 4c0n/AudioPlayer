@@ -5,13 +5,12 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.database.Cursor;
-import android.net.Uri;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
@@ -22,13 +21,8 @@ import android.support.v4.widget.SimpleCursorAdapter;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import java.io.File;
 
 
 public class TrackDetailsActivity extends AppCompatActivity implements
@@ -46,6 +40,9 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private QueryParams queryParams;
     private MediaController mediaController;
     private AudioPlayerService playerService;
+    private String title;
+    private String artist;
+    private Bitmap albumArt;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
@@ -85,25 +82,14 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         public void onMetadataChanged(MediaMetadataCompat metadata) {
             Log.d("4c0n", "TrackDetailsActivity: onMetadataChanged");
 
-            setMenuText(
-                    metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE),
-                    metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST)
-            );
+            title = metadata.getString(MediaMetadataCompat.METADATA_KEY_TITLE);
+            artist = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
+            albumArt = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
 
-            // TODO: update track details fragment
+            setMenuText(title, artist);
+            setAlbumArtImage(albumArt);
         }
     };
-
-    private void initTrackDetailsFragment(long albumId) {
-        TrackDetailsFragment trackDetailsFragment = TrackDetailsFragment.newInstance(
-                albumId
-        );
-
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.track_details_fragment_container, trackDetailsFragment)
-                .commitAllowingStateLoss();
-    }
 
     // TODO: Fix playing playlists
     private void initMediaPlayer() {
@@ -123,6 +109,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         TextView bottomText = (TextView) findViewById(R.id.menu_bottom_text);
         bottomText.setText(artist);
+    }
+
+    private void setAlbumArtImage(Bitmap image) {
+        ImageView trackDetailsImage = (ImageView) findViewById(R.id.track_details_image);
+        trackDetailsImage.setImageBitmap(image);
     }
 
     private void initTrackBrowseFragment() {
@@ -165,10 +156,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private void init() {
         cursor.moveToPosition(position);
 
-        initTrackDetailsFragment(
-                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
-        );
-
         mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
         initMediaPlayer();
@@ -203,16 +190,10 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         mediaController = (MediaController) findViewById(R.id.track_details_media_controller);
 
-        initTrackDetailsFragment(
-                cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM_ID))
-        );
-
         initTrackBrowseFragment();
 
-        setMenuText(
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
-                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST))
-        );
+        setMenuText(title, artist);
+        setAlbumArtImage(albumArt);
 
         mediaController.setMediaPlayer(playerService);
         playerService.setOnPlayerStartedListener(mediaController);
@@ -274,73 +255,5 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     protected void onDestroy() {
         unbindService(serviceConnection);
         super.onDestroy();
-    }
-
-    public static final class TrackDetailsFragment extends Fragment implements
-            LoaderManager.LoaderCallbacks<Cursor> {
-
-        private static final int IMAGE_LOADER = 1;
-        private static final String ARGUMENT_ALBUM_ID = "albumId";
-
-        public static TrackDetailsFragment newInstance(long albumId) {
-            Bundle arguments = new Bundle();
-            arguments.putLong(ARGUMENT_ALBUM_ID, albumId);
-
-            TrackDetailsFragment fragment = new TrackDetailsFragment();
-            fragment.setArguments(arguments);
-
-            return fragment;
-        }
-
-        @Nullable
-        @Override
-        public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container,
-                                 @Nullable Bundle savedInstanceState) {
-
-            getLoaderManager().restartLoader(IMAGE_LOADER, null, this);
-
-            return inflater.inflate(R.layout.fragment_track_details, container, false);
-        }
-
-        @Override
-        public Loader<Cursor> onCreateLoader(int id, Bundle args) {
-            switch (id) {
-                case IMAGE_LOADER:
-                    return new CursorLoader(
-                            getActivity(),
-                            MediaStore.Audio.Albums.EXTERNAL_CONTENT_URI,
-                            new String[] {MediaStore.Audio.AlbumColumns.ALBUM_ART},
-                            MediaStore.Audio.Albums._ID + "=?",
-                            new String[] {Long.toString(getArguments().getLong(ARGUMENT_ALBUM_ID))},
-                            null
-                    );
-                default:
-                    return null;
-            }
-        }
-
-        @Override
-        public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-            if (loader.getId() == IMAGE_LOADER) {
-                if (data.moveToNext()) {
-                    String albumArt = data.getString(
-                            data.getColumnIndex(MediaStore.Audio.AlbumColumns.ALBUM_ART)
-                    );
-
-                    ImageView image =
-                            (ImageView) getActivity().findViewById(R.id.track_details_image);
-
-                    if (albumArt != null) {
-                        image.setImageURI(Uri.fromFile(new File(albumArt)));
-                    } else {
-                        image.setImageResource(R.drawable.ic_music_note_black_192px);
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void onLoaderReset(Loader<Cursor> loader) {
-        }
     }
 }
