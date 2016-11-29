@@ -32,6 +32,7 @@ public class MediaController extends FrameLayout implements
     private int seekToMilliseconds;
     private boolean shuffleState = false;
     private MediaControllerCompat.TransportControls transportControls;
+    private boolean isPlaying = false;
 
     private Runnable progressUpdater = new Runnable() {
         @Override
@@ -55,7 +56,6 @@ public class MediaController extends FrameLayout implements
         @Override
         public void onClick(View v) {
             transportControls.pause();
-            updatePausePlayButton();
         }
     };
 
@@ -115,9 +115,14 @@ public class MediaController extends FrameLayout implements
 
     private MediaControllerCompat.Callback mediaControllerCallback =
             new MediaControllerCompat.Callback() {
+
         @Override
         public void onPlaybackStateChanged(PlaybackStateCompat state) {
             Log.d("4c0n", "onPlaybackStateChanged");
+
+            isPlaying = state.getState() == PlaybackStateCompat.STATE_PLAYING;
+
+            updatePausePlayButton();
         }
 
         @Override
@@ -192,7 +197,7 @@ public class MediaController extends FrameLayout implements
     }
 
     private void updatePausePlayButton() {
-        if (mediaPlayer.isPlaying()) {
+        if (isPlaying) {
             if (pause.getVisibility() == GONE) {
                 play.setVisibility(GONE);
                 pause.setVisibility(VISIBLE);
@@ -286,13 +291,11 @@ public class MediaController extends FrameLayout implements
     public void onPlayerStarted() {
         // start progress update cycle
         post(progressUpdater);
-        updatePausePlayButton();
     }
 
     @Override
     public void onPlayerStopped() {
         removeCallbacks(progressUpdater);
-        updatePausePlayButton();
         seekBar.setProgress(0);
         String timeElapsed = new TimeStringFormatter(0).format();
         this.timeElapsed.setText(timeElapsed);
