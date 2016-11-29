@@ -44,20 +44,21 @@ public class TrackDetailsActivity extends AppCompatActivity implements
     private String title;
     private String artist;
     private Bitmap albumArt;
+    private MediaSessionCompat.Token mediaSessionToken;
 
     private ServiceConnection serviceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             playerService = ((AudioPlayerService.AudioPlayerBinder) service).getService();
             try {
-                MediaSessionCompat.Token token = playerService.getMediaSessionToken();
+                mediaSessionToken = playerService.getMediaSessionToken();
                 MediaControllerCompat mediaControllerCompat = new MediaControllerCompat(
                         getParent(),
-                        token
+                        mediaSessionToken
                 );
                 mediaControllerCompat.registerCallback(mediaControllerCallback);
                 mediaControllerCompat.getTransportControls();
-                mediaController.registerWithMediaSession(token);
+                mediaController.registerWithMediaSession(mediaSessionToken);
             } catch (RemoteException re) {
                 Log.e("4c0n", re.getMessage());
             }
@@ -198,6 +199,13 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
         setMenuText(title, artist);
         setAlbumArtImage(albumArt);
+
+        try {
+            mediaController.registerWithMediaSession(mediaSessionToken);
+        } catch (RemoteException re) {
+            Log.e("4c0n", re.getMessage());
+            re.printStackTrace();
+        }
 
         mediaController.setMediaPlayer(playerService);
         playerService.setOnPlayerStoppedListener(mediaController);
