@@ -355,7 +355,10 @@ public class AudioPlayerService extends Service implements
                         .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
                         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                         //.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Album")
-                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, getDuration())
+                        .putLong(
+                                MediaMetadataCompat.METADATA_KEY_DURATION,
+                                mediaPlayer.getDuration()
+                        )
                         .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
                         .build()
         );
@@ -448,14 +451,6 @@ public class AudioPlayerService extends Service implements
     public int getCurrentPosition() {
         if (mediaPlayer != null) {
             return mediaPlayer.getCurrentPosition();
-        }
-        return 0;
-    }
-
-    @Override
-    public int getDuration() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getDuration();
         }
         return 0;
     }

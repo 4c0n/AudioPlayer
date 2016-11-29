@@ -33,6 +33,7 @@ public class MediaController extends FrameLayout implements
     private boolean shuffleState = false;
     private MediaControllerCompat.TransportControls transportControls;
     private boolean isPlaying = false;
+    private int duration;
 
     private Runnable progressUpdater = new Runnable() {
         @Override
@@ -128,6 +129,10 @@ public class MediaController extends FrameLayout implements
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
             Log.d("4c0n", "onMetadataChanged");
+
+            duration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+
+            setDurationText();
         }
     };
 
@@ -183,17 +188,17 @@ public class MediaController extends FrameLayout implements
         String timeElapsed = new TimeStringFormatter(currentPosition).format();
         this.timeElapsed.setText(timeElapsed);
 
-        // TODO: Duration does not need to be updated all the time
-        int duration = mediaPlayer.getDuration();
-        String timeLength = new TimeStringFormatter(duration).format();
-        this.timeLength.setText(timeLength);
-
         if (duration > 0) {
             long progress = 1000L * currentPosition / duration;
             seekBar.setProgress((int) progress);
         }
 
         return currentPosition;
+    }
+
+    private void setDurationText() {
+        String timeLength = new TimeStringFormatter(duration).format();
+        this.timeLength.setText(timeLength);
     }
 
     private void updatePausePlayButton() {
@@ -266,7 +271,6 @@ public class MediaController extends FrameLayout implements
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (fromUser) {
             // convert progress to time string
-            int duration = mediaPlayer.getDuration();
             if (duration > 0) {
                 seekToMilliseconds = duration / 1000 * progress;
                 timeElapsed.setText(new TimeStringFormatter(seekToMilliseconds).format());
@@ -303,7 +307,6 @@ public class MediaController extends FrameLayout implements
 
     interface MediaPlayer {
         int getCurrentPosition();
-        int getDuration();
         boolean isPlaying();
         void repeatOne();
         void repeatOff();
