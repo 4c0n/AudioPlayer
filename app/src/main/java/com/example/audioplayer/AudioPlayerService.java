@@ -42,7 +42,6 @@ public class AudioPlayerService extends Service implements
 
     private MediaPlayer mediaPlayer;
     private MediaPlayer nextMediaPlayer;
-    private OnPlayerStartedListener onPlayerStartedListener;
     private OnPlayerStoppedListener onPlayerStoppedListener;
     private Cursor cursor;
     private int currentTrackCursorPosition;
@@ -236,10 +235,6 @@ public class AudioPlayerService extends Service implements
 
         if (repeatState == RepeatState.REPEAT_ONE) {
             mediaPlayer.setLooping(true);
-        }
-
-        if (onPlayerStartedListener != null) {
-            onPlayerStartedListener.onPlayerStarted();
         }
 
         String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
@@ -447,19 +442,6 @@ public class AudioPlayerService extends Service implements
         }
     }
 
-    @Override
-    public int getCurrentPosition() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getCurrentPosition();
-        }
-        return 0;
-    }
-
-    @Override
-    public boolean isPlaying() {
-        return mediaPlayer != null && mediaPlayer.isPlaying();
-    }
-
     private void play() {
         if (mediaPlayer != null) {
             if (paused) {
@@ -467,8 +449,6 @@ public class AudioPlayerService extends Service implements
                 paused = false;
 
                 updateNotificationAndMediaSession();
-
-                onPlayerStartedListener.onPlayerStarted();
             } else {
                 startPlaying();
             }
@@ -572,10 +552,6 @@ public class AudioPlayerService extends Service implements
     public void onAudioFocusChange(int focusChange) {
         Log.d("4c0n", "onAudioFocusChange");
         // TODO: handle change in audio focus
-    }
-
-    public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
-        onPlayerStartedListener = listener;
     }
 
     public void setOnPlayerStoppedListener(OnPlayerStoppedListener listener) {

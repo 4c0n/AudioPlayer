@@ -64,7 +64,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
             // TODO: clean up when done:
             mediaController.setMediaPlayer(playerService);
-            playerService.setOnPlayerStartedListener(mediaController);
             playerService.setOnPlayerStoppedListener(mediaController);
         }
 
@@ -90,6 +89,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
             artist = metadata.getString(MediaMetadataCompat.METADATA_KEY_ARTIST);
             albumArt = metadata.getBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART);
 
+            // TODO: check if changed
             setMenuText(title, artist);
             setAlbumArtImage(albumArt);
         }
@@ -200,10 +200,7 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         setAlbumArtImage(albumArt);
 
         mediaController.setMediaPlayer(playerService);
-        playerService.setOnPlayerStartedListener(mediaController);
         playerService.setOnPlayerStoppedListener(mediaController);
-        // TODO: replace with something like updateStatus()
-        mediaController.onPlayerStarted();
 
         mediaController.setRepeatState(playerService.getRepeatState());
         mediaController.setShuffle(playerService.getShuffleState());

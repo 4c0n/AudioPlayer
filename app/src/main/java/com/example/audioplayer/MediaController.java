@@ -16,7 +16,6 @@ import android.widget.TextView;
 
 public class MediaController extends FrameLayout implements
         SeekBar.OnSeekBarChangeListener,
-        OnPlayerStartedListener,
         OnPlayerStoppedListener {
 
     private TextView timeElapsed;
@@ -28,23 +27,12 @@ public class MediaController extends FrameLayout implements
     private ImageButton shuffle;
     private MediaPlayer mediaPlayer;
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
-    private boolean draggingSeekBar = false;
     private int seekToMilliseconds;
     private boolean shuffleState = false;
     private MediaControllerCompat.TransportControls transportControls;
     private boolean isPlaying = false;
     private int duration;
-
-    private Runnable progressUpdater = new Runnable() {
-        @Override
-        public void run() {
-            int currentPosition = setProgress();
-            if (mediaPlayer.isPlaying() && !draggingSeekBar) {
-                // use currentPosition to determine offset, because postDelayed only queues
-                postDelayed(progressUpdater, 1000 - (currentPosition % 1000));
-            }
-        }
-    };
+    private int currentPosition;
 
     private OnClickListener onPlayClicked = new OnClickListener() {
         @Override
@@ -101,7 +89,6 @@ public class MediaController extends FrameLayout implements
     private OnClickListener onPreviousClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            removeCallbacks(progressUpdater);
             transportControls.skipToPrevious();
         }
     };
@@ -122,8 +109,10 @@ public class MediaController extends FrameLayout implements
             Log.d("4c0n", "onPlaybackStateChanged");
 
             isPlaying = state.getState() == PlaybackStateCompat.STATE_PLAYING;
-
             updatePausePlayButton();
+
+            currentPosition = (int) state.getPosition();
+            setProgress();
         }
 
         @Override
@@ -131,7 +120,6 @@ public class MediaController extends FrameLayout implements
             Log.d("4c0n", "onMetadataChanged");
 
             duration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
-
             setDurationText();
         }
     };
@@ -184,7 +172,6 @@ public class MediaController extends FrameLayout implements
 
     private int setProgress() {
         // format milliseconds string
-        int currentPosition = mediaPlayer.getCurrentPosition();
         String timeElapsed = new TimeStringFormatter(currentPosition).format();
         this.timeElapsed.setText(timeElapsed);
 
@@ -280,34 +267,21 @@ public class MediaController extends FrameLayout implements
 
     @Override
     public void onStartTrackingTouch(SeekBar seekBar) {
-        draggingSeekBar = true;
-        removeCallbacks(progressUpdater);
     }
 
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        draggingSeekBar = false;
         transportControls.seekTo(seekToMilliseconds);
-        post(progressUpdater);
-    }
-
-    @Override
-    public void onPlayerStarted() {
-        // start progress update cycle
-        post(progressUpdater);
     }
 
     @Override
     public void onPlayerStopped() {
-        removeCallbacks(progressUpdater);
         seekBar.setProgress(0);
         String timeElapsed = new TimeStringFormatter(0).format();
         this.timeElapsed.setText(timeElapsed);
     }
 
     interface MediaPlayer {
-        int getCurrentPosition();
-        boolean isPlaying();
         void repeatOne();
         void repeatOff();
         void repeatAll();
