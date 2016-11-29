@@ -11,6 +11,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -50,6 +51,11 @@ public class AudioPlayerService extends Service implements
     private Random random = new Random();
     private MediaSessionCompat mediaSession;
     private boolean paused = false;
+    private String artist;
+    private String title;
+    private Bitmap albumArt;
+
+    private Handler handler = new Handler();
 
     private final IBinder binder = new AudioPlayerBinder();
 
@@ -107,7 +113,19 @@ public class AudioPlayerService extends Service implements
             // Remove notification
             stopForeground(true);
 
-            // TODO: Update media session (or drop audio focus?)
+            // TODO: Update media session (and/or drop audio focus?)
+        }
+    };
+
+    private Runnable positionBroadcaster = new Runnable() {
+        @Override
+        public void run() {
+            Log.d("4c0n", "run");
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                int currentPosition = mediaPlayer.getCurrentPosition();
+                updateMediaSessionPlaybackState(currentPosition);
+                handler.postDelayed(positionBroadcaster, 1000 - (currentPosition % 1000));
+            }
         }
     };
 
@@ -237,13 +255,15 @@ public class AudioPlayerService extends Service implements
             mediaPlayer.setLooping(true);
         }
 
-        String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-        String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
-        Bitmap albumArt = getAlbumArt();
+        artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+        title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+        albumArt = getAlbumArt();
 
         showNotification(artist, title, albumArt);
 
-        updateMediaSession(artist, title, albumArt);
+        updateMediaSession(artist, title, albumArt, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN);
+
+        handler.post(positionBroadcaster);
 
         prepareNextMediaPlayer();
     }
@@ -328,23 +348,26 @@ public class AudioPlayerService extends Service implements
         return BitmapFactory.decodeResource(getResources(), R.drawable.ic_music_note_black_96px);
     }
 
-    private void updateMediaSession(String artist, String title, Bitmap albumArt) {
+    private void updateMediaSessionPlaybackState(long position) {
         mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
                 .setState(
                         paused
                                 ? PlaybackStateCompat.STATE_PAUSED
                                 : PlaybackStateCompat.STATE_PLAYING,
-                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
+                        position,
                         paused ? 0 : 1
                 )
                 .setActions(
                         PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
-                        | PlaybackStateCompat.ACTION_PLAY
-                        | PlaybackStateCompat.ACTION_PAUSE
-                        | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                        | PlaybackStateCompat.ACTION_STOP
-                ).build());
+                                | PlaybackStateCompat.ACTION_PLAY
+                                | PlaybackStateCompat.ACTION_PAUSE
+                                | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                                | PlaybackStateCompat.ACTION_STOP
+                ).build()
+        );
+    }
 
+    private void updateMediaSesssionMetadata(String artist, String title, Bitmap albumArt) {
         mediaSession.setMetadata(
                 new MediaMetadataCompat.Builder()
                         .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
@@ -359,21 +382,17 @@ public class AudioPlayerService extends Service implements
         );
     }
 
+    private void updateMediaSession(String artist, String title, Bitmap albumArt, long position) {
+        updateMediaSessionPlaybackState(position);
+        updateMediaSesssionMetadata(artist, title, albumArt);
+    }
+
     private void updateNotificationAndMediaSession() {
-        int pos = cursor.getPosition();
-
-        cursor.moveToPosition(currentTrackCursorPosition);
-        String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-        String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
-        Bitmap albumArt = getAlbumArt();
-
         // Update notification
         showNotification(artist, title, albumArt);
 
         // Update media session
-        updateMediaSession(artist, title, albumArt);
-
-        cursor.moveToPosition(pos);
+        updateMediaSessionPlaybackState(mediaPlayer.getCurrentPosition());
     }
 
     @Override
@@ -449,6 +468,7 @@ public class AudioPlayerService extends Service implements
                 paused = false;
 
                 updateNotificationAndMediaSession();
+                handler.post(positionBroadcaster);
             } else {
                 startPlaying();
             }
@@ -463,6 +483,7 @@ public class AudioPlayerService extends Service implements
         paused = true;
 
         updateNotificationAndMediaSession();
+        handler.removeCallbacks(positionBroadcaster);
     }
 
     @Override
@@ -499,6 +520,8 @@ public class AudioPlayerService extends Service implements
     private void next() {
         freeMediaPlayer();
 
+        handler.removeCallbacks(positionBroadcaster);
+
         if (nextMediaPlayer != null) {
             mediaPlayer = nextMediaPlayer;
             nextMediaPlayer = null;
@@ -514,6 +537,8 @@ public class AudioPlayerService extends Service implements
 
     private void previous() {
         freeMediaPlayer();
+
+        handler.removeCallbacks(positionBroadcaster);
 
         if (nextMediaPlayer != null) {
             nextMediaPlayer.release();
