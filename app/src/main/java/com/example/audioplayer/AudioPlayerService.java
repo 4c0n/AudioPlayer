@@ -113,7 +113,11 @@ public class AudioPlayerService extends Service implements
             // Remove notification
             stopForeground(true);
 
-            // TODO: Update media session (and/or drop audio focus?)
+            // Update media session
+            updateMediaSessionPlaybackState(
+                    PlaybackStateCompat.STATE_STOPPED,
+                    PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN
+            );
         }
     };
 
