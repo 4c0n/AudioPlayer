@@ -123,7 +123,10 @@ public class AudioPlayerService extends Service implements
             Log.d("4c0n", "run");
             if (mediaPlayer != null && mediaPlayer.isPlaying()) {
                 int currentPosition = mediaPlayer.getCurrentPosition();
-                updateMediaSessionPlaybackState(currentPosition);
+                updateMediaSessionPlaybackState(
+                        PlaybackStateCompat.STATE_PLAYING,
+                        currentPosition
+                );
                 handler.postDelayed(positionBroadcaster, 1000 - (currentPosition % 1000));
             }
         }
@@ -348,14 +351,21 @@ public class AudioPlayerService extends Service implements
         return BitmapFactory.decodeResource(getResources(), R.drawable.ic_music_note_black_96px);
     }
 
-    private void updateMediaSessionPlaybackState(long position) {
+    private void updateMediaSessionPlaybackState(int state, long position) {
+        float playbackSpeed = 0;
+        if (state == PlaybackStateCompat.STATE_PLAYING) {
+            playbackSpeed = 1;
+        } else if (state != PlaybackStateCompat.STATE_PAUSED) {
+            throw new IllegalArgumentException(
+                    "Expected PlaybackStateCompat.STATE_PLAYING or PlaybackStateCompat.STATE_PAUSED"
+            );
+        }
+
         mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
                 .setState(
-                        paused
-                                ? PlaybackStateCompat.STATE_PAUSED
-                                : PlaybackStateCompat.STATE_PLAYING,
+                        state,
                         position,
-                        paused ? 0 : 1
+                        playbackSpeed
                 )
                 .setActions(
                         PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
@@ -383,16 +393,16 @@ public class AudioPlayerService extends Service implements
     }
 
     private void updateMediaSession(String artist, String title, Bitmap albumArt, long position) {
-        updateMediaSessionPlaybackState(position);
+        updateMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, position);
         updateMediaSesssionMetadata(artist, title, albumArt);
     }
 
-    private void updateNotificationAndMediaSession() {
+    private void updateNotificationAndMediaSession(int state) {
         // Update notification
         showNotification(artist, title, albumArt);
 
         // Update media session
-        updateMediaSessionPlaybackState(mediaPlayer.getCurrentPosition());
+        updateMediaSessionPlaybackState(state, mediaPlayer.getCurrentPosition());
     }
 
     @Override
@@ -467,7 +477,7 @@ public class AudioPlayerService extends Service implements
                 mediaPlayer.start();
                 paused = false;
 
-                updateNotificationAndMediaSession();
+                updateNotificationAndMediaSession(PlaybackStateCompat.STATE_PLAYING);
                 handler.post(positionBroadcaster);
             } else {
                 startPlaying();
@@ -482,7 +492,7 @@ public class AudioPlayerService extends Service implements
         mediaPlayer.pause();
         paused = true;
 
-        updateNotificationAndMediaSession();
+        updateNotificationAndMediaSession(PlaybackStateCompat.STATE_PAUSED);
         handler.removeCallbacks(positionBroadcaster);
     }
 
