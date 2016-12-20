@@ -65,7 +65,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
 
             // TODO: clean up when done:
             mediaController.setMediaPlayer(playerService);
-            playerService.setOnPlayerStoppedListener(mediaController);
         }
 
         @Override
@@ -208,7 +207,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
         }
 
         mediaController.setMediaPlayer(playerService);
-        playerService.setOnPlayerStoppedListener(mediaController);
 
         mediaController.setRepeatState(playerService.getRepeatState());
         mediaController.setShuffle(playerService.getShuffleState());

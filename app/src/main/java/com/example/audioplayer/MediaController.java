@@ -14,9 +14,7 @@ import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-public class MediaController extends FrameLayout implements
-        SeekBar.OnSeekBarChangeListener,
-        OnPlayerStoppedListener {
+public class MediaController extends FrameLayout implements SeekBar.OnSeekBarChangeListener {
 
     private TextView timeElapsed;
     private SeekBar seekBar;
@@ -135,7 +133,8 @@ public class MediaController extends FrameLayout implements
     }
 
     private void processPlaybackState(PlaybackStateCompat state) {
-        isPlaying = state.getState() == PlaybackStateCompat.STATE_PLAYING;
+        int playbackState = state.getState();
+        isPlaying = playbackState == PlaybackStateCompat.STATE_PLAYING;
         updatePausePlayButton();
 
         currentPosition = (int) state.getPosition();
@@ -292,13 +291,6 @@ public class MediaController extends FrameLayout implements
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
         transportControls.seekTo(seekToMilliseconds);
-    }
-
-    @Override
-    public void onPlayerStopped() {
-        seekBar.setProgress(0);
-        String timeElapsed = new TimeStringFormatter(0).format();
-        this.timeElapsed.setText(timeElapsed);
     }
 
     interface MediaPlayer {

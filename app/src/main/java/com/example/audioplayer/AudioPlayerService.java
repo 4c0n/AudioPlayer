@@ -43,7 +43,6 @@ public class AudioPlayerService extends Service implements
 
     private MediaPlayer mediaPlayer;
     private MediaPlayer nextMediaPlayer;
-    private OnPlayerStoppedListener onPlayerStoppedListener;
     private Cursor cursor;
     private int currentTrackCursorPosition;
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
@@ -54,6 +53,7 @@ public class AudioPlayerService extends Service implements
     private String artist;
     private String title;
     private Bitmap albumArt;
+    private int duration;
 
     private Handler handler = new Handler();
 
@@ -132,7 +132,7 @@ public class AudioPlayerService extends Service implements
         }
     };
 
-    private void showNotification(String artist, String title, Bitmap albumArt) {
+    private void showNotification(String artist, String title, Bitmap albumArt, boolean isPlaying) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(
@@ -144,22 +144,22 @@ public class AudioPlayerService extends Service implements
                         )
                 );
 
-        if (paused) {
-            builder.addAction(
-                    R.drawable.ic_play_arrow_white_24dp,
-                    getString(R.string.play),
-                    MediaButtonReceiver.buildMediaButtonPendingIntent(
-                            this,
-                            PlaybackStateCompat.ACTION_PLAY
-                    )
-            );
-        } else {
+        if (isPlaying) {
             builder.addAction(
                     R.drawable.ic_pause_white_24dp,
                     getString(R.string.pause),
                     MediaButtonReceiver.buildMediaButtonPendingIntent(
                             this,
                             PlaybackStateCompat.ACTION_PAUSE
+                    )
+            );
+        } else {
+            builder.addAction(
+                    R.drawable.ic_play_arrow_white_24dp,
+                    getString(R.string.play),
+                    MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            this,
+                            PlaybackStateCompat.ACTION_PLAY
                     )
             );
         }
@@ -261,10 +261,9 @@ public class AudioPlayerService extends Service implements
         artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
         title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
         albumArt = getAlbumArt();
+        duration = mediaPlayer.getDuration();
 
-        showNotification(artist, title, albumArt);
-
-        updateMediaSession(artist, title, albumArt, PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN);
+        updateNotificationAndMediaSession(PlaybackStateCompat.STATE_PLAYING);
 
         handler.post(positionBroadcaster);
 
@@ -355,7 +354,9 @@ public class AudioPlayerService extends Service implements
         float playbackSpeed = 0;
         if (state == PlaybackStateCompat.STATE_PLAYING) {
             playbackSpeed = 1;
-        } else if (state != PlaybackStateCompat.STATE_PAUSED) {
+        } else if (state != PlaybackStateCompat.STATE_PAUSED
+                && state != PlaybackStateCompat.STATE_STOPPED) {
+
             throw new IllegalArgumentException(
                     "Expected PlaybackStateCompat.STATE_PLAYING or PlaybackStateCompat.STATE_PAUSED"
             );
@@ -377,7 +378,12 @@ public class AudioPlayerService extends Service implements
         );
     }
 
-    private void updateMediaSesssionMetadata(String artist, String title, Bitmap albumArt) {
+    private void updateMediaSessionMetadata(
+            String artist,
+            String title,
+            Bitmap albumArt,
+            int duration
+    ) {
         mediaSession.setMetadata(
                 new MediaMetadataCompat.Builder()
                         .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
@@ -385,24 +391,25 @@ public class AudioPlayerService extends Service implements
                         //.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Album")
                         .putLong(
                                 MediaMetadataCompat.METADATA_KEY_DURATION,
-                                mediaPlayer.getDuration()
+                                duration
                         )
                         .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
                         .build()
         );
     }
 
-    private void updateMediaSession(String artist, String title, Bitmap albumArt, long position) {
-        updateMediaSessionPlaybackState(PlaybackStateCompat.STATE_PLAYING, position);
-        updateMediaSesssionMetadata(artist, title, albumArt);
-    }
-
     private void updateNotificationAndMediaSession(int state) {
+        boolean isPlaying = state == PlaybackStateCompat.STATE_PLAYING;
         // Update notification
-        showNotification(artist, title, albumArt);
+        showNotification(artist, title, albumArt, isPlaying);
 
         // Update media session
-        updateMediaSessionPlaybackState(state, mediaPlayer.getCurrentPosition());
+        long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
+        if (mediaPlayer != null) {
+            position = mediaPlayer.getCurrentPosition();
+        }
+        updateMediaSessionPlaybackState(state, position);
+        updateMediaSessionMetadata(artist, title, albumArt, duration);
     }
 
     @Override
@@ -467,7 +474,7 @@ public class AudioPlayerService extends Service implements
             nextMediaPlayer = null;
             startPlaying();
         } else {
-            onPlayerStoppedListener.onPlayerStopped();
+            updateNotificationAndMediaSession(PlaybackStateCompat.STATE_STOPPED);
         }
     }
 
@@ -587,10 +594,6 @@ public class AudioPlayerService extends Service implements
     public void onAudioFocusChange(int focusChange) {
         Log.d("4c0n", "onAudioFocusChange");
         // TODO: handle change in audio focus
-    }
-
-    public void setOnPlayerStoppedListener(OnPlayerStoppedListener listener) {
-        onPlayerStoppedListener = listener;
     }
 
     public RepeatState getRepeatState() {
