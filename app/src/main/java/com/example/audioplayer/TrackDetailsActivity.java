@@ -59,12 +59,11 @@ public class TrackDetailsActivity extends AppCompatActivity implements
                 mediaControllerCompat.registerCallback(mediaControllerCallback);
                 mediaControllerCompat.getTransportControls();
                 mediaController.registerWithMediaSession(mediaSessionToken);
+                mediaController.setRepeatState(playerService.getRepeatState());
+                mediaController.setShuffle(playerService.getShuffleState());
             } catch (RemoteException re) {
                 Log.e("4c0n", re.getMessage());
             }
-
-            // TODO: clean up when done:
-            mediaController.setMediaPlayer(playerService);
         }
 
         @Override
@@ -205,8 +204,6 @@ public class TrackDetailsActivity extends AppCompatActivity implements
             Log.e("4c0n", re.getMessage());
             re.printStackTrace();
         }
-
-        mediaController.setMediaPlayer(playerService);
 
         mediaController.setRepeatState(playerService.getRepeatState());
         mediaController.setShuffle(playerService.getShuffleState());

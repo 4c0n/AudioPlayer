@@ -1,6 +1,7 @@
 package com.example.audioplayer;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.os.RemoteException;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
@@ -23,7 +24,6 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
     private ImageButton play;
     private ImageButton pause;
     private ImageButton shuffle;
-    private MediaPlayer mediaPlayer;
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
     private int seekToMilliseconds;
     private boolean shuffleState = false;
@@ -54,7 +54,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
                     repeat.setImageResource(R.drawable.ic_repeat_one_black_24dp);
                     repeat.setAlpha(1.0F);
 
-                    mediaPlayer.repeatOne();
+                    transportControls.sendCustomAction(AudioPlayerService.ACTION_REPEAT_ONE, null);
 
                     repeatState = RepeatState.REPEAT_ONE;
                     break;
@@ -62,7 +62,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
                 case REPEAT_ONE:
                     repeat.setImageResource(R.drawable.ic_repeat_black_24dp);
 
-                    mediaPlayer.repeatAll();
+                    transportControls.sendCustomAction(AudioPlayerService.ACTION_REPEAT_ALL, null);
 
                     repeatState = RepeatState.REPEAT_ALL;
                     break;
@@ -70,7 +70,7 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
                 case REPEAT_ALL:
                     repeat.setAlpha(0.5F);
 
-                    mediaPlayer.repeatOff();
+                    transportControls.sendCustomAction(AudioPlayerService.ACTION_REPEAT_OFF, null);
 
                     repeatState = RepeatState.REPEAT_OFF;
             }
@@ -95,7 +95,11 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         @Override
         public void onClick(View v) {
             setShuffle(!shuffleState);
-            mediaPlayer.shuffle(shuffleState);
+
+            Bundle args = new Bundle();
+            args.putBoolean(AudioPlayerService.ACTION_SHUFFLE_STATE_ARG, shuffleState);
+
+            transportControls.sendCustomAction(AudioPlayerService.ACTION_SHUFFLE, args);
         }
     };
 
@@ -232,10 +236,6 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
         }
     }
 
-    public void setMediaPlayer(MediaPlayer mediaPlayer) {
-        this.mediaPlayer = mediaPlayer;
-    }
-
     public void setRepeatState(RepeatState repeatState) {
         switch (repeatState) {
             case REPEAT_OFF:
@@ -291,12 +291,5 @@ public class MediaController extends FrameLayout implements SeekBar.OnSeekBarCha
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
         transportControls.seekTo(seekToMilliseconds);
-    }
-
-    interface MediaPlayer {
-        void repeatOne();
-        void repeatOff();
-        void repeatAll();
-        void shuffle(boolean on);
     }
 }

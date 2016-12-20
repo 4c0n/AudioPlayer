@@ -11,6 +11,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
@@ -31,13 +32,17 @@ import java.util.Random;
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
-        MediaController.MediaPlayer,
         AudioManager.OnAudioFocusChangeListener {
 
     public static final String INTENT_ACTION_START_PLAYING = "startPlaying";
 
     public static final String INTENT_EXTRA_QUERY_PARAMS = "queryParams";
     public static final String INTENT_EXTRA_CURSOR_POSITION = "cursorPosition";
+    public static final String ACTION_REPEAT_ONE = "repeatOne";
+    public static final String ACTION_REPEAT_OFF = "repeatOff";
+    public static final String ACTION_REPEAT_ALL = "repeatAll";
+    public static final String ACTION_SHUFFLE = "shuffle";
+    public static final String ACTION_SHUFFLE_STATE_ARG = "shuffleState";
 
     private static final int NOTIFICATION_ID = 32789;
 
@@ -118,6 +123,26 @@ public class AudioPlayerService extends Service implements
                     PlaybackStateCompat.STATE_STOPPED,
                     PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN
             );
+        }
+
+        @Override
+        public void onCustomAction(String action, Bundle extras) {
+            switch (action) {
+                case ACTION_REPEAT_ONE:
+                    repeatOne();
+                    break;
+                case ACTION_REPEAT_OFF:
+                    repeatOff();
+                    break;
+                case ACTION_REPEAT_ALL:
+                    repeatAll();
+                    break;
+                case ACTION_SHUFFLE:
+                    shuffle(extras.getBoolean(ACTION_SHUFFLE_STATE_ARG));
+                    break;
+                default:
+                    super.onCustomAction(action, extras);
+            }
         }
     };
 
@@ -507,20 +532,17 @@ public class AudioPlayerService extends Service implements
         handler.removeCallbacks(positionBroadcaster);
     }
 
-    @Override
-    public void repeatOne() {
+    private void repeatOne() {
         mediaPlayer.setLooping(true);
         repeatState = RepeatState.REPEAT_ONE;
     }
 
-    @Override
-    public void repeatOff() {
+    private void repeatOff() {
         mediaPlayer.setLooping(false);
         repeatState = RepeatState.REPEAT_OFF;
     }
 
-    @Override
-    public void repeatAll() {
+    private void repeatAll() {
         mediaPlayer.setLooping(false);
         repeatState = RepeatState.REPEAT_ALL;
 
@@ -578,8 +600,7 @@ public class AudioPlayerService extends Service implements
         initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
     }
 
-    @Override
-    public void shuffle(boolean on) {
+    private void shuffle(boolean on) {
         shuffle = on;
 
         if (nextMediaPlayer != null) {
