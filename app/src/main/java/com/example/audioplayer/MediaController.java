@@ -108,19 +108,14 @@ public class MediaController extends FrameLayout implements
         public void onPlaybackStateChanged(PlaybackStateCompat state) {
             Log.d("4c0n", "onPlaybackStateChanged");
 
-            isPlaying = state.getState() == PlaybackStateCompat.STATE_PLAYING;
-            updatePausePlayButton();
-
-            currentPosition = (int) state.getPosition();
-            setProgress();
+            processPlaybackState(state);
         }
 
         @Override
         public void onMetadataChanged(MediaMetadataCompat metadata) {
             Log.d("4c0n", "onMetadataChanged");
 
-            duration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
-            setDurationText();
+            processMetadata(metadata);
         }
     };
 
@@ -137,6 +132,19 @@ public class MediaController extends FrameLayout implements
     public MediaController(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initView();
+    }
+
+    private void processPlaybackState(PlaybackStateCompat state) {
+        isPlaying = state.getState() == PlaybackStateCompat.STATE_PLAYING;
+        updatePausePlayButton();
+
+        currentPosition = (int) state.getPosition();
+        setProgress();
+    }
+
+    private void processMetadata(MediaMetadataCompat metadata) {
+        duration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+        setDurationText();
     }
 
     private void initView() {
@@ -177,6 +185,7 @@ public class MediaController extends FrameLayout implements
 
         if (duration > 0) {
             long progress = 1000L * currentPosition / duration;
+            Log.d("4c0n", "progress: " + progress);
             seekBar.setProgress((int) progress);
         }
 
@@ -211,6 +220,17 @@ public class MediaController extends FrameLayout implements
         );
         mediaController.registerCallback(mediaControllerCallback);
         transportControls = mediaController.getTransportControls();
+
+        // Sync state if available
+        MediaMetadataCompat metadata = mediaController.getMetadata();
+        if (metadata != null) {
+            processMetadata(metadata);
+        }
+
+        PlaybackStateCompat state = mediaController.getPlaybackState();
+        if (state != null) {
+            processPlaybackState(state);
+        }
     }
 
     public void setMediaPlayer(MediaPlayer mediaPlayer) {
@@ -255,6 +275,10 @@ public class MediaController extends FrameLayout implements
     }
 
     @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+    }
+
+    @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (fromUser) {
             // convert progress to time string
@@ -263,10 +287,6 @@ public class MediaController extends FrameLayout implements
                 timeElapsed.setText(new TimeStringFormatter(seekToMilliseconds).format());
             }
         }
-    }
-
-    @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
     }
 
     @Override
