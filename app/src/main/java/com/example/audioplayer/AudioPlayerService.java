@@ -11,6 +11,8 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Binder;
+import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
@@ -30,28 +32,35 @@ import java.util.Random;
 public class AudioPlayerService extends Service implements
         MediaPlayer.OnPreparedListener,
         MediaPlayer.OnCompletionListener,
-        MediaController.MediaPlayer,
         AudioManager.OnAudioFocusChangeListener {
 
     public static final String INTENT_ACTION_START_PLAYING = "startPlaying";
 
     public static final String INTENT_EXTRA_QUERY_PARAMS = "queryParams";
     public static final String INTENT_EXTRA_CURSOR_POSITION = "cursorPosition";
+    public static final String ACTION_REPEAT_ONE = "repeatOne";
+    public static final String ACTION_REPEAT_OFF = "repeatOff";
+    public static final String ACTION_REPEAT_ALL = "repeatAll";
+    public static final String ACTION_SHUFFLE = "shuffle";
+    public static final String ACTION_SHUFFLE_STATE_ARG = "shuffleState";
 
     private static final int NOTIFICATION_ID = 32789;
 
     private MediaPlayer mediaPlayer;
     private MediaPlayer nextMediaPlayer;
-    private OnPlayerStartedListener onPlayerStartedListener;
-    private OnPlayerStoppedListener onPlayerStoppedListener;
     private Cursor cursor;
-    private OnTrackChangedListener onTrackChangedListener;
     private int currentTrackCursorPosition;
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
     private boolean shuffle = false;
     private Random random = new Random();
     private MediaSessionCompat mediaSession;
     private boolean paused = false;
+    private String artist;
+    private String title;
+    private Bitmap albumArt;
+    private int duration;
+
+    private Handler handler = new Handler();
 
     private final IBinder binder = new AudioPlayerBinder();
 
@@ -94,6 +103,7 @@ public class AudioPlayerService extends Service implements
         @Override
         public void onSeekTo(long pos) {
             Log.d("4c0n", "onSeekTo");
+            seekTo((int) pos);
         }
 
         @Override
@@ -108,11 +118,50 @@ public class AudioPlayerService extends Service implements
             // Remove notification
             stopForeground(true);
 
-            // TODO: Update media session (or drop audio focus?)
+            // Update media session
+            updateMediaSessionPlaybackState(
+                    PlaybackStateCompat.STATE_STOPPED,
+                    PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN
+            );
+        }
+
+        @Override
+        public void onCustomAction(String action, Bundle extras) {
+            switch (action) {
+                case ACTION_REPEAT_ONE:
+                    repeatOne();
+                    break;
+                case ACTION_REPEAT_OFF:
+                    repeatOff();
+                    break;
+                case ACTION_REPEAT_ALL:
+                    repeatAll();
+                    break;
+                case ACTION_SHUFFLE:
+                    shuffle(extras.getBoolean(ACTION_SHUFFLE_STATE_ARG));
+                    break;
+                default:
+                    super.onCustomAction(action, extras);
+            }
         }
     };
 
-    private void showNotification(String artist, String title, Bitmap albumArt) {
+    private Runnable positionBroadcaster = new Runnable() {
+        @Override
+        public void run() {
+            Log.d("4c0n", "run");
+            if (mediaPlayer != null && mediaPlayer.isPlaying()) {
+                int currentPosition = mediaPlayer.getCurrentPosition();
+                updateMediaSessionPlaybackState(
+                        PlaybackStateCompat.STATE_PLAYING,
+                        currentPosition
+                );
+                handler.postDelayed(positionBroadcaster, 1000 - (currentPosition % 1000));
+            }
+        }
+    };
+
+    private void showNotification(String artist, String title, Bitmap albumArt, boolean isPlaying) {
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
         builder.setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
                 .addAction(
@@ -124,22 +173,22 @@ public class AudioPlayerService extends Service implements
                         )
                 );
 
-        if (paused) {
-            builder.addAction(
-                    R.drawable.ic_play_arrow_white_24dp,
-                    getString(R.string.play),
-                    MediaButtonReceiver.buildMediaButtonPendingIntent(
-                            this,
-                            PlaybackStateCompat.ACTION_PLAY
-                    )
-            );
-        } else {
+        if (isPlaying) {
             builder.addAction(
                     R.drawable.ic_pause_white_24dp,
                     getString(R.string.pause),
                     MediaButtonReceiver.buildMediaButtonPendingIntent(
                             this,
                             PlaybackStateCompat.ACTION_PAUSE
+                    )
+            );
+        } else {
+            builder.addAction(
+                    R.drawable.ic_play_arrow_white_24dp,
+                    getString(R.string.play),
+                    MediaButtonReceiver.buildMediaButtonPendingIntent(
+                            this,
+                            PlaybackStateCompat.ACTION_PLAY
                     )
             );
         }
@@ -234,25 +283,18 @@ public class AudioPlayerService extends Service implements
 
         mediaPlayer.start();
 
-        if (onTrackChangedListener != null) {
-            onTrackChangedListener.onTrackChanged(currentTrackCursorPosition);
-        }
-
         if (repeatState == RepeatState.REPEAT_ONE) {
             mediaPlayer.setLooping(true);
         }
 
-        if (onPlayerStartedListener != null) {
-            onPlayerStartedListener.onPlayerStarted();
-        }
+        artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
+        title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
+        albumArt = getAlbumArt();
+        duration = mediaPlayer.getDuration();
 
-        String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-        String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
-        Bitmap albumArt = getAlbumArt();
+        updateNotificationAndMediaSession(PlaybackStateCompat.STATE_PLAYING);
 
-        showNotification(artist, title, albumArt);
-
-        updateMediaSession(artist, title, albumArt);
+        handler.post(positionBroadcaster);
 
         prepareNextMediaPlayer();
     }
@@ -337,49 +379,66 @@ public class AudioPlayerService extends Service implements
         return BitmapFactory.decodeResource(getResources(), R.drawable.ic_music_note_black_96px);
     }
 
-    private void updateMediaSession(String artist, String title, Bitmap albumArt) {
+    private void updateMediaSessionPlaybackState(int state, long position) {
+        float playbackSpeed = 0;
+        if (state == PlaybackStateCompat.STATE_PLAYING) {
+            playbackSpeed = 1;
+        } else if (state != PlaybackStateCompat.STATE_PAUSED
+                && state != PlaybackStateCompat.STATE_STOPPED) {
+
+            throw new IllegalArgumentException(
+                    "Expected PlaybackStateCompat.STATE_PLAYING or PlaybackStateCompat.STATE_PAUSED"
+            );
+        }
+
         mediaSession.setPlaybackState(new PlaybackStateCompat.Builder()
                 .setState(
-                        paused
-                                ? PlaybackStateCompat.STATE_PAUSED
-                                : PlaybackStateCompat.STATE_PLAYING,
-                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN,
-                        paused ? 0 : 1
+                        state,
+                        position,
+                        playbackSpeed
                 )
                 .setActions(
                         PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS
-                        | PlaybackStateCompat.ACTION_PLAY
-                        | PlaybackStateCompat.ACTION_PAUSE
-                        | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
-                        | PlaybackStateCompat.ACTION_STOP
-                ).build());
+                                | PlaybackStateCompat.ACTION_PLAY
+                                | PlaybackStateCompat.ACTION_PAUSE
+                                | PlaybackStateCompat.ACTION_SKIP_TO_NEXT
+                                | PlaybackStateCompat.ACTION_STOP
+                ).build()
+        );
+    }
 
+    private void updateMediaSessionMetadata(
+            String artist,
+            String title,
+            Bitmap albumArt,
+            int duration
+    ) {
         mediaSession.setMetadata(
                 new MediaMetadataCompat.Builder()
                         .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, artist)
                         .putString(MediaMetadataCompat.METADATA_KEY_TITLE, title)
                         //.putString(MediaMetadataCompat.METADATA_KEY_ALBUM, "Album")
-                        .putLong(MediaMetadataCompat.METADATA_KEY_DURATION, getDuration())
+                        .putLong(
+                                MediaMetadataCompat.METADATA_KEY_DURATION,
+                                duration
+                        )
                         .putBitmap(MediaMetadataCompat.METADATA_KEY_ALBUM_ART, albumArt)
                         .build()
         );
     }
 
-    private void updateNotificationAndMediaSession() {
-        int pos = cursor.getPosition();
-
-        cursor.moveToPosition(currentTrackCursorPosition);
-        String artist = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST));
-        String title = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE));
-        Bitmap albumArt = getAlbumArt();
-
+    private void updateNotificationAndMediaSession(int state) {
+        boolean isPlaying = state == PlaybackStateCompat.STATE_PLAYING;
         // Update notification
-        showNotification(artist, title, albumArt);
+        showNotification(artist, title, albumArt, isPlaying);
 
         // Update media session
-        updateMediaSession(artist, title, albumArt);
-
-        cursor.moveToPosition(pos);
+        long position = PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN;
+        if (mediaPlayer != null) {
+            position = mediaPlayer.getCurrentPosition();
+        }
+        updateMediaSessionPlaybackState(state, position);
+        updateMediaSessionMetadata(artist, title, albumArt, duration);
     }
 
     @Override
@@ -444,41 +503,18 @@ public class AudioPlayerService extends Service implements
             nextMediaPlayer = null;
             startPlaying();
         } else {
-            onPlayerStoppedListener.onPlayerStopped();
+            updateNotificationAndMediaSession(PlaybackStateCompat.STATE_STOPPED);
         }
     }
 
-    @Override
-    public int getCurrentPosition() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getCurrentPosition();
-        }
-        return 0;
-    }
-
-    @Override
-    public int getDuration() {
-        if (mediaPlayer != null) {
-            return mediaPlayer.getDuration();
-        }
-        return 0;
-    }
-
-    @Override
-    public boolean isPlaying() {
-        return mediaPlayer != null && mediaPlayer.isPlaying();
-    }
-
-    @Override
-    public void play() {
+    private void play() {
         if (mediaPlayer != null) {
             if (paused) {
                 mediaPlayer.start();
                 paused = false;
 
-                updateNotificationAndMediaSession();
-
-                onPlayerStartedListener.onPlayerStarted();
+                updateNotificationAndMediaSession(PlaybackStateCompat.STATE_PLAYING);
+                handler.post(positionBroadcaster);
             } else {
                 startPlaying();
             }
@@ -488,28 +524,25 @@ public class AudioPlayerService extends Service implements
         }
     }
 
-    @Override
-    public void pause() {
+    private void pause() {
         mediaPlayer.pause();
         paused = true;
 
-        updateNotificationAndMediaSession();
+        updateNotificationAndMediaSession(PlaybackStateCompat.STATE_PAUSED);
+        handler.removeCallbacks(positionBroadcaster);
     }
 
-    @Override
-    public void repeatOne() {
+    private void repeatOne() {
         mediaPlayer.setLooping(true);
         repeatState = RepeatState.REPEAT_ONE;
     }
 
-    @Override
-    public void repeatOff() {
+    private void repeatOff() {
         mediaPlayer.setLooping(false);
         repeatState = RepeatState.REPEAT_OFF;
     }
 
-    @Override
-    public void repeatAll() {
+    private void repeatAll() {
         mediaPlayer.setLooping(false);
         repeatState = RepeatState.REPEAT_ALL;
 
@@ -521,16 +554,16 @@ public class AudioPlayerService extends Service implements
         }
     }
 
-    @Override
-    public void seekTo(int milliseconds) {
+    private void seekTo(int milliseconds) {
         if (mediaPlayer != null) {
             mediaPlayer.seekTo(milliseconds);
         }
     }
 
-    @Override
-    public void next() {
+    private void next() {
         freeMediaPlayer();
+
+        handler.removeCallbacks(positionBroadcaster);
 
         if (nextMediaPlayer != null) {
             mediaPlayer = nextMediaPlayer;
@@ -545,9 +578,10 @@ public class AudioPlayerService extends Service implements
         }
     }
 
-    @Override
-    public void previous() {
+    private void previous() {
         freeMediaPlayer();
+
+        handler.removeCallbacks(positionBroadcaster);
 
         if (nextMediaPlayer != null) {
             nextMediaPlayer.release();
@@ -566,8 +600,7 @@ public class AudioPlayerService extends Service implements
         initMediaPlayer(cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media._ID)));
     }
 
-    @Override
-    public void shuffle(boolean on) {
+    private void shuffle(boolean on) {
         shuffle = on;
 
         if (nextMediaPlayer != null) {
@@ -588,18 +621,6 @@ public class AudioPlayerService extends Service implements
         // TODO: handle change in audio focus
     }
 
-    public void setOnPlayerStartedListener(OnPlayerStartedListener listener) {
-        onPlayerStartedListener = listener;
-    }
-
-    public void setOnPlayerStoppedListener(OnPlayerStoppedListener listener) {
-        onPlayerStoppedListener = listener;
-    }
-
-    public void setOnTrackChangedListener(OnTrackChangedListener listener) {
-        onTrackChangedListener = listener;
-    }
-
     public RepeatState getRepeatState() {
         return repeatState;
     }
@@ -616,9 +637,5 @@ public class AudioPlayerService extends Service implements
         AudioPlayerService getService() {
             return AudioPlayerService.this;
         }
-    }
-
-    interface OnTrackChangedListener {
-        void onTrackChanged(int position);
     }
 }

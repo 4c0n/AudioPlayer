@@ -1,18 +1,21 @@
 package com.example.audioplayer;
 
 import android.content.Context;
+import android.os.Bundle;
+import android.os.RemoteException;
+import android.support.v4.media.MediaMetadataCompat;
+import android.support.v4.media.session.MediaControllerCompat;
+import android.support.v4.media.session.MediaSessionCompat;
+import android.support.v4.media.session.PlaybackStateCompat;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-// TODO: Link to MediaSession
-public class MediaController extends FrameLayout implements
-        SeekBar.OnSeekBarChangeListener,
-        OnPlayerStartedListener,
-        OnPlayerStoppedListener {
+public class MediaController extends FrameLayout implements SeekBar.OnSeekBarChangeListener {
 
     private TextView timeElapsed;
     private SeekBar seekBar;
@@ -21,35 +24,25 @@ public class MediaController extends FrameLayout implements
     private ImageButton play;
     private ImageButton pause;
     private ImageButton shuffle;
-    private MediaPlayer mediaPlayer;
     private RepeatState repeatState = RepeatState.REPEAT_OFF;
-    private boolean draggingSeekBar = false;
     private int seekToMilliseconds;
     private boolean shuffleState = false;
-
-    private Runnable progressUpdater = new Runnable() {
-        @Override
-        public void run() {
-            int currentPosition = setProgress();
-            if (mediaPlayer.isPlaying() && !draggingSeekBar) {
-                // use currentPosition to determine offset, because postDelayed only queues
-                postDelayed(progressUpdater, 1000 - (currentPosition % 1000));
-            }
-        }
-    };
+    private MediaControllerCompat.TransportControls transportControls;
+    private boolean isPlaying = false;
+    private int duration;
+    private int currentPosition;
 
     private OnClickListener onPlayClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            mediaPlayer.play();
+            transportControls.play();
         }
     };
 
     private OnClickListener onPauseClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            mediaPlayer.pause();
-            updatePausePlayButton();
+            transportControls.pause();
         }
     };
 
@@ -61,7 +54,7 @@ public class MediaController extends FrameLayout implements
                     repeat.setImageResource(R.drawable.ic_repeat_one_black_24dp);
                     repeat.setAlpha(1.0F);
 
-                    mediaPlayer.repeatOne();
+                    transportControls.sendCustomAction(AudioPlayerService.ACTION_REPEAT_ONE, null);
 
                     repeatState = RepeatState.REPEAT_ONE;
                     break;
@@ -69,7 +62,7 @@ public class MediaController extends FrameLayout implements
                 case REPEAT_ONE:
                     repeat.setImageResource(R.drawable.ic_repeat_black_24dp);
 
-                    mediaPlayer.repeatAll();
+                    transportControls.sendCustomAction(AudioPlayerService.ACTION_REPEAT_ALL, null);
 
                     repeatState = RepeatState.REPEAT_ALL;
                     break;
@@ -77,7 +70,7 @@ public class MediaController extends FrameLayout implements
                 case REPEAT_ALL:
                     repeat.setAlpha(0.5F);
 
-                    mediaPlayer.repeatOff();
+                    transportControls.sendCustomAction(AudioPlayerService.ACTION_REPEAT_OFF, null);
 
                     repeatState = RepeatState.REPEAT_OFF;
             }
@@ -87,15 +80,14 @@ public class MediaController extends FrameLayout implements
     private OnClickListener onNextClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            mediaPlayer.next();
+            transportControls.skipToNext();
         }
     };
 
     private OnClickListener onPreviousClicked = new OnClickListener() {
         @Override
         public void onClick(View v) {
-            removeCallbacks(progressUpdater);
-            mediaPlayer.previous();
+            transportControls.skipToPrevious();
         }
     };
 
@@ -103,7 +95,29 @@ public class MediaController extends FrameLayout implements
         @Override
         public void onClick(View v) {
             setShuffle(!shuffleState);
-            mediaPlayer.shuffle(shuffleState);
+
+            Bundle args = new Bundle();
+            args.putBoolean(AudioPlayerService.ACTION_SHUFFLE_STATE_ARG, shuffleState);
+
+            transportControls.sendCustomAction(AudioPlayerService.ACTION_SHUFFLE, args);
+        }
+    };
+
+    private MediaControllerCompat.Callback mediaControllerCallback =
+            new MediaControllerCompat.Callback() {
+
+        @Override
+        public void onPlaybackStateChanged(PlaybackStateCompat state) {
+            Log.d("4c0n", "onPlaybackStateChanged");
+
+            processPlaybackState(state);
+        }
+
+        @Override
+        public void onMetadataChanged(MediaMetadataCompat metadata) {
+            Log.d("4c0n", "onMetadataChanged");
+
+            processMetadata(metadata);
         }
     };
 
@@ -120,6 +134,20 @@ public class MediaController extends FrameLayout implements
     public MediaController(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         initView();
+    }
+
+    private void processPlaybackState(PlaybackStateCompat state) {
+        int playbackState = state.getState();
+        isPlaying = playbackState == PlaybackStateCompat.STATE_PLAYING;
+        updatePausePlayButton();
+
+        currentPosition = (int) state.getPosition();
+        setProgress();
+    }
+
+    private void processMetadata(MediaMetadataCompat metadata) {
+        duration = (int) metadata.getLong(MediaMetadataCompat.METADATA_KEY_DURATION);
+        setDurationText();
     }
 
     private void initView() {
@@ -155,25 +183,25 @@ public class MediaController extends FrameLayout implements
 
     private int setProgress() {
         // format milliseconds string
-        int currentPosition = mediaPlayer.getCurrentPosition();
         String timeElapsed = new TimeStringFormatter(currentPosition).format();
         this.timeElapsed.setText(timeElapsed);
 
-        // TODO: Duration does not need to be updated all the time
-        int duration = mediaPlayer.getDuration();
-        String timeLength = new TimeStringFormatter(duration).format();
-        this.timeLength.setText(timeLength);
-
         if (duration > 0) {
             long progress = 1000L * currentPosition / duration;
+            Log.d("4c0n", "progress: " + progress);
             seekBar.setProgress((int) progress);
         }
 
         return currentPosition;
     }
 
+    private void setDurationText() {
+        String timeLength = new TimeStringFormatter(duration).format();
+        this.timeLength.setText(timeLength);
+    }
+
     private void updatePausePlayButton() {
-        if (mediaPlayer.isPlaying()) {
+        if (isPlaying) {
             if (pause.getVisibility() == GONE) {
                 play.setVisibility(GONE);
                 pause.setVisibility(VISIBLE);
@@ -186,8 +214,26 @@ public class MediaController extends FrameLayout implements
         }
     }
 
-    public void setMediaPlayer(MediaPlayer mediaPlayer) {
-        this.mediaPlayer = mediaPlayer;
+    public void registerWithMediaSession(MediaSessionCompat.Token token) throws
+            RemoteException {
+
+        MediaControllerCompat mediaController = new MediaControllerCompat(
+                getContext(),
+                token
+        );
+        mediaController.registerCallback(mediaControllerCallback);
+        transportControls = mediaController.getTransportControls();
+
+        // Sync state if available
+        MediaMetadataCompat metadata = mediaController.getMetadata();
+        if (metadata != null) {
+            processMetadata(metadata);
+        }
+
+        PlaybackStateCompat state = mediaController.getPlaybackState();
+        if (state != null) {
+            processPlaybackState(state);
+        }
     }
 
     public void setRepeatState(RepeatState repeatState) {
@@ -228,10 +274,13 @@ public class MediaController extends FrameLayout implements
     }
 
     @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+    }
+
+    @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (fromUser) {
             // convert progress to time string
-            int duration = mediaPlayer.getDuration();
             if (duration > 0) {
                 seekToMilliseconds = duration / 1000 * progress;
                 timeElapsed.setText(new TimeStringFormatter(seekToMilliseconds).format());
@@ -240,46 +289,7 @@ public class MediaController extends FrameLayout implements
     }
 
     @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-        draggingSeekBar = true;
-        removeCallbacks(progressUpdater);
-    }
-
-    @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
-        draggingSeekBar = false;
-        mediaPlayer.seekTo(seekToMilliseconds);
-        post(progressUpdater);
-    }
-
-    @Override
-    public void onPlayerStarted() {
-        // start progress update cycle
-        post(progressUpdater);
-        updatePausePlayButton();
-    }
-
-    @Override
-    public void onPlayerStopped() {
-        removeCallbacks(progressUpdater);
-        updatePausePlayButton();
-        seekBar.setProgress(0);
-        String timeElapsed = new TimeStringFormatter(0).format();
-        this.timeElapsed.setText(timeElapsed);
-    }
-
-    interface MediaPlayer {
-        int getCurrentPosition();
-        int getDuration();
-        boolean isPlaying();
-        void play();
-        void pause();
-        void repeatOne();
-        void repeatOff();
-        void repeatAll();
-        void seekTo(int milliseconds);
-        void next();
-        void previous();
-        void shuffle(boolean on);
+        transportControls.seekTo(seekToMilliseconds);
     }
 }
